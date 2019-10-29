@@ -7,13 +7,13 @@ import com.google.crypto.tink.*;
 import com.google.crypto.tink.aead.AeadConfig;
 import com.google.crypto.tink.aead.AeadKeyTemplates;
 import com.google.crypto.tink.proto.KeyTemplate;
-import org.apache.commons.io.FileUtils;
-import org.odpi.openmetadata.adminservices.configuration.properties.OMAGServerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.odpi.openmetadata.adminservices.store.OMAGServerConfigStoreConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.EndpointProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.odpi.openmetadata.adminservices.configuration.properties.OMAGServerConfig;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,19 +67,17 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
     /**
      * Save the server configuration.
      *
-     * @param serverConfig - configuration properties to save
+     * @param omagServerConfig - configuration properties to save
      */
-    public <T> void saveServerConfig(T serverConfig) {
+    public void saveServerConfig(OMAGServerConfig omagServerConfig) {
 
         File configStoreFile = new File(configStoreName);
         File keystore = getKeystore();
 
         try {
 
-            if (serverConfig == null) {
-                log.debug("Deleting server config store properties: " + serverConfig);
-                configStoreFile.delete();
-                keystore.delete();
+            if (omagServerConfig == null) {
+                removeServerConfig();
             } else {
 
                 log.debug("Generating new encryption key for secure storage.");
@@ -87,9 +85,9 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
                 CleartextKeysetHandle.write(keysetHandle, JsonKeysetWriter.withFile(
                         keystore));
 
-                log.debug("Writing encrypted server config store properties: " + serverConfig);
+                log.debug("Writing encrypted server config store properties: " + omagServerConfig);
                 ObjectMapper objectMapper = new ObjectMapper();
-                String configStoreFileContents = objectMapper.writeValueAsString(serverConfig);
+                String configStoreFileContents = objectMapper.writeValueAsString(omagServerConfig);
                 Aead aead = keysetHandle.getPrimitive(Aead.class);
                 byte[] ciphertext = aead.encrypt(configStoreFileContents.getBytes(Charset.forName("UTF-8")), null);
                 FileUtils.writeByteArrayToFile(configStoreFile, ciphertext, false);
@@ -121,11 +119,11 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
      *
      * @return server configuration
      */
-    public <T> T  retrieveServerConfig( Class<T> clazz)
-    {
+    public OMAGServerConfig  retrieveServerConfig() {
+
         File configStoreFile = new File(configStoreName);
         File keystore = getKeystore();
-        T newConfigProperties = null;
+        OMAGServerConfig newConfigProperties = null;
 
         try {
 
@@ -138,7 +136,7 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
             byte[] decrypted = aead.decrypt(ciphertext, null);
             String configStoreFileContents = new String(decrypted, Charset.forName("UTF-8"));
             ObjectMapper objectMapper = new ObjectMapper();
-            newConfigProperties = objectMapper.readValue(configStoreFileContents, clazz);
+            newConfigProperties = objectMapper.readValue(configStoreFileContents, OMAGServerConfig.class);
 
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException("Unable to read encryption key.", e);
@@ -154,10 +152,18 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
      * Remove the server configuration.
      */
     public void removeServerConfig() {
-        File keystore = new File(keysetStoreName);
-        keystore.delete();
+        File keystore = getKeystore();
+        if (keystore.delete()) {
+            log.debug("Successfully deleted keystore.");
+        } else {
+            log.warn("Unable to delete keystore.");
+        }
         File configStoreFile = new File(configStoreName);
-        configStoreFile.delete();
+        if (configStoreFile.delete()) {
+            log.debug("Successfully deleted config file: {}", configStoreFile.getName());
+        } else {
+            log.warn("Unable to delete server config file: {}", configStoreFile.getName());
+        }
     }
 
     /**
@@ -172,7 +178,7 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
         // Start by trying to identify any pre-existing keystore directory
         File pwd = new File(".");
         File[] keystoreDirs = pwd.listFiles((dir, name) -> name.startsWith(KEYSTORE_FOLDER_PREFIX));
-        File secureFile = null;
+        File secureFile;
 
         if (keystoreDirs.length == 0) {
 
@@ -186,12 +192,36 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
             try {
                 // We should secure the file and its containing directory to only be accessible by the OS-level owner
                 FileUtils.touch(secureFile);
-                secureFile.setReadable(false, false);
-                secureFile.setReadable(true);
-                secureDir.setExecutable(false, false);
-                secureDir.setExecutable(true);
-                secureDir.setReadable(false, false);
-                secureDir.setReadable(true);
+                if (secureFile.setReadable(false, false)) {
+                    log.debug("Keystore file marked as un-readable.");
+                } else {
+                    log.warn("Unable to mark keystore file as un-readable.");
+                }
+                if (secureFile.setReadable(true)) {
+                    log.debug("Keystore file marked as readable only by owner.");
+                } else {
+                    log.warn("Unable to mark keystore file as readable only by owner.");
+                }
+                if (secureDir.setExecutable(false, false)) {
+                    log.debug("Secure directory marked as non-executable.");
+                } else {
+                    log.warn("Unable to mark secure directory as non-executable.");
+                }
+                if (secureDir.setExecutable(true)) {
+                    log.debug("Secure directory marked as executable only by owner.");
+                } else {
+                    log.warn("Unable to mark secure directory as executable only by owner.");
+                }
+                if (secureDir.setReadable(false, false)) {
+                    log.debug("Secure directory marked as non-readable.");
+                } else {
+                    log.warn("Unable to mark secure directory as non-readable.");
+                }
+                if (secureDir.setReadable(true)) {
+                    log.debug("Secure directory marked as readable only by owner.");
+                } else {
+                    log.warn("Unable to mark secure directory as readable only by owner.");
+                }
             } catch (IOException e) {
                 throw new IllegalStateException("Unable to create secure location for storing encryption key.", e);
             }
@@ -208,7 +238,11 @@ public class EncryptedFileBasedServerConfigStoreConnector extends OMAGServerConf
 
             if (keyFiles.length == 0) {
                 // If for some reason we have a directory but no keys, remove the directory and start over
-                secureDir.delete();
+                if (secureDir.delete()) {
+                    log.debug("Removed empty secure directory.");
+                } else {
+                    log.warn("Unable to remove empty secure directory.");
+                }
                 return getKeystore();
             } else if (keyFiles.length == 1) {
                 // If we have precisely one key file, use it
