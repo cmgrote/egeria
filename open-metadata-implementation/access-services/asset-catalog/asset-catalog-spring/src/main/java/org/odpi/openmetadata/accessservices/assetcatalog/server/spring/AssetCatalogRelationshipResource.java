@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The AssetCatalogRelationshipResource provides the server-side implementation of the Asset Catalog Open Metadata
  * Assess Service (OMAS). This interface facilitates the searching for asset's relationships, fetch the details about a specific relationship.
@@ -37,6 +39,6 @@ public class AssetCatalogRelationshipResource {
                                                                @PathVariable("entity1GUID") String entity1GUID,
                                                                @PathVariable("entity2GUID") String entity2GUID,
                                                                @RequestParam(name = "relationshipType", required = false) String relationshipType) {
-        return relationshipService.getRelationshipBetweenEntities(serverName, userId, entity1GUID, entity2GUID, relationshipType);
+        return createSpringResponse(relationshipService.getRelationshipBetweenEntities(serverName, userId, entity1GUID, entity2GUID, relationshipType));
     }
 }

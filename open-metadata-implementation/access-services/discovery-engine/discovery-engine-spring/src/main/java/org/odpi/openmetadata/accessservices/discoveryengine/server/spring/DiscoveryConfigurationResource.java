@@ -10,6 +10,8 @@ import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.*;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * DiscoveryConfigurationResource provides the Spring wrapper for the DiscoveryConfigurationServices
  */
@@ -42,7 +44,7 @@ public class DiscoveryConfigurationResource
                                               @PathVariable String                        userId,
                                               @RequestBody  NewDiscoveryEngineRequestBody requestBody)
     {
-        return restAPI.createDiscoveryEngine(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.createDiscoveryEngine(serverName, userId, requestBody));
     }
 
 

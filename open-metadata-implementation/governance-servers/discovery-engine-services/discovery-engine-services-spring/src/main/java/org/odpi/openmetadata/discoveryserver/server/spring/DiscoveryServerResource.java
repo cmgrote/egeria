@@ -8,6 +8,7 @@ import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.*;
 import org.odpi.openmetadata.discoveryserver.server.DiscoveryServerRESTServices;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
 
 /**
  * DiscoveryServerResource provides the server-side catcher for REST calls using Spring
@@ -44,12 +45,12 @@ public class DiscoveryServerResource
                                        @PathVariable String                       assetDiscoveryType,
                                        @RequestBody  DiscoveryRequestRequestBody  requestBody)
     {
-        return restAPI.discoverAsset(serverName,
-                                     discoveryEngineGUID,
-                                     userId,
-                                     assetGUID,
-                                     assetDiscoveryType,
-                                     requestBody);
+        return createSpringResponse(restAPI.discoverAsset(serverName,
+                                                          discoveryEngineGUID,
+                                                          userId,
+                                                          assetGUID,
+                                                          assetDiscoveryType,
+                                                          requestBody));
     }
 
 
@@ -76,11 +77,11 @@ public class DiscoveryServerResource
                                       @PathVariable String                       assetDiscoveryType,
                                       @RequestBody  DiscoveryRequestRequestBody  requestBody)
     {
-        return restAPI.scanAllAssets(serverName,
-                                     discoveryEngineGUID,
-                                     userId,
-                                     assetDiscoveryType,
-                                     requestBody);
+        return createSpringResponse(restAPI.scanAllAssets(serverName,
+                                                          discoveryEngineGUID,
+                                                          userId,
+                                                          assetDiscoveryType,
+                                                          requestBody));
     }
 
 
@@ -103,7 +104,7 @@ public class DiscoveryServerResource
                                                               @PathVariable String   userId,
                                                               @PathVariable String   discoveryRequestGUID)
     {
-        return restAPI.getDiscoveryReport(serverName, discoveryEngineGUID, userId, discoveryRequestGUID);
+        return createSpringResponse(restAPI.getDiscoveryReport(serverName, discoveryEngineGUID, userId, discoveryRequestGUID));
     }
 
 
@@ -130,12 +131,12 @@ public class DiscoveryServerResource
                                                                 @RequestParam int      startingFrom,
                                                                 @RequestParam int      maximumResults)
     {
-        return restAPI.getDiscoveryReportAnnotations(serverName,
-                                                     discoveryEngineGUID,
-                                                     userId,
-                                                     discoveryRequestGUID,
-                                                     startingFrom,
-                                                     maximumResults);
+        return createSpringResponse(restAPI.getDiscoveryReportAnnotations(serverName,
+                                                                          discoveryEngineGUID,
+                                                                          userId,
+                                                                          discoveryRequestGUID,
+                                                                          startingFrom,
+                                                                          maximumResults));
     }
 
 
@@ -164,13 +165,13 @@ public class DiscoveryServerResource
                                                          @RequestParam int      startingFrom,
                                                          @RequestParam int      maximumResults)
     {
-        return restAPI.getExtendedAnnotations(serverName,
-                                              discoveryEngineGUID,
-                                              userId,
-                                              discoveryRequestGUID,
-                                              annotationGUID,
-                                              startingFrom,
-                                              maximumResults);
+        return createSpringResponse(restAPI.getExtendedAnnotations(serverName,
+                                                                   discoveryEngineGUID,
+                                                                   userId,
+                                                                   discoveryRequestGUID,
+                                                                   annotationGUID,
+                                                                   startingFrom,
+                                                                   maximumResults));
     }
 
 
@@ -196,6 +197,6 @@ public class DiscoveryServerResource
                                             @PathVariable String   discoveryRequestGUID,
                                             @PathVariable String   annotationGUID)
     {
-        return restAPI.getAnnotation(serverName, discoveryEngineGUID, userId, discoveryRequestGUID, annotationGUID);
+        return createSpringResponse(restAPI.getAnnotation(serverName, discoveryEngineGUID, userId, discoveryRequestGUID, annotationGUID));
     }
 }

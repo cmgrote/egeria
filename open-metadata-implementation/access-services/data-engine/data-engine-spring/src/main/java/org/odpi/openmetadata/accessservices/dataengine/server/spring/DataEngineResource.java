@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The DataEngineResource provides the server-side implementation of the Data Engine Open Metadata Assess Service
  * (OMAS). This interface facilitates the creation of processes, ports and schema types, with all the needed
@@ -50,7 +52,7 @@ public class DataEngineResource {
     public GUIDResponse createExternalDataEngine(@PathVariable("serverName") String serverName,
                                                  @PathVariable("userId") String userId,
                                                  @RequestBody DataEngineRegistrationRequestBody requestBody) {
-        return restAPI.createExternalDataEngine(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.createExternalDataEngine(serverName, userId, requestBody));
     }
 
     /**
@@ -66,7 +68,7 @@ public class DataEngineResource {
     public GUIDResponse getExternalDataEngineByQualifiedName(@PathVariable String serverName,
                                                              @PathVariable String userId,
                                                              @PathVariable String qualifiedName) {
-        return restAPI.getExternalDataEngineByQualifiedName(serverName, userId, qualifiedName);
+        return createSpringResponse(restAPI.getExternalDataEngineByQualifiedName(serverName, userId, qualifiedName));
     }
 
     /**
@@ -82,7 +84,7 @@ public class DataEngineResource {
     public GUIDResponse createOrUpdateSchemaType(@PathVariable("userId") String userId,
                                                  @PathVariable("serverName") String serverName,
                                                  @RequestBody SchemaTypeRequestBody requestBody) {
-        return restAPI.createOrUpdateSchemaType(userId, serverName, requestBody);
+        return createSpringResponse(restAPI.createOrUpdateSchemaType(userId, serverName, requestBody));
     }
 
 
@@ -99,7 +101,7 @@ public class DataEngineResource {
     public GUIDResponse createOrUpdatePortImplementation(@PathVariable("userId") String userId,
                                                          @PathVariable("serverName") String serverName,
                                                          @RequestBody PortImplementationRequestBody portImplementationRequestBody) {
-        return restAPI.createOrUpdatePortImplementation(userId, serverName, portImplementationRequestBody);
+        return createSpringResponse(restAPI.createOrUpdatePortImplementation(userId, serverName, portImplementationRequestBody));
     }
 
 
@@ -116,7 +118,7 @@ public class DataEngineResource {
     public GUIDResponse createOrUpdatePortAlias(@PathVariable("userId") String userId,
                                                 @PathVariable("serverName") String serverName,
                                                 @RequestBody PortAliasRequestBody portAliasRequestBody) {
-        return restAPI.createOrUpdatePortAlias(userId, serverName, portAliasRequestBody);
+        return createSpringResponse(restAPI.createOrUpdatePortAlias(userId, serverName, portAliasRequestBody));
     }
 
     /**
@@ -132,7 +134,7 @@ public class DataEngineResource {
     public GUIDListResponse createOrUpdateProcesses(@PathVariable("userId") String userId,
                                                     @PathVariable("serverName") String serverName,
                                                     @RequestBody ProcessesRequestBody processesRequestBody) {
-        return restAPI.createOrUpdateProcesses(userId, serverName, processesRequestBody);
+        return createSpringResponse(restAPI.createOrUpdateProcesses(userId, serverName, processesRequestBody));
     }
 
     /**
@@ -150,7 +152,7 @@ public class DataEngineResource {
                                           @PathVariable("serverName") String serverName,
                                           @PathVariable("processGuid") String processGuid,
                                           @RequestBody PortListRequestBody portListRequestBody) {
-        return restAPI.addPortsToProcess(userId, serverName, processGuid, portListRequestBody);
+        return createSpringResponse(restAPI.addPortsToProcess(userId, serverName, processGuid, portListRequestBody));
     }
 
     /**
@@ -166,6 +168,6 @@ public class DataEngineResource {
     public VoidResponse addLineageMappings(@PathVariable("userId") String userId,
                                            @PathVariable("serverName") String serverName,
                                            @RequestBody LineageMappingsRequestBody lineageMappingsRequestBody) {
-        return restAPI.addLineageMappings(userId, serverName, lineageMappingsRequestBody);
+        return createSpringResponse(restAPI.addLineageMappings(userId, serverName, lineageMappingsRequestBody));
     }
 }

@@ -19,7 +19,7 @@ public class SpringUtils {
      */
     public static <T extends FFDCResponseBase> T createSpringResponse(T response) throws SpringErrorResponseException {
         // TODO: is it sufficient to simply look for non-200 or an exception class name?
-        if (response.getRelatedHTTPCode() != 200 || response.getExceptionClassName() != null) {
+        if (response != null && (response.getRelatedHTTPCode() != 200 || response.getExceptionClassName() != null)) {
             throw new SpringErrorResponseException(response.getRelatedHTTPCode(), response);
         }
         return response;

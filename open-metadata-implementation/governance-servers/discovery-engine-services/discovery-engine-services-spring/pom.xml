@@ -44,6 +44,11 @@
             <groupId>org.odpi.egeria</groupId>
             <artifactId>discovery-engine-services-server</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>spring-services</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

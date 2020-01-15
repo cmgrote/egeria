@@ -19,6 +19,8 @@ import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.Om
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_DEFAULT_VALUE;
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_MAX_VALUE;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * Spring Rest Controller defining 'GlossaryCategory' oriented endpoints
  */
@@ -49,7 +51,7 @@ public class CategoryResource {
     public GlossaryViewEntityDetailResponse getCategory(@PathVariable("serverName") String serverName,
                                                         @PathVariable("userId") String userId,
                                                         @PathVariable("categoryGUID") @NotBlank String categoryGUID) {
-        return categoryService.getCategory(userId, serverName, categoryGUID);
+        return createSpringResponse(categoryService.getCategory(userId, serverName, categoryGUID));
     }
 
     /**
@@ -69,7 +71,7 @@ public class CategoryResource {
                                                                                         @PathVariable("glossaryGUID") @NotBlank String glossaryGUID,
                                                                                         @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                                         @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return categoryService.getCategoriesViaCategoryAnchorRelationships(userId, serverName, glossaryGUID, from, size);
+        return createSpringResponse(categoryService.getCategoriesViaCategoryAnchorRelationships(userId, serverName, glossaryGUID, from, size));
     }
 
     /**
@@ -89,7 +91,7 @@ public class CategoryResource {
                                                              @PathVariable("categoryGUID") @NotBlank String categoryGUID,
                                                              @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                              @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return categoryService.getSubcategories(userId, serverName, categoryGUID, from, size);
+        return createSpringResponse(categoryService.getSubcategories(userId, serverName, categoryGUID, from, size));
     }
 
     /**
@@ -109,7 +111,7 @@ public class CategoryResource {
                                                                      @PathVariable("categoryGUID") @NotBlank String categoryGUID,
                                                                      @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                      @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return categoryService.getExternalGlossaryLinks(userId, serverName, categoryGUID, from, size);
+        return createSpringResponse(categoryService.getExternalGlossaryLinks(userId, serverName, categoryGUID, from, size));
     }
 
 }

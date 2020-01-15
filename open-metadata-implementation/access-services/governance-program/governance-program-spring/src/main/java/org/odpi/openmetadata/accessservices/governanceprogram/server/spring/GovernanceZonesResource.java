@@ -9,6 +9,8 @@ import org.odpi.openmetadata.commonservices.gaf.metadatamanagement.rest.ZoneRequ
 import org.odpi.openmetadata.commonservices.gaf.metadatamanagement.rest.ZoneResponse;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The GovernanceLeadershipResource provides a Spring based server-side REST API
  * that supports the GovernanceLeadershipInterface.   It delegates each request to the
@@ -50,7 +52,7 @@ public class GovernanceZonesResource
                                               @PathVariable String          userId,
                                               @RequestBody  ZoneRequestBody requestBody)
     {
-        return restAPI.createGovernanceZone(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.createGovernanceZone(serverName, userId, requestBody));
     }
 
 
@@ -74,7 +76,7 @@ public class GovernanceZonesResource
                                                @RequestParam int      startingFrom,
                                                @RequestParam int      maximumResults)
     {
-        return restAPI.getGovernanceZones(serverName, userId, startingFrom, maximumResults);
+        return createSpringResponse(restAPI.getGovernanceZones(serverName, userId, startingFrom, maximumResults));
     }
 
 
@@ -96,6 +98,6 @@ public class GovernanceZonesResource
                                           @PathVariable String   userId,
                                           @PathVariable String   qualifiedName)
     {
-        return restAPI.getGovernanceZone(serverName, userId, qualifiedName);
+        return createSpringResponse(restAPI.getGovernanceZone(serverName, userId, qualifiedName));
     }
 }

@@ -13,6 +13,7 @@ import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
 import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest.*;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
 
 /**
  * The AssetConsumerResource provides the server-side implementation of the Asset Consumer Open Metadata
@@ -56,7 +57,7 @@ public class AssetConsumerResource
                                         @PathVariable String             commentGUID,
                                         @RequestBody  CommentRequestBody requestBody)
     {
-        return restAPI.addCommentReply(serverName, userId, assetGUID, commentGUID, requestBody);
+        return createSpringResponse(restAPI.addCommentReply(serverName, userId, assetGUID, commentGUID, requestBody));
     }
 
 
@@ -81,7 +82,7 @@ public class AssetConsumerResource
                                           @PathVariable String              assetGUID,
                                           @RequestBody  CommentRequestBody  requestBody)
     {
-        return restAPI.addCommentToAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.addCommentToAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -106,7 +107,7 @@ public class AssetConsumerResource
                                        @PathVariable String              assetGUID,
                                        @RequestBody  FeedbackRequestBody requestBody)
     {
-        return restAPI.addLikeToAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.addLikeToAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -135,7 +136,7 @@ public class AssetConsumerResource
                                              @PathVariable String                assetGUID,
                                              @RequestBody  LogRecordRequestBody requestBody)
     {
-        return restAPI.addLogMessageToAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.addLogMessageToAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -159,7 +160,7 @@ public class AssetConsumerResource
                                          @PathVariable String             assetGUID,
                                          @RequestBody  RatingRequestBody requestBody)
     {
-        return restAPI.addRatingToAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.addRatingToAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -185,7 +186,7 @@ public class AssetConsumerResource
                                       @PathVariable String              tagGUID,
                                       @RequestBody  FeedbackRequestBody requestBody)
     {
-        return restAPI.addTagToAsset(serverName, userId, assetGUID, tagGUID, requestBody);
+        return createSpringResponse(restAPI.addTagToAsset(serverName, userId, assetGUID, tagGUID, requestBody));
     }
 
 
@@ -207,7 +208,7 @@ public class AssetConsumerResource
                                   @PathVariable String         userId,
                                   @RequestBody  TagRequestBody requestBody)
     {
-        return restAPI.createTag(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.createTag(serverName, userId, requestBody));
     }
 
 
@@ -231,7 +232,7 @@ public class AssetConsumerResource
                                     @PathVariable String          tagGUID,
                                     @RequestBody  NullRequestBody requestBody)
     {
-        return restAPI.deleteTag(serverName, userId, tagGUID, requestBody);
+        return createSpringResponse(restAPI.deleteTag(serverName, userId, tagGUID, requestBody));
     }
 
 
@@ -255,7 +256,7 @@ public class AssetConsumerResource
                                                   @PathVariable String   userId,
                                                   @PathVariable String   connectionName)
     {
-        return restAPI.getAssetForConnectionName(serverName, userId, connectionName);
+        return createSpringResponse(restAPI.getAssetForConnectionName(serverName, userId, connectionName));
     }
 
 
@@ -282,7 +283,7 @@ public class AssetConsumerResource
                                        @RequestParam int      pageSize,
                                        @RequestBody  String   searchString)
     {
-        return restAPI.findAssets(serverName, userId, searchString, startFrom, pageSize);
+        return createSpringResponse(restAPI.findAssets(serverName, userId, searchString, startFrom, pageSize));
     }
 
 
@@ -309,7 +310,7 @@ public class AssetConsumerResource
                                                @RequestParam int    startFrom,
                                                @RequestParam int    pageSize)
     {
-        return restAPI.getAssetsByMeaning(serverName, userId, termGUID, startFrom, pageSize);
+        return createSpringResponse(restAPI.getAssetsByMeaning(serverName, userId, termGUID, startFrom, pageSize));
     }
 
 
@@ -335,7 +336,7 @@ public class AssetConsumerResource
                                             @RequestParam int      pageSize,
                                             @RequestBody  String   name)
     {
-        return restAPI.getAssetsByName(serverName, userId, name, startFrom, pageSize);
+        return createSpringResponse(restAPI.getAssetsByName(serverName, userId, name, startFrom, pageSize));
     }
 
 
@@ -361,7 +362,7 @@ public class AssetConsumerResource
                                     @RequestParam int    startFrom,
                                     @RequestParam int    pageSize)
     {
-        return restAPI.getAssetsByTag(serverName, userId, tagGUID, startFrom, pageSize);
+        return createSpringResponse(restAPI.getAssetsByTag(serverName, userId, tagGUID, startFrom, pageSize));
     }
 
 
@@ -385,7 +386,7 @@ public class AssetConsumerResource
                                                   @PathVariable String   userId,
                                                   @RequestBody  String   name)
     {
-        return restAPI.getConnectionByName(serverName, userId, name);
+        return createSpringResponse(restAPI.getConnectionByName(serverName, userId, name));
     }
 
 
@@ -410,7 +411,7 @@ public class AssetConsumerResource
                                                      @RequestParam int      pageSize,
                                                      @RequestBody  String   name)
     {
-        return restAPI.getMeaningByName(serverName, userId, name, startFrom, pageSize);
+        return createSpringResponse(restAPI.getMeaningByName(serverName, userId, name, startFrom, pageSize));
     }
 
 
@@ -435,7 +436,7 @@ public class AssetConsumerResource
                                                  @RequestParam int      pageSize,
                                                  @RequestBody  String   name)
     {
-        return restAPI.findMeanings(serverName, userId, name, startFrom, pageSize);
+        return createSpringResponse(restAPI.findMeanings(serverName, userId, name, startFrom, pageSize));
     }
 
 
@@ -457,7 +458,7 @@ public class AssetConsumerResource
                                            @PathVariable String   userId,
                                            @PathVariable String   termGUID)
     {
-        return restAPI.getMeaning(serverName, userId, termGUID);
+        return createSpringResponse(restAPI.getMeaning(serverName, userId, termGUID));
     }
 
 
@@ -479,7 +480,7 @@ public class AssetConsumerResource
                               @PathVariable String   userId,
                               @PathVariable String   tagGUID)
     {
-        return restAPI.getTag(serverName, userId, tagGUID);
+        return createSpringResponse(restAPI.getTag(serverName, userId, tagGUID));
     }
 
 
@@ -504,7 +505,7 @@ public class AssetConsumerResource
                                       @RequestParam int     pageSize,
                                       @RequestBody  String  tagName)
     {
-        return restAPI.getTagsByName(serverName, userId, tagName, startFrom, pageSize);
+        return createSpringResponse(restAPI.getTagsByName(serverName, userId, tagName, startFrom, pageSize));
     }
 
 
@@ -529,7 +530,7 @@ public class AssetConsumerResource
                                         @RequestParam int     pageSize,
                                         @RequestBody  String  tagName)
     {
-        return restAPI.getMyTagsByName(serverName, userId, tagName, startFrom, pageSize);
+        return createSpringResponse(restAPI.getMyTagsByName(serverName, userId, tagName, startFrom, pageSize));
     }
 
 
@@ -554,7 +555,7 @@ public class AssetConsumerResource
                                  @RequestParam int     pageSize,
                                  @RequestBody  String  tagName)
     {
-        return restAPI.findTags(serverName, userId, tagName, startFrom, pageSize);
+        return createSpringResponse(restAPI.findTags(serverName, userId, tagName, startFrom, pageSize));
     }
 
 
@@ -579,7 +580,7 @@ public class AssetConsumerResource
                                    @RequestParam int     pageSize,
                                    @RequestBody  String  tagName)
     {
-        return restAPI.findMyTags(serverName, userId, tagName, startFrom, pageSize);
+        return createSpringResponse(restAPI.findMyTags(serverName, userId, tagName, startFrom, pageSize));
     }
 
 
@@ -605,7 +606,7 @@ public class AssetConsumerResource
                                                @PathVariable String          commentGUID,
                                                @RequestBody  NullRequestBody requestBody)
     {
-        return restAPI.removeCommentFromAsset(serverName, userId, assetGUID, commentGUID, requestBody);
+        return createSpringResponse(restAPI.removeCommentFromAsset(serverName, userId, assetGUID, commentGUID, requestBody));
     }
 
 
@@ -629,7 +630,7 @@ public class AssetConsumerResource
                                               @PathVariable String          assetGUID,
                                               @RequestBody  NullRequestBody requestBody)
     {
-        return restAPI.removeLikeFromAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.removeLikeFromAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -653,7 +654,7 @@ public class AssetConsumerResource
                                                 @PathVariable String          assetGUID,
                                                 @RequestBody  NullRequestBody requestBody)
     {
-        return restAPI.removeRatingFromAsset(serverName, userId, assetGUID, requestBody);
+        return createSpringResponse(restAPI.removeRatingFromAsset(serverName, userId, assetGUID, requestBody));
     }
 
 
@@ -679,7 +680,7 @@ public class AssetConsumerResource
                                              @PathVariable String          tagGUID,
                                              @RequestBody  NullRequestBody requestBody)
     {
-        return restAPI.removeTagFromAsset(serverName, userId, assetGUID, tagGUID, requestBody);
+        return createSpringResponse(restAPI.removeTagFromAsset(serverName, userId, assetGUID, tagGUID, requestBody));
     }
 
 
@@ -705,7 +706,7 @@ public class AssetConsumerResource
                                         @PathVariable String              commentGUID,
                                         @RequestBody  CommentRequestBody  requestBody)
     {
-        return restAPI.updateComment(serverName, userId, assetGUID, commentGUID, requestBody);
+        return createSpringResponse(restAPI.updateComment(serverName, userId, assetGUID, commentGUID, requestBody));
     }
 
 
@@ -729,6 +730,6 @@ public class AssetConsumerResource
                                                @PathVariable String         tagGUID,
                                                @RequestBody  TagRequestBody requestBody)
     {
-        return restAPI.updateTagDescription(serverName, userId, tagGUID, requestBody);
+        return createSpringResponse(restAPI.updateTagDescription(serverName, userId, tagGUID, requestBody));
     }
 }

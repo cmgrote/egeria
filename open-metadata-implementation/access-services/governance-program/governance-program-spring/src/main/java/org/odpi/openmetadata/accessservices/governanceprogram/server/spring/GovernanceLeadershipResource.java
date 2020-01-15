@@ -8,6 +8,8 @@ import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The GovernanceLeadershipResource provides a Spring based server-side REST API
  * that supports the GovernanceLeadershipInterface.   It delegates each request to the
@@ -47,7 +49,7 @@ public class GovernanceLeadershipResource
                                                 @RequestBody  GovernanceOfficerDetailsRequestBody  requestBody)
 
     {
-        return restAPI.createGovernanceOfficer(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.createGovernanceOfficer(serverName, userId, requestBody));
     }
 
 
@@ -72,7 +74,7 @@ public class GovernanceLeadershipResource
                                                   @PathVariable String                               governanceOfficerGUID,
                                                   @RequestBody  GovernanceOfficerDetailsRequestBody  requestBody)
     {
-        return restAPI.updateGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody);
+        return createSpringResponse(restAPI.updateGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody));
     }
 
 
@@ -96,7 +98,7 @@ public class GovernanceLeadershipResource
                                                   @PathVariable String                                 governanceOfficerGUID,
                                                   @RequestBody  GovernanceOfficerValidatorRequestBody  requestBody)
     {
-        return restAPI.deleteGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody);
+        return createSpringResponse(restAPI.deleteGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody));
     }
 
 
@@ -117,7 +119,7 @@ public class GovernanceLeadershipResource
                                                                 @PathVariable String     userId,
                                                                 @PathVariable String     governanceOfficerGUID)
     {
-        return restAPI.getGovernanceOfficerByGUID(serverName, userId, governanceOfficerGUID);
+        return createSpringResponse(restAPI.getGovernanceOfficerByGUID(serverName, userId, governanceOfficerGUID));
     }
 
 
@@ -139,7 +141,7 @@ public class GovernanceLeadershipResource
                                                                            @PathVariable String     userId,
                                                                            @PathVariable String     appointmentId)
     {
-        return restAPI.getGovernanceOfficerByAppointmentId(serverName, userId, appointmentId);
+        return createSpringResponse(restAPI.getGovernanceOfficerByAppointmentId(serverName, userId, appointmentId));
     }
 
 
@@ -157,7 +159,7 @@ public class GovernanceLeadershipResource
     public GovernanceOfficerListResponse  getGovernanceOfficers(@PathVariable String     serverName,
                                                                 @PathVariable String     userId)
     {
-        return restAPI.getGovernanceOfficers(serverName, userId);
+        return createSpringResponse(restAPI.getGovernanceOfficers(serverName, userId));
     }
 
 
@@ -175,7 +177,7 @@ public class GovernanceLeadershipResource
     public GovernanceOfficerListResponse  getActiveGovernanceOfficers(@PathVariable String     serverName,
                                                                       @PathVariable String     userId)
     {
-        return restAPI.getActiveGovernanceOfficers(serverName, userId);
+        return createSpringResponse(restAPI.getActiveGovernanceOfficers(serverName, userId));
     }
 
 
@@ -199,7 +201,7 @@ public class GovernanceLeadershipResource
                                                                         @PathVariable String                        userId,
                                                                         @RequestBody  GovernanceDomainRequestBody   requestBody)
     {
-        return restAPI.getGovernanceOfficersByDomain(serverName, userId, requestBody);
+        return createSpringResponse(restAPI.getGovernanceOfficersByDomain(serverName, userId, requestBody));
     }
 
 
@@ -222,7 +224,7 @@ public class GovernanceLeadershipResource
                                                  @PathVariable String                  governanceOfficerGUID,
                                                  @RequestBody  AppointmentRequestBody  requestBody)
     {
-        return restAPI.appointGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody);
+        return createSpringResponse(restAPI.appointGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody));
     }
 
 
@@ -246,6 +248,6 @@ public class GovernanceLeadershipResource
                                                  @PathVariable String                  governanceOfficerGUID,
                                                  @RequestBody  AppointmentRequestBody  requestBody)
     {
-        return restAPI.relieveGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody);
+        return createSpringResponse(restAPI.relieveGovernanceOfficer(serverName, userId, governanceOfficerGUID, requestBody));
     }
 }

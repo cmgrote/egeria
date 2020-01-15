@@ -8,6 +8,8 @@ import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest.*;
 import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.server.OCFMetadataRESTServices;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The ConnectedAssetResource is the server-side implementation of the REST services needed to
  * populate the Open Connector Framework (OCF) Connected Asset Properties.
@@ -47,7 +49,7 @@ public class ConnectedAssetResource
                                                   @PathVariable String     userId,
                                                   @PathVariable String     guid)
     {
-        return restAPI.getConnectionByGUID(serverName, serviceURLName, userId, guid);
+        return createSpringResponse(restAPI.getConnectionByGUID(serverName, serviceURLName, userId, guid));
     }
 
 
@@ -72,7 +74,7 @@ public class ConnectedAssetResource
                                                     @PathVariable String   userId,
                                                     @PathVariable String   assetGUID)
     {
-        return restAPI.getConnectionForAsset(serverName, serviceURLName, userId, assetGUID);
+        return createSpringResponse(restAPI.getConnectionForAsset(serverName, serviceURLName, userId, assetGUID));
     }
 
 
@@ -98,7 +100,7 @@ public class ConnectedAssetResource
                                                   @PathVariable String   userId,
                                                   @PathVariable String   connectionGUID)
     {
-        return restAPI.getAssetForConnectionGUID(serverName, serviceURLName, userId, connectionGUID);
+        return createSpringResponse(restAPI.getAssetForConnectionGUID(serverName, serviceURLName, userId, connectionGUID));
     }
 
 
@@ -127,7 +129,7 @@ public class ConnectedAssetResource
                                                   @PathVariable String   assetGUID,
                                                   @PathVariable String   connectionGUID)
     {
-        return restAPI.getConnectedAssetSummary(serverName, serviceURLName, userId, assetGUID, connectionGUID);
+        return createSpringResponse(restAPI.getConnectedAssetSummary(serverName, serviceURLName, userId, assetGUID, connectionGUID));
     }
 
 
@@ -151,7 +153,7 @@ public class ConnectedAssetResource
                                          @PathVariable String   userId,
                                          @PathVariable String   assetGUID)
     {
-        return restAPI.getAssetSummary(serverName, serviceURLName, userId, assetGUID);
+        return createSpringResponse(restAPI.getAssetSummary(serverName, serviceURLName, userId, assetGUID));
     }
 
 
@@ -180,7 +182,7 @@ public class ConnectedAssetResource
                                                     @RequestParam int     elementStart,
                                                     @RequestParam int     maxElements)
     {
-        return restAPI.getCertifications(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getCertifications(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -209,7 +211,7 @@ public class ConnectedAssetResource
                                              @RequestParam int     elementStart,
                                              @RequestParam int     maxElements)
     {
-        return restAPI.getAssetComments(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getAssetComments(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -240,7 +242,7 @@ public class ConnectedAssetResource
                                                    @RequestParam int     elementStart,
                                                    @RequestParam int     maxElements)
     {
-        return restAPI.getAssetCommentReplies(serverName, serviceURLName, userId, assetGUID, commentGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getAssetCommentReplies(serverName, serviceURLName, userId, assetGUID, commentGUID, elementStart, maxElements));
     }
 
 
@@ -269,7 +271,7 @@ public class ConnectedAssetResource
                                               @RequestParam int     elementStart,
                                               @RequestParam int     maxElements)
     {
-        return restAPI.getConnections(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getConnections(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -298,7 +300,7 @@ public class ConnectedAssetResource
                                                               @RequestParam int     elementStart,
                                                               @RequestParam int     maxElements)
     {
-        return restAPI.getExternalIdentifiers(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getExternalIdentifiers(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -327,7 +329,7 @@ public class ConnectedAssetResource
                                                             @RequestParam int     elementStart,
                                                             @RequestParam int     maxElements)
     {
-        return restAPI.getExternalReferences(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getExternalReferences(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -356,7 +358,7 @@ public class ConnectedAssetResource
                                                 @RequestParam int     elementStart,
                                                 @RequestParam int     maxElements)
     {
-        return restAPI.getInformalTags(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getInformalTags(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -385,7 +387,7 @@ public class ConnectedAssetResource
                                         @RequestParam int     elementStart,
                                         @RequestParam int     maxElements)
     {
-        return restAPI.getLicenses(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getLicenses(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -414,7 +416,7 @@ public class ConnectedAssetResource
                                   @RequestParam int     elementStart,
                                   @RequestParam int     maxElements)
     {
-        return restAPI.getLikes(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getLikes(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -443,7 +445,7 @@ public class ConnectedAssetResource
                                                @RequestParam int     elementStart,
                                                @RequestParam int     maxElements)
     {
-        return restAPI.getKnownLocations(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getKnownLocations(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -472,7 +474,7 @@ public class ConnectedAssetResource
                                         @RequestParam int     elementStart,
                                         @RequestParam int     maxElements)
     {
-        return restAPI.getNoteLogs(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getNoteLogs(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -501,7 +503,7 @@ public class ConnectedAssetResource
                                   @RequestParam int     elementStart,
                                   @RequestParam int     maxElements)
     {
-        return restAPI.getNotes(serverName, serviceURLName, userId, noteLogGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getNotes(serverName, serviceURLName, userId, noteLogGUID, elementStart, maxElements));
     }
 
 
@@ -530,7 +532,7 @@ public class ConnectedAssetResource
                                       @RequestParam int     elementStart,
                                       @RequestParam int     maxElements)
     {
-        return restAPI.getRatings(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getRatings(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -559,7 +561,7 @@ public class ConnectedAssetResource
                                                   @RequestParam int     elementStart,
                                                   @RequestParam int     maxElements)
     {
-        return restAPI.getRelatedAssets(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getRelatedAssets(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -588,7 +590,7 @@ public class ConnectedAssetResource
                                                       @RequestParam int     elementStart,
                                                       @RequestParam int     maxElements)
     {
-        return restAPI.getMoreInformation(serverName, serviceURLName, userId, elementGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getMoreInformation(serverName, serviceURLName, userId, elementGUID, elementStart, maxElements));
     }
 
 
@@ -617,7 +619,7 @@ public class ConnectedAssetResource
                                                                     @RequestParam int     elementStart,
                                                                     @RequestParam int     maxElements)
     {
-        return restAPI.getRelatedMediaReferences(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getRelatedMediaReferences(serverName, serviceURLName, userId, assetGUID, elementStart, maxElements));
     }
 
 
@@ -646,7 +648,7 @@ public class ConnectedAssetResource
                                                         @RequestParam int     elementStart,
                                                         @RequestParam int     maxElements)
     {
-        return restAPI.getSchemaAttributes(serverName, serviceURLName, userId, schemaTypeGUID, elementStart, maxElements);
+        return createSpringResponse(restAPI.getSchemaAttributes(serverName, serviceURLName, userId, schemaTypeGUID, elementStart, maxElements));
     }
 
 }

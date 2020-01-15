@@ -19,6 +19,8 @@ import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.Om
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_DEFAULT_VALUE;
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_MAX_VALUE;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * Spring Rest Controller defining 'Glossary' oriented endpoints
  */
@@ -51,7 +53,7 @@ public class GlossaryResource {
                                                              @PathVariable("userId") String userId,
                                                              @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                              @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return glossaryService.getAllGlossaries(userId, serverName, from, size);
+        return createSpringResponse(glossaryService.getAllGlossaries(userId, serverName, from, size));
     }
 
     /**
@@ -67,7 +69,7 @@ public class GlossaryResource {
     public GlossaryViewEntityDetailResponse getGlossary(@PathVariable("serverName") String serverName,
                                                         @PathVariable("userId") String userId,
                                                         @PathVariable("glossaryGUID") @NotBlank String glossaryGUID) {
-        return glossaryService.getGlossary(userId, serverName, glossaryGUID);
+        return createSpringResponse(glossaryService.getGlossary(userId, serverName, glossaryGUID));
     }
 
     /**
@@ -83,7 +85,7 @@ public class GlossaryResource {
     public GlossaryViewEntityDetailResponse getTermHomeGlossary(@PathVariable("serverName") String serverName,
                                                                 @PathVariable("userId") String userId,
                                                                 @PathVariable("termGUID") @NotBlank String termGUID) {
-        return glossaryService.getTermHomeGlossary(userId, serverName, termGUID);
+        return createSpringResponse(glossaryService.getTermHomeGlossary(userId, serverName, termGUID));
     }
 
     /**
@@ -99,7 +101,7 @@ public class GlossaryResource {
     public GlossaryViewEntityDetailResponse getCategoryHomeGlossary(@PathVariable("serverName") String serverName,
                                                                     @PathVariable("userId") String userId,
                                                                     @PathVariable("categoryGUID") @NotBlank String categoryGUID) {
-        return glossaryService.getCategoryHomeGlossary(userId, serverName, categoryGUID);
+        return createSpringResponse(glossaryService.getCategoryHomeGlossary(userId, serverName, categoryGUID));
     }
 
     /**
@@ -119,7 +121,7 @@ public class GlossaryResource {
                                                                      @PathVariable("glossaryGUID") @NotBlank String glossaryGUID,
                                                                      @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                      @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return glossaryService.getExternalGlossaryLinks(userId, serverName, glossaryGUID, from, size);
+        return createSpringResponse(glossaryService.getExternalGlossaryLinks(userId, serverName, glossaryGUID, from, size));
     }
 
 }

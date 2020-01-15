@@ -23,6 +23,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * The AssetCatalogEntityResource provides the server-side implementation of the
  * Asset Catalog Open Metadata Assess Service (OMAS).
@@ -49,7 +51,7 @@ public class AssetCatalogEntityResource {
                                                    @PathVariable("userId") String userId,
                                                    @PathVariable("assetGUID") @NotBlank String assetGUID,
                                                    @RequestParam(name = "assetType", required = false) @NotNull String assetType) {
-        return assetService.getAssetDetailsByGUID(serverName, userId, assetGUID, assetType);
+        return createSpringResponse(assetService.getAssetDetailsByGUID(serverName, userId, assetGUID, assetType));
     }
 
     /**
@@ -67,7 +69,7 @@ public class AssetCatalogEntityResource {
                                                      @PathVariable("userId") String userId,
                                                      @PathVariable("assetGUID") @NotBlank String assetGUID,
                                                      @RequestParam(name = "assetType", required = false) @NotNull String assetType) {
-        return assetService.getAssetUniverseByGUID(serverName, userId, assetGUID, assetType);
+        return createSpringResponse(assetService.getAssetUniverseByGUID(serverName, userId, assetGUID, assetType));
     }
 
     /**
@@ -91,7 +93,7 @@ public class AssetCatalogEntityResource {
                                                        @RequestParam(name = "relationshipType", required = false) String relationshipType,
                                                        @RequestParam(name = "from", required = false, defaultValue = "0") @PositiveOrZero Integer from,
                                                        @RequestParam(name = "pageSize", required = false, defaultValue = "100") @PositiveOrZero Integer pageSize) {
-        return assetService.getAssetRelationships(serverName, userId, assetGUID, assetType, relationshipType, from, pageSize);
+        return createSpringResponse(assetService.getAssetRelationships(serverName, userId, assetGUID, assetType, relationshipType, from, pageSize));
     }
 
     /**
@@ -111,7 +113,7 @@ public class AssetCatalogEntityResource {
                                                               @PathVariable("assetGUID") @NotBlank String assetGUID,
                                                               @RequestParam(name = "assetType", required = false) String assetType,
                                                               @RequestParam(name = "classificationName", required = false) String classificationName) {
-        return assetService.getClassificationByAssetGUID(serverName, userId, assetGUID, assetType, classificationName);
+        return createSpringResponse(assetService.getClassificationByAssetGUID(serverName, userId, assetGUID, assetType, classificationName));
     }
 
     /**
@@ -129,7 +131,7 @@ public class AssetCatalogEntityResource {
                                                      @PathVariable("userId") String userId,
                                                      @PathVariable("assetGUID") @NotBlank String startAssetGUID,
                                                      @PathVariable("endAssetGUID") @NotBlank String endAssetGUID) {
-        return assetService.getLinkingAssets(serverName, userId, startAssetGUID, endAssetGUID);
+        return createSpringResponse(assetService.getLinkingAssets(serverName, userId, startAssetGUID, endAssetGUID));
     }
 
     /**
@@ -147,7 +149,7 @@ public class AssetCatalogEntityResource {
                                                          @PathVariable("userId") String userId,
                                                          @PathVariable("assetGUID") String startAssetGUID,
                                                          @PathVariable("endAssetGUID") String endAssetGUID) {
-        return assetService.getLinkingRelationships(serverName, userId, startAssetGUID, endAssetGUID);
+        return createSpringResponse(assetService.getLinkingRelationships(serverName, userId, startAssetGUID, endAssetGUID));
     }
 
     /**
@@ -165,7 +167,7 @@ public class AssetCatalogEntityResource {
                                                               @PathVariable("userId") String userId,
                                                               @PathVariable("assetGUID") @NotBlank String assetGUID,
                                                               @RequestBody SearchParameters searchParameters) {
-        return assetService.getAssetsFromNeighborhood(serverName, userId, assetGUID, searchParameters);
+        return createSpringResponse(assetService.getAssetsFromNeighborhood(serverName, userId, assetGUID, searchParameters));
     }
 
     /**
@@ -182,7 +184,7 @@ public class AssetCatalogEntityResource {
                                       @PathVariable("userId") String userId,
                                       @RequestParam("searchCriteria") @NotBlank String searchCriteria,
                                       @RequestBody SearchParameters searchParameters) {
-        return assetService.searchByType(serverName, userId, searchCriteria, searchParameters);
+        return createSpringResponse(assetService.searchByType(serverName, userId, searchCriteria, searchParameters));
     }
 
 
@@ -202,7 +204,7 @@ public class AssetCatalogEntityResource {
                                          @PathVariable("userId") String userId,
                                          @PathVariable("assetGUID") @NotBlank String assetGUID,
                                          @RequestParam(name = "assetType", required = false) String assetType) {
-        return assetService.buildContext(serverName, userId, assetGUID, assetType);
+        return createSpringResponse(assetService.buildContext(serverName, userId, assetGUID, assetType));
     }
 
     /**
@@ -218,7 +220,7 @@ public class AssetCatalogEntityResource {
     public AssetCatalogSupportedTypes getSupportedTypes(@PathVariable("serverName") String serverName,
                                                         @PathVariable("userId") String userId,
                                                         @RequestParam(name = "type", required = false) @Nullable String type) {
-        return assetService.getSupportedTypes(serverName, userId, type);
+        return createSpringResponse(assetService.getSupportedTypes(serverName, userId, type));
     }
 
 

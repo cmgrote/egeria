@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * ConfigRepositoryServicesResource provides the configuration services for setting
  * up the repository services subsystems.
@@ -42,7 +44,7 @@ public class ConfigRepositoryServicesResource
     public VoidResponse setDefaultAuditLog(@PathVariable String userId,
                                            @PathVariable String serverName)
     {
-        return adminAPI.setDefaultAuditLog(userId, serverName);
+        return createSpringResponse(adminAPI.setDefaultAuditLog(userId, serverName));
     }
 
 
@@ -61,7 +63,7 @@ public class ConfigRepositoryServicesResource
                                                       @PathVariable String       serverName,
                                                       @RequestBody  List<String> supportedSeverities)
     {
-        return adminAPI.addConsoleAuditLogDestination(userId, serverName, supportedSeverities);
+        return createSpringResponse(adminAPI.addConsoleAuditLogDestination(userId, serverName, supportedSeverities));
     }
 
 
@@ -80,7 +82,7 @@ public class ConfigRepositoryServicesResource
                                                     @PathVariable String       serverName,
                                                     @RequestBody  List<String> supportedSeverities)
     {
-        return adminAPI.addSLF4JAuditLogDestination(userId, serverName, supportedSeverities);
+        return createSpringResponse(adminAPI.addSLF4JAuditLogDestination(userId, serverName, supportedSeverities));
     }
 
 
@@ -99,7 +101,7 @@ public class ConfigRepositoryServicesResource
                                                    @PathVariable String       serverName,
                                                    @RequestBody  List<String> supportedSeverities)
     {
-        return adminAPI.addFileAuditLogDestination(userId, serverName, supportedSeverities);
+        return createSpringResponse(adminAPI.addFileAuditLogDestination(userId, serverName, supportedSeverities));
     }
 
 
@@ -118,7 +120,7 @@ public class ConfigRepositoryServicesResource
                                                          @PathVariable String       serverName,
                                                          @RequestBody  List<String> supportedSeverities)
     {
-        return adminAPI.addEventTopicAuditLogDestination(userId, serverName, supportedSeverities);
+        return createSpringResponse(adminAPI.addEventTopicAuditLogDestination(userId, serverName, supportedSeverities));
     }
 
 
@@ -137,7 +139,7 @@ public class ConfigRepositoryServicesResource
                                                @PathVariable String     serverName,
                                                @RequestBody  Connection connection)
     {
-        return adminAPI.addAuditLogDestination(userId, serverName, connection);
+        return createSpringResponse(adminAPI.addAuditLogDestination(userId, serverName, connection));
     }
 
 
@@ -154,7 +156,7 @@ public class ConfigRepositoryServicesResource
     public VoidResponse clearAuditLogDestinations(@PathVariable String userId,
                                                   @PathVariable String serverName)
     {
-        return adminAPI.clearAuditLogDestinations(userId, serverName);
+        return createSpringResponse(adminAPI.clearAuditLogDestinations(userId, serverName));
     }
 
 
@@ -173,7 +175,7 @@ public class ConfigRepositoryServicesResource
                                                           @PathVariable String serverName,
                                                           @RequestBody  String fileName)
     {
-        return adminAPI.addStartUpOpenMetadataArchiveFile(userId, serverName, fileName);
+        return createSpringResponse(adminAPI.addStartUpOpenMetadataArchiveFile(userId, serverName, fileName));
     }
 
 
@@ -191,7 +193,7 @@ public class ConfigRepositoryServicesResource
     public VoidResponse setNoRepositoryMode(@PathVariable String userId,
                                             @PathVariable String serverName)
     {
-        return adminAPI.setNoRepositoryMode(userId, serverName);
+        return createSpringResponse(adminAPI.setNoRepositoryMode(userId, serverName));
     }
 
 
@@ -209,7 +211,7 @@ public class ConfigRepositoryServicesResource
     public VoidResponse setInMemLocalRepository(@PathVariable String userId,
                                                 @PathVariable String serverName)
     {
-        return adminAPI.setInMemLocalRepository(userId, serverName);
+        return createSpringResponse(adminAPI.setInMemLocalRepository(userId, serverName));
     }
 
 
@@ -227,7 +229,7 @@ public class ConfigRepositoryServicesResource
     public VoidResponse setGraphLocalRepository(@PathVariable                  String userId,
                                                 @PathVariable                  String serverName)
     {
-        return adminAPI.setGraphLocalRepository(userId, serverName);
+        return createSpringResponse(adminAPI.setGraphLocalRepository(userId, serverName));
     }
 
 
@@ -247,7 +249,7 @@ public class ConfigRepositoryServicesResource
                                                      @PathVariable String     serverName,
                                                      @RequestBody  Connection connection)
     {
-        return adminAPI.setRepositoryProxyConnection(userId, serverName, connection);
+        return createSpringResponse(adminAPI.setRepositoryProxyConnection(userId, serverName, connection));
     }
 
 
@@ -269,7 +271,7 @@ public class ConfigRepositoryServicesResource
                                                      @RequestParam                   String               connectorProvider,
                                                      @RequestBody(required = false)  Map<String, Object>  additionalProperties)
     {
-        return adminAPI.setRepositoryProxyConnection(userId, serverName, connectorProvider, additionalProperties);
+        return createSpringResponse(adminAPI.setRepositoryProxyConnection(userId, serverName, connectorProvider, additionalProperties));
     }
 
 
@@ -291,7 +293,7 @@ public class ConfigRepositoryServicesResource
                                                       @PathVariable String     serverName,
                                                       @RequestBody  Connection connection)
     {
-        return adminAPI.setLocalRepositoryEventMapper(userId, serverName, connection);
+        return createSpringResponse(adminAPI.setLocalRepositoryEventMapper(userId, serverName, connection));
     }
 
 
@@ -317,7 +319,7 @@ public class ConfigRepositoryServicesResource
                                                       @RequestParam                 String               eventSource,
                                                       @RequestBody(required=false)  Map<String, Object>  additionalProperties)
     {
-        return adminAPI.setLocalRepositoryEventMapper(userId, serverName, connectorProvider, eventSource, additionalProperties);
+        return createSpringResponse(adminAPI.setLocalRepositoryEventMapper(userId, serverName, connectorProvider, eventSource, additionalProperties));
     }
 
 
@@ -339,7 +341,7 @@ public class ConfigRepositoryServicesResource
                                                        @PathVariable  String               serverName,
                                                        @PathVariable  String               name)
     {
-        return adminAPI.setLocalMetadataCollectionName(userId, serverName, name);
+        return createSpringResponse(adminAPI.setLocalMetadataCollectionName(userId, serverName, name));
     }
 
 
@@ -359,7 +361,7 @@ public class ConfigRepositoryServicesResource
     public GUIDResponse getLocalMetadataCollectionId(@PathVariable  String               userId,
                                                      @PathVariable  String               serverName)
     {
-        return adminAPI.getLocalMetadataCollectionId(userId, serverName);
+        return createSpringResponse(adminAPI.getLocalMetadataCollectionId(userId, serverName));
     }
 
 
@@ -385,7 +387,7 @@ public class ConfigRepositoryServicesResource
                                                  @PathVariable                   String               cohortName,
                                                  @RequestBody(required = false)  Map<String, Object>  additionalProperties)
     {
-        return adminAPI.enableCohortRegistration(userId, serverName, cohortName, additionalProperties);
+        return createSpringResponse(adminAPI.enableCohortRegistration(userId, serverName, cohortName, additionalProperties));
     }
 
 
@@ -404,7 +406,7 @@ public class ConfigRepositoryServicesResource
                                                   @PathVariable String          serverName,
                                                   @PathVariable String          cohortName)
     {
-        return adminAPI.disableCohortRegistration(userId, serverName, cohortName);
+        return createSpringResponse(adminAPI.disableCohortRegistration(userId, serverName, cohortName));
     }
 
 
@@ -430,7 +432,7 @@ public class ConfigRepositoryServicesResource
                                                 @PathVariable String                serverName,
                                                 @RequestBody  List<Connection>      auditLogDestinations)
     {
-        return adminAPI.setAuditLogDestinations(userId, serverName, auditLogDestinations);
+        return createSpringResponse(adminAPI.setAuditLogDestinations(userId, serverName, auditLogDestinations));
     }
 
 
@@ -450,7 +452,7 @@ public class ConfigRepositoryServicesResource
                                                 @PathVariable String           serverName,
                                                 @RequestBody  List<Connection> openMetadataArchives)
     {
-        return adminAPI.setOpenMetadataArchives(userId, serverName, openMetadataArchives);
+        return createSpringResponse(adminAPI.setOpenMetadataArchives(userId, serverName, openMetadataArchives));
     }
 
 
@@ -469,7 +471,7 @@ public class ConfigRepositoryServicesResource
                                                  @PathVariable String                serverName,
                                                  @RequestBody LocalRepositoryConfig localRepositoryConfig)
     {
-        return adminAPI.setLocalRepositoryConfig(userId, serverName, localRepositoryConfig);
+        return createSpringResponse(adminAPI.setLocalRepositoryConfig(userId, serverName, localRepositoryConfig));
     }
 
 
@@ -491,6 +493,6 @@ public class ConfigRepositoryServicesResource
                                         @PathVariable String       cohortName,
                                         @RequestBody  CohortConfig cohortConfig)
     {
-        return adminAPI.setCohortConfig(userId, serverName, cohortName, cohortConfig);
+        return createSpringResponse(adminAPI.setCohortConfig(userId, serverName, cohortName, cohortConfig));
     }
 }

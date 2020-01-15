@@ -10,6 +10,8 @@ import org.odpi.openmetadata.governanceservers.openlineage.server.OpenLineageRes
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * * The OpenLineageResource provides the server-side interface of the Open Lineage Services governance server.
  */
@@ -35,7 +37,7 @@ public class OpenLineageResource {
             @PathVariable("userId") String userId,
             @PathVariable("guid") String guid,
             @RequestBody LineageQueryParameters params){
-        return restAPI.lineage(serverName, userId, params.getScope(), params.getView(), guid, params.getDisplayNameMustContain(), params.getIncludeProcesses());
+        return createSpringResponse(restAPI.lineage(serverName, userId, params.getScope(), params.getView(), guid, params.getDisplayNameMustContain(), params.getIncludeProcesses()));
     }
 
 
@@ -49,7 +51,7 @@ public class OpenLineageResource {
     @GetMapping(path = "/dump")
     public VoidResponse dumpGraph(@PathVariable("userId") String userId,
                                   @PathVariable("serverName") String serverName) {
-        return restAPI.dumpGraph(serverName, userId);
+        return createSpringResponse(restAPI.dumpGraph(serverName, userId));
     }
 
     /**

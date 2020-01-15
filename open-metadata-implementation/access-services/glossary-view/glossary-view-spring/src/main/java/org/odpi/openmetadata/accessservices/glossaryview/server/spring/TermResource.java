@@ -19,6 +19,8 @@ import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.Om
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_DEFAULT_VALUE;
 import static org.odpi.openmetadata.accessservices.glossaryview.server.spring.OmasRegistration.PAGE_SIZE_MAX_VALUE;
 
+import static org.odpi.openmetadata.commonservices.spring.SpringUtils.createSpringResponse;
+
 /**
  * Spring Rest Controller defining 'GlossaryTerm' oriented endpoints
  */
@@ -49,7 +51,7 @@ public class TermResource {
     public GlossaryViewEntityDetailResponse getTerm(@PathVariable("serverName") String serverName,
                                                     @PathVariable("userId") String userId,
                                                     @PathVariable("termGUID") @NotBlank String termGUID) {
-        return termService.getTerm(userId, serverName, termGUID);
+        return createSpringResponse(termService.getTerm(userId, serverName, termGUID));
     }
 
     /**
@@ -69,7 +71,7 @@ public class TermResource {
                                                                                @PathVariable("glossaryGUID") @NotBlank String glossaryGUID,
                                                                                @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                                @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getTermsViaTermAnchorRelationships(userId, serverName, glossaryGUID, from, size);
+        return createSpringResponse(termService.getTermsViaTermAnchorRelationships(userId, serverName, glossaryGUID, from, size));
     }
 
     /**
@@ -89,7 +91,7 @@ public class TermResource {
                                                                                        @PathVariable("categoryGUID") @NotBlank String categoryGUID,
                                                                                        @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                                        @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getTermsViaTermCategorizationRelationships(userId, serverName, categoryGUID, from, size);
+        return createSpringResponse(termService.getTermsViaTermCategorizationRelationships(userId, serverName, categoryGUID, from, size));
     }
 
     /**
@@ -109,7 +111,7 @@ public class TermResource {
                                                                      @PathVariable("termGUID") @NotBlank String termGUID,
                                                                      @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                      @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getExternalGlossaryLinks(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getExternalGlossaryLinks(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -129,7 +131,7 @@ public class TermResource {
                                                             @PathVariable("termGUID") @NotBlank String termGUID,
                                                             @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                             @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getRelatedTerms(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getRelatedTerms(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -149,7 +151,7 @@ public class TermResource {
                                                         @PathVariable("termGUID") @NotBlank String termGUID,
                                                         @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                         @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getSynonyms(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getSynonyms(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -169,7 +171,7 @@ public class TermResource {
                                                         @PathVariable("termGUID") @NotBlank String termGUID,
                                                         @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                         @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getAntonyms(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getAntonyms(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -189,7 +191,7 @@ public class TermResource {
                                                               @PathVariable("termGUID") @NotBlank String termGUID,
                                                               @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                               @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getPreferredTerms(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getPreferredTerms(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -209,7 +211,7 @@ public class TermResource {
                                                                 @PathVariable("termGUID") @NotBlank String termGUID,
                                                                 @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                 @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getReplacementTerms(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getReplacementTerms(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -229,7 +231,7 @@ public class TermResource {
                                                             @PathVariable("termGUID") @NotBlank String termGUID,
                                                             @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                             @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getTranslations(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getTranslations(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -249,7 +251,7 @@ public class TermResource {
                                                    @PathVariable("termGUID") @NotBlank String termGUID,
                                                    @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                    @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getIsA(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getIsA(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -269,7 +271,7 @@ public class TermResource {
                                                            @PathVariable("termGUID") @NotBlank String termGUID,
                                                            @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                            @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getValidValues(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getValidValues(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -289,7 +291,7 @@ public class TermResource {
                                                               @PathVariable("termGUID") @NotBlank String termGUID,
                                                               @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                               @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getUsedInContexts(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getUsedInContexts(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -309,7 +311,7 @@ public class TermResource {
                                                                 @PathVariable("termGUID") @NotBlank String termGUID,
                                                                 @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                                 @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getAssignedElements(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getAssignedElements(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -329,7 +331,7 @@ public class TermResource {
                                                           @PathVariable("termGUID") @NotBlank String termGUID,
                                                           @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                           @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getAttributes(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getAttributes(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -349,7 +351,7 @@ public class TermResource {
                                                         @PathVariable("termGUID") @NotBlank String termGUID,
                                                         @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                         @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getSubtypes(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getSubtypes(userId, serverName, termGUID, from, size));
     }
 
     /**
@@ -369,7 +371,7 @@ public class TermResource {
                                                      @PathVariable("termGUID") @NotBlank String termGUID,
                                                      @RequestParam(name="from", defaultValue=PAGE_FROM_DEFAULT_VALUE) @PositiveOrZero Integer from,
                                                      @RequestParam(name="size", defaultValue=PAGE_SIZE_DEFAULT_VALUE) @PositiveOrZero @Max(PAGE_SIZE_MAX_VALUE) Integer size) {
-        return termService.getTypes(userId, serverName, termGUID, from, size);
+        return createSpringResponse(termService.getTypes(userId, serverName, termGUID, from, size));
     }
 
 }
