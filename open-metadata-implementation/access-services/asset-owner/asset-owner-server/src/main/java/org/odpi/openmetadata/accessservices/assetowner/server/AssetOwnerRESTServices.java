@@ -167,14 +167,15 @@ public class AssetOwnerRESTServices
                 auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
                 AssetHandler handler = instanceHandler.getAssetHandler(userId, serverName, methodName);
 
-                handler.addAsset(userId,
-                                 typeName,
-                                 requestBody.getQualifiedName(),
-                                 requestBody.getDisplayName(),
-                                 requestBody.getDescription(),
-                                 requestBody.getAdditionalProperties(),
-                                 requestBody.getExtendedProperties(),
-                                 methodName);
+                String guid = handler.addAsset(userId,
+                                               typeName,
+                                               requestBody.getQualifiedName(),
+                                               requestBody.getDisplayName(),
+                                               requestBody.getDescription(),
+                                               requestBody.getAdditionalProperties(),
+                                               requestBody.getExtendedProperties(),
+                                               methodName);
+                response.setGUID(guid);
             }
             else
             {
@@ -245,11 +246,12 @@ public class AssetOwnerRESTServices
                     schemaAttributes = null;
                 }
 
-                handler.saveAssociatedSchemaType(userId,
-                                                 assetGUID,
-                                                 schemaType,
-                                                 schemaAttributes,
-                                                 methodName);
+                String guid = handler.saveAssociatedSchemaType(userId,
+                                                               assetGUID,
+                                                               schemaType,
+                                                               schemaAttributes,
+                                                               methodName);
+                response.setGUID(guid);
             }
             else
             {
@@ -302,11 +304,12 @@ public class AssetOwnerRESTServices
                 AssetHandler          handler = instanceHandler.getAssetHandler(userId, serverName, methodName);
                 SchemaType            schemaType = requestBody.getSchemaTypeProperties().cloneProperties(null);
 
-                handler.saveAssociatedSchemaType(userId,
-                                                 assetGUID,
-                                                 schemaType,
-                                                 null,
-                                                 methodName);
+                String guid = handler.saveAssociatedSchemaType(userId,
+                                                               assetGUID,
+                                                               schemaType,
+                                                null,
+                                                               methodName);
+                response.setGUID(guid);
             }
             else
             {
