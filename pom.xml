@@ -190,6 +190,7 @@
         <spring.version>5.3.0</spring.version>
         <spring-security.version>5.4.1</spring-security.version>
         <spring-data.version>2.4.0</spring-data.version>
+        <reactor.version>3.4.0</reactor.version>
         <servo-core.version>0.13.0</servo-core.version>
         <netflix-zuul.version>2.2.5.RELEASE</netflix-zuul.version>
         <tomcat.version>9.0.39</tomcat.version>
@@ -2562,6 +2563,12 @@
 
             <dependency>
                 <groupId>org.springframework</groupId>
+                <artifactId>spring-webflux</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
                 <artifactId>spring-expression</artifactId>
                 <version>${spring.version}</version>
             </dependency>
@@ -2575,6 +2582,12 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-test</artifactId>
                 <version>${spring.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-core</artifactId>
+                <version>${reactor.version}</version>
             </dependency>
 
             <dependency>
