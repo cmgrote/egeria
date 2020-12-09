@@ -39,7 +39,7 @@ its **application.properties** file found in the **resources** subdirectory.
   REST API calls.
   
 * Controlling the level of developer logging that the platform
-  produces when it is running.
+  produces when it is running. See [Configuring logging options](omag-server-platform-logging.md) for more details.
   
 * Defining where the connector implementations should be loaded from.
 
@@ -49,6 +49,10 @@ In addition, Egeria adds support for additional application properties.
 
 * [Auto-starting servers](configuring-the-server-startup-list-for-the-platform.md) - Defining which OMAG Servers, 
   if any, should be started automatically by the OMAG Server Platform when it starts.
+
+##Transport Level Security
+
+See [Transport Level Security in Egeria & Certificates](omag-server-platform-transport-level-security.md) for information on setting up transport level security with egeria
 
 ----
 Return to the [Administration Services User Guide](.)
