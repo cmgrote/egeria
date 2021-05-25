@@ -65,6 +65,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Endpoint extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Properties of an Endpoint
      */
@@ -97,7 +99,7 @@ public class Endpoint extends Referenceable
         elementType.setElementTypeDescription(elementTypeDescription);
         elementType.setElementSourceServer(elementAccessServiceURL);
         elementType.setElementOrigin(elementOrigin);
-        elementType.setElementHomeMetadataCollectionId(elementHomeMetadataCollectionId);
+        elementType.setElementMetadataCollectionId(elementHomeMetadataCollectionId);
 
         return elementType;
     }
@@ -272,6 +274,8 @@ public class Endpoint extends Referenceable
     }
 
 
+
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -285,7 +289,7 @@ public class Endpoint extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof Endpoint))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -295,9 +299,21 @@ public class Endpoint extends Referenceable
         }
         Endpoint endpoint = (Endpoint) objectToCompare;
         return Objects.equals(getDisplayName(), endpoint.getDisplayName()) &&
-                Objects.equals(getDescription(), endpoint.getDescription()) &&
-                Objects.equals(getAddress(), endpoint.getAddress()) &&
-                Objects.equals(getProtocol(), endpoint.getProtocol()) &&
-                Objects.equals(getEncryptionMethod(), endpoint.getEncryptionMethod());
+                       Objects.equals(getDescription(), endpoint.getDescription()) &&
+                       Objects.equals(getAddress(), endpoint.getAddress()) &&
+                       Objects.equals(getProtocol(), endpoint.getProtocol()) &&
+                       Objects.equals(getEncryptionMethod(), endpoint.getEncryptionMethod());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getDisplayName(), getDescription(), getAddress(), getProtocol(), getEncryptionMethod());
     }
 }

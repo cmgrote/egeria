@@ -149,18 +149,12 @@ public class ContributionRecordHandler
              * Throw logic error because if there is a problem with the repository server or security,
              * an exception should already have been thrown.
              */
-            CommunityProfileErrorCode errorCode = CommunityProfileErrorCode.UNABLE_TO_CREATE_CONTRIBUTION_RECORD;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                     serverName,
-                                                                                                     personalProfileGUID,
-                                                                                                     qualifiedName);
-
-            throw new PropertyServerException(errorCode.getHTTPErrorCode(),
+            throw new PropertyServerException(CommunityProfileErrorCode.UNABLE_TO_CREATE_CONTRIBUTION_RECORD.getMessageDefinition(methodName,
+                                                                                                                                  serverName,
+                                                                                                                                  personalProfileGUID,
+                                                                                                                                  qualifiedName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
     }
 
@@ -195,11 +189,15 @@ public class ContributionRecordHandler
         String contributionRecordGUID = repositoryHandler.createEntity(userId,
                                                                        ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_GUID,
                                                                        ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_NAME,
+                                                                       null,
+                                                                       null,
                                                                        properties,
                                                                        methodName);
 
         repositoryHandler.createRelationship(userId,
                                              ContributionRecordMapper.PERSONAL_CONTRIBUTION_TYPE_GUID,
+                                             null,
+                                             null,
                                              personalProfileGUID,
                                              contributionRecordGUID,
                                              null,
@@ -216,6 +214,7 @@ public class ContributionRecordHandler
      * @param contributionRecord contribution record with updated properties.
      * @param methodName calling method
      *
+     * @throws InvalidParameterException bad property
      * @throws PropertyServerException the metadata repository is not available
      * @throws UserNotAuthorizedException the user is not authorized to issue this request
      */
@@ -234,12 +233,14 @@ public class ContributionRecordHandler
                                                                                 contributionRecord.getExtendedProperties(),
                                                                                 contributionRecord.getAdditionalProperties());
 
-        repositoryHandler.updateEntity(userId,
-                                       contributionRecord.getGUID(),
-                                       ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_GUID,
-                                       ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_NAME,
-                                       properties,
-                                       methodName);
+        repositoryHandler.updateEntityProperties(userId,
+                                                 null,
+                                                 null,
+                                                 contributionRecord.getGUID(),
+                                                 ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_GUID,
+                                                 ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_NAME,
+                                                 properties,
+                                                 methodName);
     }
 
 
@@ -320,6 +321,7 @@ public class ContributionRecordHandler
      * Delete the contribution record for a person.
      *
      * @param userId calling user
+     * @param personalProfileGUID unique identifier of personal profile
      * @param qualifiedName qualified name of their personal profile.
      * @param methodName calling method
      *
@@ -334,14 +336,18 @@ public class ContributionRecordHandler
                                                                      PropertyServerException,
                                                                      UserNotAuthorizedException
     {
-        final String        qualifiedNameParameterName = "qualifiedName";
+        final String guidParameterName = "profileGUID";
+        final String qualifiedNameParameterName = "qualifiedName";
 
         ContributionRecord contributionRecord = this.getContributionRecord(userId, personalProfileGUID, qualifiedName, methodName);
 
         if (contributionRecord != null)
         {
             repositoryHandler.removeEntity(userId,
+                                           null,
+                                           null,
                                            contributionRecord.getGUID(),
+                                           guidParameterName,
                                            ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_GUID,
                                            ContributionRecordMapper.CONTRIBUTION_RECORD_TYPE_NAME,
                                            qualifiedNameParameterName,

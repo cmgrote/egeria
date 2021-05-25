@@ -18,10 +18,19 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
               property = "class")
 @JsonSubTypes(
         {
-                @JsonSubTypes.Type(value = DataProfileAnnotation.class, name = "DataProfileAnnotation")
+                @JsonSubTypes.Type(value = ClassificationAnnotation.class, name = "ClassificationAnnotation"),
+                @JsonSubTypes.Type(value = DataClassAnnotation.class, name = "DataClassAnnotation"),
+                @JsonSubTypes.Type(value = DataProfileAnnotation.class, name = "DataProfileAnnotation"),
+                @JsonSubTypes.Type(value = DataProfileLogAnnotation.class, name = "DataProfileLogAnnotation"),
+                @JsonSubTypes.Type(value = QualityAnnotation.class, name = "QualityAnnotation"),
+                @JsonSubTypes.Type(value = RelationshipAdviceAnnotation.class, name = "RelationshipAdviceAnnotation"),
+                @JsonSubTypes.Type(value = RequestForActionAnnotation.class, name = "RequestForActionAnnotation"),
+                @JsonSubTypes.Type(value = SemanticAnnotation.class, name = "SemanticAnnotation"),
         })
-public class DataFieldAnnotation extends Annotation
+public abstract class DataFieldAnnotation extends Annotation
 {
+    private static final long    serialVersionUID = 1L;
+
     /**
      * Default constructor
      */
@@ -50,24 +59,23 @@ public class DataFieldAnnotation extends Annotation
     public String toString()
     {
         return "DataFieldAnnotation{" +
-                       "annotationType='" + getAnnotationType() + '\'' +
-                       ", summary='" + getSummary() + '\'' +
-                       ", confidenceLevel=" + getConfidenceLevel() +
-                       ", expression='" + getExpression() + '\'' +
-                       ", explanation='" + getExplanation() + '\'' +
-                       ", analysisStep='" + getAnalysisStep() + '\'' +
-                       ", jsonProperties='" + getJsonProperties() + '\'' +
-                       ", annotationStatus=" + getAnnotationStatus() +
-                       ", numAttachedAnnotations=" + getNumAttachedAnnotations() +
-                       ", reviewDate=" + getReviewDate() +
-                       ", steward='" + getSteward() + '\'' +
-                       ", reviewComment='" + getReviewComment() + '\'' +
-                       ", additionalProperties=" + getAdditionalProperties() +
-                       ", type=" + getType() +
-                       ", GUID='" + getGUID() + '\'' +
-                       ", URL='" + getURL() + '\'' +
-                       ", classifications=" + getClassifications() +
-                       ", extendedProperties=" + getExtendedProperties() +
-                       '}';
+                "annotationType='" + getAnnotationType() + '\'' +
+                ", summary='" + getSummary() + '\'' +
+                ", confidenceLevel=" + getConfidenceLevel() +
+                ", expression='" + getExpression() + '\'' +
+                ", explanation='" + getExplanation() + '\'' +
+                ", analysisStep='" + getAnalysisStep() + '\'' +
+                ", jsonProperties='" + getJsonProperties() + '\'' +
+                ", annotationStatus=" + getAnnotationStatus() +
+                ", numAttachedAnnotations=" + getNumAttachedAnnotations() +
+                ", reviewDate=" + getReviewDate() +
+                ", steward='" + getSteward() + '\'' +
+                ", reviewComment='" + getReviewComment() + '\'' +
+                ", additionalProperties=" + getAdditionalProperties() +
+                ", headerVersion=" + getHeaderVersion() +
+                ", elementHeader=" + getElementHeader() +
+                ", typeName='" + getTypeName() + '\'' +
+                ", extendedProperties=" + getExtendedProperties() +
+                '}';
     }
 }

@@ -37,13 +37,14 @@ public class DataViewHandler {
 
 
     /**
+     * Creating data view based on payload
      *
-     *
-     * @param userId
-     * @param requestBody - json describing the data view
-     * @throws DataViewCreationException
+     * @param userId calling user
+     * @param requestBody json describing the data view
+     * @return unique identifier for the guid
+     * @throws DataViewCreationException unable to create view
      */
-    public void createDataView(String userId, DataViewRequestBody requestBody) throws DataViewCreationException {
+    public String createDataView(String userId, DataViewRequestBody requestBody) throws DataViewCreationException {
 
         log.debug("Creating data view based on payload {}", requestBody);
         SoftwareServerCapabilitySource softwareServerCapabilitySource = dataViewCreator.retrieveSoftwareServerCapability(requestBody.getRegistrationGuid(), requestBody.getRegistrationQualifiedName());
@@ -81,6 +82,6 @@ public class DataViewHandler {
 //            } else {
 //                dataViewUpdater.updateDataView(requestBody, dataViewWrapper.getEntityDetail());
 //            } TODO update not implemented yet
-
+            return dataViewWrapper.getEntityDetail().getGUID();
         }
     }

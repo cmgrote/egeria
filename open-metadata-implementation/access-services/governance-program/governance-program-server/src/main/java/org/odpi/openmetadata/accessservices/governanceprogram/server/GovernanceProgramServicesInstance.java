@@ -3,14 +3,17 @@
 package org.odpi.openmetadata.accessservices.governanceprogram.server;
 
 
+import org.odpi.openmetadata.accessservices.governanceprogram.converters.GovernanceZoneConverter;
 import org.odpi.openmetadata.accessservices.governanceprogram.ffdc.GovernanceProgramErrorCode;
 import org.odpi.openmetadata.accessservices.governanceprogram.handlers.ExternalReferencesHandler;
 import org.odpi.openmetadata.accessservices.governanceprogram.handlers.GovernanceOfficerHandler;
 import org.odpi.openmetadata.accessservices.governanceprogram.handlers.PersonalProfileHandler;
+import org.odpi.openmetadata.accessservices.governanceprogram.metadataelements.GovernanceZoneElement;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
+import org.odpi.openmetadata.commonservices.generichandlers.GovernanceZoneHandler;
 import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstance;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.exceptions.NewInstanceException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
 
@@ -22,9 +25,10 @@ public class GovernanceProgramServicesInstance extends OMASServiceInstance
 {
     private static AccessServiceDescription myDescription = AccessServiceDescription.GOVERNANCE_PROGRAM_OMAS;
 
-    private GovernanceOfficerHandler  governanceOfficerHandler;
-    private ExternalReferencesHandler externalReferencesHandler;
-    private PersonalProfileHandler    personalProfileHandler;
+    private GovernanceZoneHandler<GovernanceZoneElement> governanceZoneHandler;
+    private GovernanceOfficerHandler                     governanceOfficerHandler;
+    private ExternalReferencesHandler                    externalReferencesHandler;
+    private PersonalProfileHandler                       personalProfileHandler;
 
 
     /**
@@ -38,11 +42,11 @@ public class GovernanceProgramServicesInstance extends OMASServiceInstance
      * @throws NewInstanceException a problem occurred during initialization
      */
     public GovernanceProgramServicesInstance(OMRSRepositoryConnector repositoryConnector,
-                                             OMRSAuditLog            auditLog,
+                                             AuditLog                auditLog,
                                              String                  localServerUserId,
                                              int                     maxPageSize) throws NewInstanceException
     {
-        super(myDescription.getAccessServiceName() + " OMAS",
+        super(myDescription.getAccessServiceFullName(),
               repositoryConnector,
               auditLog,
               localServerUserId,
@@ -52,6 +56,20 @@ public class GovernanceProgramServicesInstance extends OMASServiceInstance
 
         if (repositoryHandler != null)
         {
+            this.governanceZoneHandler = new GovernanceZoneHandler<>(new GovernanceZoneConverter<>(repositoryHelper, serviceName, serverName),
+                                                                     GovernanceZoneElement.class,
+                                                                     serviceName,
+                                                                     serverName,
+                                                                     invalidParameterHandler,
+                                                                     repositoryHandler,
+                                                                     repositoryHelper,
+                                                                     localServerUserId,
+                                                                     securityVerifier,
+                                                                     supportedZones,
+                                                                     defaultZones,
+                                                                     publishZones,
+                                                                     auditLog);
+
             this.externalReferencesHandler = new ExternalReferencesHandler(serviceName,
                                                                            serverName,
                                                                            invalidParameterHandler,
@@ -74,45 +92,10 @@ public class GovernanceProgramServicesInstance extends OMASServiceInstance
         }
         else
         {
-            GovernanceProgramErrorCode errorCode   = GovernanceProgramErrorCode.OMRS_NOT_INITIALIZED;
-            String                     errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+            throw new NewInstanceException(GovernanceProgramErrorCode.OMRS_NOT_INITIALIZED.getMessageDefinition(methodName),
                                            this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
 
-        }
-    }
-
-
-    /**
-     * Return the server name.
-     *
-     * @return serverName name of the server for this instance
-     * @throws NewInstanceException a problem occurred during initialization
-     */
-    public String getServerName() throws NewInstanceException
-    {
-        final String methodName = "getServerName";
-
-        if (serverName != null)
-        {
-            return serverName;
-        }
-        else
-        {
-            GovernanceProgramErrorCode errorCode    = GovernanceProgramErrorCode.OMRS_NOT_AVAILABLE;
-            String                errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
-                                           this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
         }
     }
 
@@ -148,4 +131,16 @@ public class GovernanceProgramServicesInstance extends OMASServiceInstance
     {
         return personalProfileHandler;
     }
+
+
+    /**
+     * Return the handler for governance zone requests.
+     *
+     * @return handler object
+     */
+    GovernanceZoneHandler<GovernanceZoneElement> getGovernanceZoneHandler()
+    {
+        return governanceZoneHandler;
+    }
+
 }

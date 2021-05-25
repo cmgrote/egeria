@@ -1,6 +1,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 package org.odpi.openmetadata.accessservices.assetcatalog.exception;
 
+import org.odpi.openmetadata.commonservices.ffdc.exceptions.OMAGCheckedExceptionBase;
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.ExceptionMessageDefinition;
+
+import java.util.Map;
+
 /**
  * AssetCatalogException provides a checked exception for reporting errors found when using
  * the Asset Catalog OMAS services.
@@ -9,142 +14,78 @@ package org.odpi.openmetadata.accessservices.assetcatalog.exception;
  * The AssetCatalogErrorCode can be used with this exception to populate it with standard messages.
  * The aim is to be able to uniquely identify the cause and remedy for the error.
  */
-public class AssetCatalogException extends Exception {
-
-    /*
-     * These default values are only seen if this exception is initialized using one of its superclass constructors.
-     */
-    private int reportedHTTPCode;
-    private String reportingClassName;
-    private String reportingActionDescription;
-    private String reportedErrorMessage;
-    private String reportedSystemAction;
-    private String reportedUserAction;
-    private Throwable reportedCaughtException = null;
-
+public class AssetCatalogException extends OMAGCheckedExceptionBase {
+   
+    private static final long    serialVersionUID = 1L;
 
     /**
-     * This is the typical constructor used for creating a ConnectionCheckedException.
+     * This is the typical constructor used for creating an AssetCatalogException.
      *
-     * @param httpCode          - http response code to use if this exception flows over a rest call
-     * @param className         - name of class reporting error
-     * @param actionDescription - description of function it was performing when error detected
-     * @param errorMessage      - description of error
-     * @param systemAction      - actions of the system as a result of the error
-     * @param userAction        - instructions for correcting the error
+     * @param messageDefinition  content of the message
+     * @param className   name of class reporting error
+     * @param actionDescription   description of function it was performing when error detected
      */
-    public AssetCatalogException(int httpCode,
-                                 String className,
-                                 String actionDescription,
-                                 String errorMessage,
-                                 String systemAction,
-                                 String userAction) {
-        super(errorMessage);
-        this.reportedHTTPCode = httpCode;
-        this.reportingClassName = className;
-        this.reportingActionDescription = actionDescription;
-        this.reportedErrorMessage = errorMessage;
-        this.reportedSystemAction = systemAction;
-        this.reportedUserAction = userAction;
+    public AssetCatalogException(ExceptionMessageDefinition messageDefinition,
+                                String                     className,
+                                String                     actionDescription)
+    {
+        super(messageDefinition, className, actionDescription);
     }
 
 
     /**
-     * This is the  constructor used for creating a ConnectionCheckedException that resulted from a previous error.
+     * This is the typical constructor used for creating an AssetCatalogException.
+     * The properties allow additional information to be associated with the exception.
      *
-     * @param httpCode          - http response code to use if this exception flows over a rest call
-     * @param className         - name of class reporting error
-     * @param actionDescription - description of function it was performing when error detected
-     * @param errorMessage      - description of error
-     * @param systemAction      - actions of the system as a result of the error
-     * @param userAction        - instructions for correcting the error
-     * @param caughtError       - the error that resulted in this exception.
+     * @param messageDefinition  content of the message
+     * @param className   name of class reporting error
+     * @param actionDescription   description of function it was performing when error detected
+     * @param relatedProperties  arbitrary properties that may help with diagnosing the problem.
      */
-    public AssetCatalogException(int httpCode,
-                                 String className,
-                                 String actionDescription,
-                                 String errorMessage,
-                                 String systemAction,
-                                 String userAction,
-                                 Throwable caughtError) {
-        super(errorMessage, caughtError);
-        this.reportedHTTPCode = httpCode;
-        this.reportingClassName = className;
-        this.reportingActionDescription = actionDescription;
-        this.reportedErrorMessage = errorMessage;
-        this.reportedSystemAction = systemAction;
-        this.reportedUserAction = userAction;
-        this.reportedCaughtException = caughtError;
+    public AssetCatalogException(ExceptionMessageDefinition messageDefinition,
+                                String                     className,
+                                String                     actionDescription,
+                                Map<String, Object> relatedProperties)
+    {
+        super(messageDefinition, className, actionDescription, relatedProperties);
     }
 
 
     /**
-     * Return the HTTP response code to use with this exception.
+     * This is the constructor used for creating an AssetCatalogException when an unexpected error has been caught.
+     * The properties allow additional information to be associated with the exception.
      *
-     * @return reportedHTTPCode
+     * @param messageDefinition  content of the message
+     * @param className   name of class reporting error
+     * @param actionDescription   description of function it was performing when error detected
+     * @param caughtError   previous error causing this exception
      */
-    public int getReportedHTTPCode() {
-        return reportedHTTPCode;
-    }
-
-    /**
-     * The class that created this exception.
-     *
-     * @return reportingClassName
-     */
-    public String getReportingClassName() {
-        return reportingClassName;
-    }
-
-
-    /**
-     * The type of request that the class was performing when the condition occurred that resulted in this
-     * exception.
-     *
-     * @return reportingActionDescription
-     */
-    public String getReportingActionDescription() {
-        return reportingActionDescription;
+    public AssetCatalogException(ExceptionMessageDefinition messageDefinition,
+                                String                     className,
+                                String                     actionDescription,
+                                Throwable                  caughtError)
+    {
+        super(messageDefinition, className, actionDescription, caughtError);
     }
 
 
     /**
-     * A formatted short description of the cause of the condition that resulted in this exception.
+     * This is the constructor used for creating an AssetCatalogException when an unexpected error has been caught.
+     * The properties allow additional information to be associated with the exception.
      *
-     * @return reportedErrorMessage
+     * @param messageDefinition  content of the message
+     * @param className   name of class reporting error
+     * @param actionDescription   description of function it was performing when error detected
+     * @param caughtError   previous error causing this exception
+     * @param relatedProperties  arbitrary properties that may help with diagnosing the problem.
      */
-    public String getErrorMessage() {
-        return reportedErrorMessage;
+    public AssetCatalogException(ExceptionMessageDefinition messageDefinition,
+                                String                     className,
+                                String                     actionDescription,
+                                Throwable                  caughtError,
+                                Map<String, Object>        relatedProperties)
+    {
+        super(messageDefinition, className, actionDescription, caughtError, relatedProperties);
     }
 
-
-    /**
-     * A description of the action that the system took as a result of the error condition.
-     *
-     * @return reportedSystemAction
-     */
-    public String getReportedSystemAction() {
-        return reportedSystemAction;
-    }
-
-
-    /**
-     * A description of the action necessary to correct the error.
-     *
-     * @return reportedUserAction
-     */
-    public String getReportedUserAction() {
-        return reportedUserAction;
-    }
-
-
-    /**
-     * An exception that was caught and wrapped by this exception.  If a null is returned, then this exception is
-     * newly created and not the result of a previous exception.
-     *
-     * @return reportedCaughtException
-     */
-    public Throwable getReportedCaughtException() {
-        return reportedCaughtException;
-    }
 }

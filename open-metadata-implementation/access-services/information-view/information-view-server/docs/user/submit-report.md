@@ -56,7 +56,7 @@ The structure of the report is described by elements of type ReportElement. Repo
 
 ```
 
-POST {{url-omas}}/servers/{{server-id-omas}}/open-metadata/access-services/information-view/users/{{user-id}}/report
+POST {serverURLRoot}/servers/{serverName}/open-metadata/access-services/information-view/users/{userId}/report
 
 Sample 1
 {
@@ -116,11 +116,11 @@ Sample 1
                         "name": "LNAME"
                       }
                     ],
-                    "businessTerm": {
+                    "businessTerms": [{
                                    "name": "Patient Full Name",
                                    "guid": "UUID",
                                    "qualifiedName": "businessTermQualifiedName",
-                               }
+                               }]
                     }
                 ]
               }
@@ -175,9 +175,9 @@ Sample 2
 									"guid": "774c8b42-f805-4c8a-a320-68dcf936f0d1"
 								}
 							],
-							"businessTerm": {
+							"businessTerms": [{
 								"guid": "6662c0f2.e1b1ec6c.00263shk7.8vmg2e5.dt0tqp.fedhui18kd6cif3ro2ugd"
-							}
+							}]
 						}, {
 							"class": "ReportColumn",
 							"name": "Role of the employee derived from report",
@@ -234,10 +234,10 @@ Sample 3
               "id": "_EMPSALARYANALYSIS.Employee_Contract_Number"
             }
           ],
-          "businessTerm": {
+          "businessTerms": [{
             "name": "Employee Contract Number",
             "guid": "6662c0f2.e1b1ec6c.00263pfur.m0g2a5b.l5676h.5imorjcftp26mv2rr93bp"
-          }
+          }]
         },
         {
           "class": "ReportColumn",
@@ -256,7 +256,7 @@ Sample 3
   ]
 }
 
-VoidResponse restResult
+GuidResponse in case of success containing the guid of the report top level entity or error response in case of errors
 
 ```
 ----

@@ -30,9 +30,12 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class InformalTag extends ElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of a InformalTag
      */
+    protected boolean isPublic     = false;
     protected boolean isPrivateTag = false;
     protected String  name         = null;
     protected String  description  = null;
@@ -51,40 +54,63 @@ public class InformalTag extends ElementHeader
     /**
      * Copy/clone constructor.
      *
-     * @param templateInformalTag element to copy
+     * @param template element to copy
      */
-    public InformalTag(InformalTag templateInformalTag)
+    public InformalTag(InformalTag template)
     {
-        super(templateInformalTag);
+        super(template);
 
-        if (templateInformalTag != null)
+        if (template != null)
         {
-            isPrivateTag = templateInformalTag.isPrivateTag();
-            user = templateInformalTag.getUser();
-            name = templateInformalTag.getName();
-            description = templateInformalTag.getDescription();
+            isPublic = template.getIsPublic();
+            isPrivateTag = template.getIsPrivateTag();
+            user = template.getUser();
+            name = template.getName();
+            description = template.getDescription();
         }
     }
 
 
     /**
+     * Return if the link to the tag is private to the creating user.
+     *
+     * @return boolean
+     */
+    public boolean getIsPublic()
+    {
+        return isPublic;
+    }
+
+
+    /**
+     * Set up whether the link to the tag is private to the creating user or not.
+     *
+     * @param aPublic boolean
+     */
+    public void setIsPublic(boolean aPublic)
+    {
+        isPublic = aPublic;
+    }
+
+
+    /**
      * Return boolean flag to say whether the tag is private or not.  A private tag is only seen by the
-     * person who set it up.  Public tags are visible to everyone who can see the asset description.
+     * person who set it up.  Public tags are visible to everyone.
      *
      * @return boolean is private flag
      */
-    public boolean isPrivateTag() {
+    public boolean getIsPrivateTag() {
         return isPrivateTag;
     }
 
 
     /**
      * Set up boolean flag to say whether the tag is private or not.  A private tag is only seen by the
-     * person who set it up.  Public tags are visible to everyone who can see the asset description.
+     * person who set it up.  Public tags are visible to everyone.
      *
      * @param privateTag indicator of a private tag
      */
-    public void setPrivateTag(boolean privateTag)
+    public void setIsPrivateTag(boolean privateTag)
     {
         isPrivateTag = privateTag;
     }
@@ -164,7 +190,8 @@ public class InformalTag extends ElementHeader
     public String toString()
     {
         return "InformalTag{" +
-                "isPrivateTag=" + isPrivateTag +
+                "public=" + isPublic +
+                ", isPrivateTag=" + isPrivateTag +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", user='" + user + '\'' +
@@ -189,7 +216,7 @@ public class InformalTag extends ElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof InformalTag))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -198,9 +225,22 @@ public class InformalTag extends ElementHeader
             return false;
         }
         InformalTag that = (InformalTag) objectToCompare;
-        return isPrivateTag() == that.isPrivateTag() &&
-                Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getDescription(), that.getDescription()) &&
-                Objects.equals(getUser(), that.getUser());
+        return isPublic == that.isPublic &&
+                       isPrivateTag == that.isPrivateTag &&
+                       Objects.equals(getName(), that.getName()) &&
+                       Objects.equals(getDescription(), that.getDescription()) &&
+                       Objects.equals(getUser(), that.getUser());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), isPublic, isPrivateTag, getName(), getDescription(), getUser());
     }
 }

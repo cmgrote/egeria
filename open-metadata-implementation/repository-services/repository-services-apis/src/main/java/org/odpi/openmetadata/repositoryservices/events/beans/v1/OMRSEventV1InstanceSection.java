@@ -5,11 +5,14 @@ package org.odpi.openmetadata.repositoryservices.events.beans.v1;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Classification;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceGraph;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefSummary;
 import org.odpi.openmetadata.repositoryservices.events.OMRSInstanceEventType;
+
+import java.io.Serializable;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -20,8 +23,9 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class OMRSEventV1InstanceSection extends OMRSEventV1
+public class OMRSEventV1InstanceSection implements Serializable
 {
+    private static final long    serialVersionUID = 1L;
 
     private OMRSInstanceEventType eventType = null;
 
@@ -32,6 +36,8 @@ public class OMRSEventV1InstanceSection extends OMRSEventV1
     private EntityDetail   entity                           = null;
     private Relationship   originalRelationship             = null;
     private Relationship   relationship                     = null;
+    private Classification originalClassification           = null;
+    private Classification classification                   = null;
     private InstanceGraph  instanceBatch                    = null;
     private String         homeMetadataCollectionId         = null;
     private String         originalHomeMetadataCollectionId = null;
@@ -122,6 +128,26 @@ public class OMRSEventV1InstanceSection extends OMRSEventV1
         this.relationship = relationship;
     }
 
+    public Classification getOriginalClassification()
+    {
+        return originalClassification;
+    }
+
+    public void setOriginalClassification(Classification originalClassification)
+    {
+        this.originalClassification = originalClassification;
+    }
+
+    public Classification getClassification()
+    {
+        return classification;
+    }
+
+    public void setClassification(Classification classification)
+    {
+        this.classification = classification;
+    }
+
     public InstanceGraph getInstanceBatch()
     {
         return instanceBatch;
@@ -170,5 +196,33 @@ public class OMRSEventV1InstanceSection extends OMRSEventV1
     public void setOriginalInstanceGUID(String originalInstanceGUID)
     {
         this.originalInstanceGUID = originalInstanceGUID;
+    }
+
+
+    /**
+     * JSON-style toString.
+     *
+     * @return list of properties and their values.
+     */
+    @Override
+    public String toString()
+    {
+        return "OMRSEventV1InstanceSection{" +
+                       "eventType=" + eventType +
+                       ", typeDefGUID='" + typeDefGUID + '\'' +
+                       ", typeDefName='" + typeDefName + '\'' +
+                       ", instanceGUID='" + instanceGUID + '\'' +
+                       ", originalEntity=" + originalEntity +
+                       ", entity=" + entity +
+                       ", originalRelationship=" + originalRelationship +
+                       ", relationship=" + relationship +
+                       ", originalClassification=" + originalClassification +
+                       ", classification=" + classification +
+                       ", instanceBatch=" + instanceBatch +
+                       ", homeMetadataCollectionId='" + homeMetadataCollectionId + '\'' +
+                       ", originalHomeMetadataCollectionId='" + originalHomeMetadataCollectionId + '\'' +
+                       ", originalTypeDefSummary=" + originalTypeDefSummary +
+                       ", originalInstanceGUID='" + originalInstanceGUID + '\'' +
+                       '}';
     }
 }

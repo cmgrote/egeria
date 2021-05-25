@@ -2,18 +2,20 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.commonservices.multitenant;
 
+import org.odpi.openmetadata.commonservices.multitenant.ffdc.OMAGServerInstanceAuditCode;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.OMAGServerInstanceErrorCode;
 import org.odpi.openmetadata.commonservices.repositoryhandler.RepositoryErrorHandler;
 import org.odpi.openmetadata.commonservices.repositoryhandler.RepositoryHandler;
-import org.odpi.openmetadata.metadatasecurity.server.OpenMetadataServerSecurityVerifier;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.connectors.ConnectorProvider;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 import org.odpi.openmetadata.commonservices.ffdc.exceptions.PropertyServerException;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.exceptions.NewInstanceException;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * OMASServiceInstance caches references to OMRS objects for a specific server.
@@ -30,6 +32,14 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
 
     protected List<String>            supportedZones;
     protected List<String>            defaultZones;
+    protected List<String>            publishZones;
+
+    private Connection   inTopicEventBusConnection;
+    private String       inTopicConnectorProviderName;
+    private Connection   outTopicEventBusConnection;
+    private String       outTopicConnectorProviderName;
+
+    private static final String  serverIdPropertyName = "local.server.id";
 
 
     /**
@@ -47,9 +57,9 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
                                OMRSRepositoryConnector repositoryConnector,
                                List<String>            supportedZones,
                                List<String>            defaultZones,
-                               OMRSAuditLog            auditLog) throws NewInstanceException
+                               AuditLog                auditLog) throws NewInstanceException
     {
-        this(serviceName, repositoryConnector, supportedZones, defaultZones, auditLog, null, 500);
+        this(serviceName, repositoryConnector, supportedZones, defaultZones, null, auditLog, null, 500);
     }
 
 
@@ -64,9 +74,9 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
     @Deprecated
     public OMASServiceInstance(String                  serviceName,
                                OMRSRepositoryConnector repositoryConnector,
-                               OMRSAuditLog            auditLog) throws NewInstanceException
+                               AuditLog                auditLog) throws NewInstanceException
     {
-        this( serviceName, repositoryConnector, null, null, auditLog, null, 500);
+        this(serviceName, repositoryConnector, null, null, null, auditLog, null, 500);
     }
 
 
@@ -82,11 +92,11 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
      */
     public OMASServiceInstance(String                  serviceName,
                                OMRSRepositoryConnector repositoryConnector,
-                               OMRSAuditLog            auditLog,
+                               AuditLog                auditLog,
                                String                  localServerUserId,
                                int                     maxPageSize) throws NewInstanceException
     {
-        this(serviceName, repositoryConnector, null, null, auditLog, localServerUserId, maxPageSize);
+        this(serviceName, repositoryConnector, null, null, null, auditLog, localServerUserId, maxPageSize);
     }
 
 
@@ -97,6 +107,7 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
      * @param repositoryConnector link to the repository responsible for servicing the REST calls.
      * @param supportedZones list of zones that DiscoveryEngine is allowed to serve Assets from.
      * @param defaultZones list of zones that DiscoveryEngine should set in all new Assets.
+     * @param publishZones list of zones that the access service sets up in published Asset instances.
      * @param auditLog logging destination
      * @param localServerUserId userId used for server initiated actions
      * @param maxPageSize maximum page size
@@ -106,9 +117,54 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
                                OMRSRepositoryConnector repositoryConnector,
                                List<String>            supportedZones,
                                List<String>            defaultZones,
-                               OMRSAuditLog            auditLog,
+                               List<String>            publishZones,
+                               AuditLog                auditLog,
                                String                  localServerUserId,
                                int                     maxPageSize) throws NewInstanceException
+    {
+        this(serviceName,
+             repositoryConnector,
+             supportedZones,
+             defaultZones,
+             publishZones,
+             auditLog,
+             localServerUserId,
+             maxPageSize,
+             null,
+             null,
+             null,
+             null);
+    }
+
+    /**
+     * Set up the local repository connector that will service the REST Calls.
+     *
+     * @param serviceName name of this service
+     * @param repositoryConnector link to the repository responsible for servicing the REST calls.
+     * @param supportedZones list of zones that DiscoveryEngine is allowed to serve Assets from.
+     * @param defaultZones list of zones that DiscoveryEngine should set in all new Assets.
+     * @param publishZones list of zones that the access service sets up in published Asset instances.
+     * @param auditLog logging destination
+     * @param localServerUserId userId used for server initiated actions
+     * @param maxPageSize maximum page size
+     * @param inTopicConnectorProviderName class name of the client side in topic connector
+     * @param inTopicEventBusConnection connection for the event bus configured with the in topic
+     * @param outTopicConnectorProviderName class name of the client side out topic connector
+     * @param outTopicEventBusConnection connection for the event bus configured with the out topic
+     * @throws NewInstanceException a problem occurred during initialization
+     */
+    public OMASServiceInstance(String                  serviceName,
+                               OMRSRepositoryConnector repositoryConnector,
+                               List<String>            supportedZones,
+                               List<String>            defaultZones,
+                               List<String>            publishZones,
+                               AuditLog                auditLog,
+                               String                  localServerUserId,
+                               int                     maxPageSize,
+                               String                  inTopicConnectorProviderName,
+                               Connection              inTopicEventBusConnection,
+                               String                  outTopicConnectorProviderName,
+                               Connection              outTopicEventBusConnection) throws NewInstanceException
     {
         super(null, serviceName, auditLog, localServerUserId, maxPageSize);
 
@@ -123,36 +179,29 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
                 this.metadataCollection = repositoryConnector.getMetadataCollection();
                 this.repositoryHelper = repositoryConnector.getRepositoryHelper();
 
-                this.errorHandler = new RepositoryErrorHandler(repositoryHelper, serviceName, serverName);
+                this.errorHandler = new RepositoryErrorHandler(repositoryHelper, serviceName, serverName, auditLog);
                 this.repositoryHandler = new RepositoryHandler(auditLog, errorHandler, metadataCollection, maxPageSize);
                 this.supportedZones = supportedZones;
                 this.defaultZones = defaultZones;
+                this.publishZones = publishZones;
+                this.inTopicConnectorProviderName = inTopicConnectorProviderName;
+                this.inTopicEventBusConnection = inTopicEventBusConnection;
+                this.outTopicConnectorProviderName = outTopicConnectorProviderName;
+                this.outTopicEventBusConnection = outTopicEventBusConnection;
             }
             catch (Throwable error)
             {
-                OMAGServerInstanceErrorCode errorCode    = OMAGServerInstanceErrorCode.OMRS_NOT_INITIALIZED;
-                String                      errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-                throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+                throw new NewInstanceException(OMAGServerInstanceErrorCode.OMRS_NOT_INITIALIZED.getMessageDefinition(methodName),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
 
             }
         }
         else
         {
-            OMAGServerInstanceErrorCode errorCode    = OMAGServerInstanceErrorCode.OMRS_NOT_INITIALIZED;
-            String                      errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+            throw new NewInstanceException(OMAGServerInstanceErrorCode.OMRS_NOT_INITIALIZED.getMessageDefinition(methodName),
                                            this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
 
         }
     }
@@ -165,6 +214,7 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
      * @return serverName name of the server for this instance
      * @throws NewInstanceException a problem occurred during initialization
      */
+    @Override
     public String getServerName() throws NewInstanceException
     {
         final String methodName = "getServerName";
@@ -175,15 +225,9 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
         }
         else
         {
-            OMAGServerInstanceErrorCode errorCode    = OMAGServerInstanceErrorCode.OMRS_NOT_AVAILABLE;
-            String                      errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+            throw new NewInstanceException(OMAGServerInstanceErrorCode.OMRS_NOT_AVAILABLE.getMessageDefinition(methodName),
                                            this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
         }
     }
 
@@ -198,15 +242,9 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
     {
         if ((repositoryConnector == null) || (metadataCollection == null) || (! repositoryConnector.isActive()))
         {
-            OMAGServerInstanceErrorCode errorCode    = OMAGServerInstanceErrorCode.OMRS_NOT_AVAILABLE;
-            String                      errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new PropertyServerException(errorCode.getHTTPErrorCode(),
+            throw new PropertyServerException(OMAGServerInstanceErrorCode.OMRS_NOT_AVAILABLE.getMessageDefinition(methodName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
     }
 
@@ -322,5 +360,212 @@ public class OMASServiceInstance extends AuditableServerServiceInstance
         validateActiveRepository(methodName);
 
         return defaultZones;
+    }
+
+
+    /**
+     * Return the list of zones that this instance of the OMAS should set in any published Asset.
+     *
+     * @return list of zone names.
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    List<String> getPublishZones() throws PropertyServerException
+    {
+        final String methodName = "getPublishZones";
+
+        validateActiveRepository(methodName);
+
+        return publishZones;
+    }
+
+
+    /**
+     * Return the connection used in the client to create a connector to send events from the in topic.
+     *
+     * @param callerId unique identifier of the caller
+     * @return connection object for client
+     */
+    Connection getInTopicClientConnection(String  callerId) throws PropertyServerException
+    {
+        final String methodName = "getInTopicClientConnection";
+
+        return this.getClientTopicConnection(callerId,
+                                             inTopicEventBusConnection,
+                                             inTopicConnectorProviderName,
+                                             methodName);
+    }
+
+
+
+    /**
+     * Return the connection used in the client to create a connector to access events from the out topic.
+     *
+     * @param callerId unique identifier of the caller
+     * @return connection object for client
+     */
+    Connection getOutTopicClientConnection(String  callerId) throws PropertyServerException
+    {
+        final String methodName = "getOutTopicClientConnection";
+
+        return this.getClientTopicConnection(callerId,
+                                             outTopicEventBusConnection,
+                                             outTopicConnectorProviderName,
+                                             methodName);
+    }
+
+
+
+    /**
+     * Return the connection used in the client to create a connector to access events from the out topic.
+     *
+     * @param callerId unique identifier of the caller
+     * @param topicEventBusConnection connection for the event bus pre-populated with the topic name
+     * @param connectorProviderClassName Java class name of the connector provider for the client-side topic connector
+     * @param methodName calling method so error messages show whether this was an in or an out topic problem.
+     * @return connection object for client
+     */
+    private Connection getClientTopicConnection(String     callerId,
+                                                Connection topicEventBusConnection,
+                                                String     connectorProviderClassName,
+                                                String     methodName) throws PropertyServerException
+    {
+        if ((topicEventBusConnection != null) && (connectorProviderClassName != null))
+        {
+            /*
+             * The caller Id needs to be inserted into the configuration properties of the event bus connection.  This is used
+             * to identify the caller to the event bus so it knows which events the caller has seen already. (It effectively controls
+             * the cursor for the caller for the events on the topic.)
+             */
+            Connection  newEventBusConnection  = new Connection(topicEventBusConnection);
+
+            Map<String, Object> configurationProperties = newEventBusConnection.getConfigurationProperties();
+
+            if (configurationProperties == null)
+            {
+                configurationProperties = new HashMap<>();
+            }
+
+            configurationProperties.put(serverIdPropertyName, callerId);
+
+            newEventBusConnection.setConfigurationProperties(configurationProperties);
+
+            return this.buildClientTopicConnection(newEventBusConnection, connectorProviderClassName, methodName);
+        }
+        else
+        {
+            auditLog.logMessage(methodName, OMAGServerInstanceAuditCode.NO_TOPIC_INFORMATION.getMessageDefinition(methodName, serviceName));
+
+            throw new PropertyServerException(OMAGServerInstanceErrorCode.NO_TOPIC_INFORMATION.getMessageDefinition(methodName, serviceName),
+                                              this.getClass().getName(),
+                                              methodName);
+        }
+    }
+
+
+    /**
+     * Create the client-side connector for one of this access service's topics.
+     *
+     * @param topicEventBusConnection connection from the configuration properties - the event bus
+     * @param accessServiceConnectorProviderClassName class name of connector provider
+     * @param methodName calling method so error messages show whether this was an in or an out topic problem.
+     * @return connector to access the topic
+     * @throws PropertyServerException problem creating connector
+     */
+    private   Connection buildClientTopicConnection(Connection   topicEventBusConnection,
+                                                    String       accessServiceConnectorProviderClassName,
+                                                    String       methodName) throws PropertyServerException
+    {
+        final String connectionDescription = "Client-side topic connection.";
+        final String eventSource = "Topic Event Bus";
+
+        ElementType elementType = VirtualConnection.getVirtualConnectionType();
+
+        elementType.setElementOrigin(ElementOrigin.CONFIGURATION);
+
+        String connectionName = "OutTopicConnector." + serviceName;
+
+        VirtualConnection connection = new VirtualConnection();
+
+        elementType = VirtualConnection.getVirtualConnectionType();
+
+        connection.setType(elementType);
+        connection.setQualifiedName(connectionName);
+        connection.setDisplayName(connectionName);
+        connection.setDescription(connectionDescription);
+        connection.setConnectorType(getConnectorType(accessServiceConnectorProviderClassName, methodName));
+
+        /*
+         * The event bus for this server is embedded in the out topic connection.
+         */
+        EmbeddedConnection embeddedConnection = new EmbeddedConnection();
+
+        embeddedConnection.setDisplayName(eventSource);
+        embeddedConnection.setArguments(null);
+        embeddedConnection.setEmbeddedConnection(topicEventBusConnection);
+
+        List<EmbeddedConnection> embeddedConnections = new ArrayList<>();
+        embeddedConnections.add(embeddedConnection);
+
+        connection.setEmbeddedConnections(embeddedConnections);
+
+        return connection;
+    }
+
+
+    /**
+     * Return the connector type for the requested connector provider.  This is best used for connector providers that
+     * can return their own connector type.  Otherwise it makes one up.
+     *
+     * @param connectorProviderClassName name of the connector provider class
+     * @param methodName calling method so error messages show whether this was an in or an out topic problem.
+     * @return ConnectorType bean
+     * @throws PropertyServerException problem creating connector
+     */
+    private ConnectorType   getConnectorType(String  connectorProviderClassName,
+                                             String  methodName) throws PropertyServerException
+    {
+        ConnectorType  connectorType = null;
+
+        if (connectorProviderClassName != null)
+        {
+            try
+            {
+                Class<?>   connectorProviderClass = Class.forName(connectorProviderClassName);
+                Object     potentialConnectorProvider = connectorProviderClass.newInstance();
+
+                ConnectorProvider connectorProvider = (ConnectorProvider)potentialConnectorProvider;
+
+                connectorType = connectorProvider.getConnectorType();
+
+                if (connectorType == null)
+                {
+                    connectorType = new ConnectorType();
+
+                    connectorType.setType(connectorType.getType());
+                    connectorType.setQualifiedName(connectorProviderClassName);
+                    connectorType.setDisplayName(connectorProviderClass.getSimpleName());
+                    connectorType.setDescription("ConnectorType for " + connectorType.getDisplayName());
+                    connectorType.setConnectorProviderClassName(connectorProviderClassName);
+                }
+            }
+            catch (Exception error)
+            {
+                auditLog.logException(methodName,
+                                      OMAGServerInstanceAuditCode.BAD_TOPIC_CONNECTOR_PROVIDER.getMessageDefinition(methodName,
+                                                                                                                    serviceName,
+                                                                                                                    error.getClass().getName(),
+                                                                                                                    error.getMessage()),
+                                      error);
+
+                throw new PropertyServerException(OMAGServerInstanceErrorCode.BAD_TOPIC_CONNECTOR_PROVIDER.getMessageDefinition(methodName,
+                                                                                                                                serviceName,
+                                                                                                                                error.getClass().getName(),
+                                                                                                                                error.getMessage()),
+                                                  this.getClass().getName(),
+                                                  methodName);
+            }
+        }
+
+        return connectorType;
     }
 }

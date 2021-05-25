@@ -5,14 +5,20 @@ trigger:
   paths:
     include:
       - open-metadata-resources/open-metadata-deployment/docker
+  branches:
+    include:
+      - master
 pr: none
 schedules:
   - cron: "11 0 * * *"
-    displayName: Daily Docker Build
+    displayName: Daily Docker Build for extended images
     always: true
     branches:
       include:
         - master
+
+variables:
+  - group: Artifactory
 
 stages:
   - stage: Docker
@@ -24,14 +30,8 @@ stages:
           matrix:
             apache-atlas:
               POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/apache-atlas/pom.xml'
-            egeria:
-              POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/egeria/pom.xml'
-            egeria-configure:
-              POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/configure/pom.xml'
             egeria-gaian:
               POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/gaian/pom.xml'
-            egeria-omrs-monitor:
-              POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/omrs-monitor/pom.xml'
             egeria-ranger:
               POM_FILE: 'open-metadata-resources/open-metadata-deployment/docker/apache-ranger-admin/pom.xml'
         steps:
@@ -40,13 +40,13 @@ stages:
           - task: DownloadSecureFile@1
             name: dockerConfig
             inputs:
-              secureFile: egeria-docker.json
+              secureFile: odpi-docker.json
           - script: mv $(dockerConfig.secureFilePath) ${HOME}/.docker/config.json
           - task: Docker@2
             displayName: Login to Docker Hub
             inputs:
               command: login
-              containerRegistry: odpipoc-dockerhub
+              containerRegistry: odpi-dockerhub
           - task: Maven@3
             inputs:
               mavenPomFile: $(POM_FILE)
@@ -58,6 +58,8 @@ stages:
                   --batch-mode
                   -e
                   -Ddocker
-                  -Ddocker.repo=odpipoc
+                  -Ddocker.taglatest
+                  -Ddocker.repo=odpi
                   -Ddocker.registry=docker.io
+                  -Ddocker.images=ext
                   -Ddockerfile.googleContainerRegistryEnabled=false

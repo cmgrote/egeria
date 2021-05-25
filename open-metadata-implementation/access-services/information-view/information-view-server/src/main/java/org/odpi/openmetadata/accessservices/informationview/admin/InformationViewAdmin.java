@@ -26,7 +26,6 @@ import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.openmetadatatopic.OpenMetadataTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
-import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSConfigErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +68,6 @@ public class InformationViewAdmin extends AccessServiceAdmin
                 auditCode.getSystemAction(),
                 auditCode.getUserAction());
 
-
         this.auditLog = auditLog;
 
         if (enterpriseConnector != null)
@@ -95,7 +93,7 @@ public class InformationViewAdmin extends AccessServiceAdmin
 
             eventPublisher = new EventPublisher(informationViewOutTopicConnector, enterpriseConnector, supportedZones, auditLog);
             InformationViewEnterpriseOmrsEventListener informationViewEnterpriseOmrsEventListener = new InformationViewEnterpriseOmrsEventListener(eventPublisher, auditLog);
-            enterpriseOMRSTopicConnector.registerListener(informationViewEnterpriseOmrsEventListener);
+            enterpriseOMRSTopicConnector.registerListener(informationViewEnterpriseOmrsEventListener, accessServiceConfigurationProperties.getAccessServiceName());
         }
 
         if (informationViewOutTopicConnector != null) {
@@ -114,7 +112,7 @@ public class InformationViewAdmin extends AccessServiceAdmin
                 auditCode.getLogMessageId(),
                 auditCode.getSeverity(),
                 auditCode.getFormattedLogMessage(serverName),
-                null,
+                accessServiceConfigurationProperties.toString(),
                 auditCode.getSystemAction(),
                 auditCode.getUserAction());
     }
@@ -134,20 +132,21 @@ public class InformationViewAdmin extends AccessServiceAdmin
             topicConnector.start();
         } catch (ConnectorCheckedException e) {
             auditCode = InformationViewAuditCode.ERROR_INITIALIZING_INFORMATION_VIEW_TOPIC_CONNECTION;
-            auditLog.logRecord(actionDescription,
+            auditLog.logException(actionDescription,
                     auditCode.getLogMessageId(),
                     auditCode.getSeverity(),
                     auditCode.getFormattedLogMessage(topicName, serverName),
                     null,
                     auditCode.getSystemAction(),
-                    auditCode.getUserAction());
+                    auditCode.getUserAction(),
+                    e);
             throw new OMAGConfigurationErrorException(400,
                     InformationViewAdmin.class.getSimpleName(),
                     actionDescription,
                     auditCode.getFormattedLogMessage(),
                     auditCode.getSystemAction(),
-                    auditCode.getUserAction()
-            );
+                    auditCode.getUserAction(),
+                    e);
         }
     }
 
@@ -167,13 +166,14 @@ public class InformationViewAdmin extends AccessServiceAdmin
                 return getTopicConnector(topicConnection);
             } catch (Exception e) {
                 InformationViewAuditCode auditCode = InformationViewAuditCode.ERROR_INITIALIZING_CONNECTION;
-                auditLog.logRecord(actionDescription,
+                auditLog.logException(actionDescription,
                         auditCode.getLogMessageId(),
                         auditCode.getSeverity(),
                         auditCode.getFormattedLogMessage(topicConnection.toString(), serverName, e.getMessage()),
-                        null,
+                        topicConnection.toString(),
                         auditCode.getSystemAction(),
-                        auditCode.getUserAction());
+                        auditCode.getUserAction(),
+                        e);
                 throw e;
             }
 
@@ -205,11 +205,11 @@ public class InformationViewAdmin extends AccessServiceAdmin
                 log.debug("Unable to create topic connector: " + error.toString());
             }
 
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_TOPIC_CONNECTOR;
+            InformationViewErrorCode errorCode = InformationViewErrorCode.NULL_TOPIC_CONNECTOR;
             String errorMessage = errorCode.getErrorMessageId()
                     + errorCode.getFormattedErrorMessage("getTopicConnector");
 
-            throw new OMRSConfigErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSConfigErrorException(errorCode.getHttpErrorCode(),
                     this.getClass().getName(),
                     methodName,
                     errorMessage,

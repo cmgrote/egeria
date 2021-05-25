@@ -2,9 +2,10 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.eventmanagement;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.odpi.openmetadata.repositoryservices.auditlog.*;
 import org.odpi.openmetadata.repositoryservices.events.*;
 import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorException;
@@ -17,11 +18,11 @@ import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicCo
  */
 public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
 {
-    private OMRSAuditLog auditLog;
-
     private static final Logger log = LoggerFactory.getLogger(OMRSRepositoryEventPublisher.class);
 
-    private OMRSTopicConnector omrsTopicConnector;
+    private OpenMetadataEventsSecurity securityVerifier = new OMRSMetadataDefaultEventsSecurity();
+    private OMRSTopicConnector         omrsTopicConnector;
+    private AuditLog                   auditLog;
 
 
     /**
@@ -34,7 +35,7 @@ public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
      */
     public OMRSRepositoryEventPublisher(String             publisherName,
                                         OMRSTopicConnector topicConnector,
-                                        OMRSAuditLog       auditLog)
+                                        AuditLog           auditLog)
     {
         super(publisherName);
 
@@ -49,15 +50,9 @@ public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
         {
             log.debug("Null topic connector");
 
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_TOPIC_CONNECTOR;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(publisherName);
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_TOPIC_CONNECTOR.getMessageDefinition(publisherName),
                                               this.getClass().getName(),
-                                              actionDescription,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              actionDescription);
 
         }
 
@@ -65,6 +60,25 @@ public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
 
         log.debug("New Event Publisher: " + publisherName);
     }
+
+
+    /**
+     * Set up a new security verifier (the handler runs with a default verifier until this
+     * method is called).
+     *
+     * The security verifier provides authorization checks for whether individual events should be sent/received.
+     * Authorization checks are enabled through the OpenMetadataServerSecurityConnector.
+     *
+     * @param securityVerifier new security verifier
+     */
+    public void setSecurityVerifier(OpenMetadataEventsSecurity securityVerifier)
+    {
+        if (securityVerifier != null)
+        {
+            this.securityVerifier = securityVerifier;
+        }
+    }
+
 
 
     /**
@@ -87,17 +101,11 @@ public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
         {
             omrsTopicConnector.sendTypeDefEvent(typeDefEvent);
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.SEND_TYPEDEF_EVENT_ERROR;
-
             auditLog.logException(actionDescription,
-                                  auditCode.getLogMessageId(),
-                                  auditCode.getSeverity(),
-                                  auditCode.getFormattedLogMessage(sourceName),
+                                  OMRSAuditCode.SEND_TYPEDEF_EVENT_ERROR.getMessageDefinition(sourceName),
                                   "typeDefEvent {" + typeDefEvent.toString() + "}",
-                                  auditCode.getSystemAction(),
-                                  auditCode.getUserAction(),
                                   error);
 
             log.debug("Exception: ", error);
@@ -124,19 +132,18 @@ public class OMRSRepositoryEventPublisher extends OMRSRepositoryEventBuilder
 
         try
         {
-            omrsTopicConnector.sendInstanceEvent(instanceEvent);
-        }
-        catch (Throwable error)
-        {
-            OMRSAuditCode auditCode = OMRSAuditCode.SEND_INSTANCE_EVENT_ERROR;
+            OMRSInstanceEvent validatedEvent = securityVerifier.validateOutboundEvent(eventProcessorName, instanceEvent);
 
+            if (validatedEvent != null)
+            {
+                omrsTopicConnector.sendInstanceEvent(instanceEvent);
+            }
+        }
+        catch (Exception error)
+        {
             auditLog.logException(actionDescription,
-                                  auditCode.getLogMessageId(),
-                                  auditCode.getSeverity(),
-                                  auditCode.getFormattedLogMessage(sourceName),
+                                  OMRSAuditCode.SEND_INSTANCE_EVENT_ERROR.getMessageDefinition(sourceName),
                                   "instanceEvent {" + instanceEvent.toString() + "}",
-                                  auditCode.getSystemAction(),
-                                  auditCode.getUserAction(),
                                   error);
 
             log.debug("Exception: ", error);

@@ -12,13 +12,12 @@ details of the connector - just its interface.
 It is implemented in the following Java class:
 
 ```
-  org.odpi.openmetadata.frameworks.connectors.ConnectorBroker
+org.odpi.openmetadata.frameworks.connectors.ConnectorBroker
 ```
 
 and is used as follows:
 
 ```
-
 import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
 
@@ -26,7 +25,6 @@ import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
    
 ConnectorBroker   connectorBroker     = new ConnectorBroker();
 Connector         connector           = connectorBroker.getConnector(connection);
-  
 ```
 
 When the connector instance is requested, the Connector Broker uses the ConnectorType properties
@@ -39,8 +37,12 @@ the result to its caller.
 The Connector Broker is used in the client code of the Open Metadata Access Services (OMASs) that provide
 connector instances to their consumers.  Examples include:
 
-* [Asset Consumer OMAS](../../../../access-services/asset-consumer/docs/concepts/README.md)
-* [Asset Owner OMAS](../../../../access-services/asset-owner/README.md)
+* [Asset Consumer OMAS](../../../../access-services/asset-consumer)
+* [Asset Owner OMAS](../../../../access-services/asset-owner)
+
+
+----
+* [Return to OCF Overview](../..)
 
 
 ----

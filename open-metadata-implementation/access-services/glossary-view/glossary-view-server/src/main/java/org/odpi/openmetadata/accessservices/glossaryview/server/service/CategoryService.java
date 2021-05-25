@@ -12,12 +12,14 @@ import org.odpi.openmetadata.accessservices.glossaryview.rest.GlossaryViewEntity
 public class CategoryService extends GlossaryViewOMAS {
 
     private static final String CATEGORY_TYPE_NAME = "GlossaryCategory";
+    private static final String GLOSSARY_TYPE_NAME = "Glossary";
 
     private static final String CATEGORY_ANCHOR_RELATIONSHIP_NAME = "CategoryAnchor";
     private static final String CATEGORY_HIERARCHY_LINK_RELATIONSHIP_NAME ="CategoryHierarchyLink";
     private static final String LIBRARY_CATEGORY_REFERENCE_RELATIONSHIP_NAME = "LibraryCategoryReference";
 
     public CategoryService() {}
+
 
     /**
      * Extract the category definition for the given GUID
@@ -38,14 +40,14 @@ public class CategoryService extends GlossaryViewOMAS {
      * @param userId calling user
      * @param serverName instance to call
      * @param glossaryGUID glossary GUID
-     * @param from from
-     * @param size size
+     * @param from offset start for the return values
+     * @param size maximum number of results
      *
      * @return EntityDetailResponse all external glossaries
      */
     public GlossaryViewEntityDetailResponse getCategoriesViaCategoryAnchorRelationships(String userId, String serverName,
                                                                                         String glossaryGUID, Integer from, Integer size){
-        return getRelatedEntitiesResponse(userId, serverName, glossaryGUID, CATEGORY_TYPE_NAME,
+        return getRelatedEntitiesResponse(userId, serverName, glossaryGUID, GLOSSARY_TYPE_NAME,
                 CATEGORY_ANCHOR_RELATIONSHIP_NAME, from, size, "getCategoriesViaCategoryAnchorRelationships");
     }
 
@@ -55,14 +57,14 @@ public class CategoryService extends GlossaryViewOMAS {
      * @param userId calling user
      * @param serverName instance to call
      * @param categoryGUID category GUID
-     * @param from from
-     * @param size size
+     * @param from offset start for the return values
+     * @param size maximum number of results
      *
      * @return EntityDetailResponse subcategories
      */
     public GlossaryViewEntityDetailResponse getSubcategories(String userId, String serverName, String categoryGUID,
                                                              Integer from, Integer size){
-        return getRelatedEntitiesResponse(userId, serverName, categoryGUID, CATEGORY_TYPE_NAME,
+        return getSubEntitiesResponse(userId, serverName, categoryGUID, CATEGORY_TYPE_NAME, true,
                 CATEGORY_HIERARCHY_LINK_RELATIONSHIP_NAME, from, size,"getSubcategories");
     }
 
@@ -72,8 +74,8 @@ public class CategoryService extends GlossaryViewOMAS {
      * @param userId calling user
      * @param serverName instance to call
      * @param categoryGUID glossary GUID
-     * @param from
-     * @param size
+     * @param from offset start for the return values
+     * @param size maximum number of results
      *
      * @return EntityDetailResponse all external glossaries
      */
@@ -83,4 +85,17 @@ public class CategoryService extends GlossaryViewOMAS {
                 LIBRARY_CATEGORY_REFERENCE_RELATIONSHIP_NAME, from, size,"getExternalGlossaryLinks");
     }
 
+    /**
+     * Extract all categories definitions
+     *
+     * @param userId calling user
+     * @param serverName instance to call
+     * @param from offset start for the return values
+     * @param size maximum number of results
+     *
+     * @return EntityDetailResponse all glossaries
+     */
+    public GlossaryViewEntityDetailResponse getAllCategories(String userId, String serverName, Integer from, Integer size) {
+        return getAllEntityDetailsResponse(userId, serverName, CATEGORY_TYPE_NAME, from, size, "getAllCategories");
+    }
 }

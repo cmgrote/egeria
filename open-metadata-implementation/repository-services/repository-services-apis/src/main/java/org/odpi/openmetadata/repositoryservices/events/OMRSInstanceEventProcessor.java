@@ -13,7 +13,7 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
  */
 public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventProcessorInterface
 {
-    protected String  eventProcessorName;
+    private String  eventProcessorName;
 
     /**
      * Return the name of the event processor.
@@ -124,14 +124,49 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
      * @param originatorServerName  name of the server that the event came from.
      * @param originatorServerType  type of server that the event came from.
      * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
-     * @param entity  details of the entity with the new classification added.
+     * @param entity  details of the entity with the new classification added. No guarantee this is all of the classifications.
      */
-    public abstract void processClassifiedEntityEvent(String       sourceName,
-                                                      String       originatorMetadataCollectionId,
-                                                      String       originatorServerName,
-                                                      String       originatorServerType,
-                                                      String       originatorOrganizationName,
-                                                      EntityDetail entity);
+    @Deprecated
+    @SuppressWarnings(value = "unused")
+    public  void processClassifiedEntityEvent(String         sourceName,
+                                              String         originatorMetadataCollectionId,
+                                              String         originatorServerName,
+                                              String         originatorServerType,
+                                              String         originatorOrganizationName,
+                                              EntityDetail   entity)
+    {
+    }
+
+
+    /**
+     * A new classification has been added to an entity.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity with the new classification added. No guarantee this is all of the classifications.
+     * @param classification new classification
+     */
+    @SuppressWarnings(value = "unused")
+    public  void processClassifiedEntityEvent(String         sourceName,
+                                              String         originatorMetadataCollectionId,
+                                              String         originatorServerName,
+                                              String         originatorServerType,
+                                              String         originatorOrganizationName,
+                                              EntityDetail   entity,
+                                              Classification classification)
+    {
+        processClassifiedEntityEvent(sourceName,
+                                     originatorMetadataCollectionId,
+                                     originatorServerName,
+                                     originatorServerType,
+                                     originatorOrganizationName,
+                                     entity);
+    }
 
 
     /**
@@ -144,14 +179,49 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
      * @param originatorServerName  name of the server that the event came from.
      * @param originatorServerType  type of server that the event came from.
      * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
-     * @param entity  details of the entity after the classification has been removed.
+     * @param entity  details of the entity after the classification has been removed. No guarantee this is all of the classifications.
      */
-    public abstract void processDeclassifiedEntityEvent(String       sourceName,
-                                                        String       originatorMetadataCollectionId,
-                                                        String       originatorServerName,
-                                                        String       originatorServerType,
-                                                        String       originatorOrganizationName,
-                                                        EntityDetail entity);
+    @Deprecated
+    @SuppressWarnings(value = "unused")
+    public   void processDeclassifiedEntityEvent(String         sourceName,
+                                                 String         originatorMetadataCollectionId,
+                                                 String         originatorServerName,
+                                                 String         originatorServerType,
+                                                 String         originatorOrganizationName,
+                                                 EntityDetail   entity)
+    {
+    }
+
+
+    /**
+     * A classification has been removed from an entity.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity after the classification has been removed. No guarantee this is all of the classifications.
+     * @param originalClassification classification that was removed
+     */
+    @SuppressWarnings(value = "unused")
+    public  void processDeclassifiedEntityEvent(String         sourceName,
+                                                String         originatorMetadataCollectionId,
+                                                String         originatorServerName,
+                                                String         originatorServerType,
+                                                String         originatorOrganizationName,
+                                                EntityDetail   entity,
+                                                Classification originalClassification)
+    {
+        processDeclassifiedEntityEvent(sourceName,
+                                       originatorMetadataCollectionId,
+                                       originatorServerName,
+                                       originatorServerType,
+                                       originatorOrganizationName,
+                                       entity);
+    }
 
 
     /**
@@ -164,14 +234,52 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
      * @param originatorServerName  name of the server that the event came from.
      * @param originatorServerType  type of server that the event came from.
      * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
-     * @param entity  details of the entity after the classification has been changed.
+     * @param entity  details of the entity after the classification has been changed. No guarantee this is all of the classifications.
      */
-    public abstract void processReclassifiedEntityEvent(String       sourceName,
-                                                        String       originatorMetadataCollectionId,
-                                                        String       originatorServerName,
-                                                        String       originatorServerType,
-                                                        String       originatorOrganizationName,
-                                                        EntityDetail entity);
+    @Deprecated
+    @SuppressWarnings(value = "unused")
+    public  void processReclassifiedEntityEvent(String         sourceName,
+                                                String         originatorMetadataCollectionId,
+                                                String         originatorServerName,
+                                                String         originatorServerType,
+                                                String         originatorOrganizationName,
+                                                EntityDetail   entity)
+    {
+    }
+
+
+
+    /**
+     * An existing classification has been changed on an entity.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity after the classification has been changed. No guarantee this is all of the classifications.
+     * @param originalClassification classification that was removed
+     * @param classification new classification
+     */
+    @SuppressWarnings(value = "unused")
+    public  void processReclassifiedEntityEvent(String         sourceName,
+                                                String         originatorMetadataCollectionId,
+                                                String         originatorServerName,
+                                                String         originatorServerType,
+                                                String         originatorOrganizationName,
+                                                EntityDetail   entity,
+                                                Classification originalClassification,
+                                                Classification classification)
+    {
+        processReclassifiedEntityEvent(sourceName,
+                                       originatorMetadataCollectionId,
+                                       originatorServerName,
+                                       originatorServerType,
+                                       originatorOrganizationName,
+                                       entity);
+    }
 
 
     /**
@@ -217,6 +325,54 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
                                                     String       originatorServerType,
                                                     String       originatorOrganizationName,
                                                     EntityDetail entity);
+
+
+    /**
+     * An entity has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the version of the entity that has been purged.
+     */
+    public  void processPurgedEntityEvent(String       sourceName,
+                                          String       originatorMetadataCollectionId,
+                                          String       originatorServerName,
+                                          String       originatorServerType,
+                                          String       originatorOrganizationName,
+                                          EntityDetail entity)
+    {
+        /*
+         * This is a new method - if this method is not overridden in the implementing repository connector,
+         * it delegates to the original version of purgeRelationshipReferenceCopy.
+         */
+        if (entity != null)
+        {
+            String  typeDefGUID = null;
+            String  typeDefName = null;
+
+            InstanceType type = entity.getType();
+
+            if (type != null)
+            {
+                typeDefGUID = type.getTypeDefGUID();
+                typeDefName = type.getTypeDefName();
+            }
+
+            this.processPurgedEntityEvent(sourceName,
+                                          originatorMetadataCollectionId,
+                                          originatorServerName,
+                                          originatorServerType,
+                                          originatorOrganizationName,
+                                          typeDefGUID,
+                                          typeDefName,
+                                          entity.getGUID());
+        }
+    }
 
 
     /**
@@ -287,9 +443,7 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
                                               originatorServerName,
                                               originatorServerType,
                                               originatorOrganizationName,
-                                              type.getTypeDefGUID(),
-                                              type.getTypeDefName(),
-                                              entity.getGUID());
+                                              entity);
             }
         }
     }
@@ -516,6 +670,55 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
                                                           Relationship relationship);
 
 
+
+    /**
+     * A relationship has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param relationship  details of the  relationship that has been purged.
+     */
+    public void processPurgedRelationshipEvent(String       sourceName,
+                                               String       originatorMetadataCollectionId,
+                                               String       originatorServerName,
+                                               String       originatorServerType,
+                                               String       originatorOrganizationName,
+                                               Relationship relationship)
+    {
+        /*
+         * This is a new method - if this method is not overridden in the implementing repository connector,
+         * it delegates to the original version of purgeRelationshipReferenceCopy.
+         */
+        if (relationship != null)
+        {
+            String  typeDefGUID = null;
+            String  typeDefName = null;
+
+            InstanceType type = relationship.getType();
+
+            if (type != null)
+            {
+                typeDefGUID = type.getTypeDefGUID();
+                typeDefName = type.getTypeDefName();
+            }
+
+            this.processPurgedEntityEvent(sourceName,
+                                          originatorMetadataCollectionId,
+                                          originatorServerName,
+                                          originatorServerType,
+                                          originatorOrganizationName,
+                                          typeDefGUID,
+                                          typeDefName,
+                                          relationship.getGUID());
+        }
+    }
+
+
     /**
      * A deleted relationship has been permanently removed from the repository.  This request can not be undone.
      *
@@ -533,14 +736,14 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
      * @param typeDefName name of this relationship's TypeDef.
      * @param instanceGUID  unique identifier for the relationship.
      */
-    public abstract void processPurgedRelationshipEvent(String       sourceName,
-                                                        String       originatorMetadataCollectionId,
-                                                        String       originatorServerName,
-                                                        String       originatorServerType,
-                                                        String       originatorOrganizationName,
-                                                        String       typeDefGUID,
-                                                        String       typeDefName,
-                                                        String       instanceGUID);
+    public abstract void processPurgedRelationshipEvent(String sourceName,
+                                                        String originatorMetadataCollectionId,
+                                                        String originatorServerName,
+                                                        String originatorServerType,
+                                                        String originatorOrganizationName,
+                                                        String typeDefGUID,
+                                                        String typeDefName,
+                                                        String instanceGUID);
 
 
     /**
@@ -580,9 +783,7 @@ public abstract class OMRSInstanceEventProcessor implements OMRSInstanceEventPro
                                                     originatorServerName,
                                                     originatorServerType,
                                                     originatorOrganizationName,
-                                                    type.getTypeDefGUID(),
-                                                    type.getTypeDefName(),
-                                                    relationship.getGUID());
+                                                    relationship);
             }
         }
     }

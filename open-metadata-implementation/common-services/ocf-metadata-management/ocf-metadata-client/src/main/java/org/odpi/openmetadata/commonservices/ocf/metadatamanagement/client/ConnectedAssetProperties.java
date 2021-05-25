@@ -33,6 +33,8 @@ import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperti
  */
 public class ConnectedAssetProperties extends org.odpi.openmetadata.frameworks.connectors.properties.ConnectedAssetProperties
 {
+    private static final long    serialVersionUID = 1L;
+
     private String               serviceName;
     private String               remoteServerName;
     private String               userId              = null;
@@ -147,10 +149,10 @@ public class ConnectedAssetProperties extends org.odpi.openmetadata.frameworks.c
      * @throws UserNotAuthorizedException the userId associated with the connector is not authorized to
      *                                    access the asset properties.
      */
+    @Override
     public void refresh() throws PropertyServerException, UserNotAuthorizedException
     {
         final  String  methodName  = "refresh";
-        final  String  serviceName = "ConnectedAssetProperties";
 
         log.debug("Calling method: " + methodName);
 

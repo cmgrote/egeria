@@ -2,12 +2,11 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.discoveryengine.server.spring;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.accessservices.discoveryengine.rest.*;
 import org.odpi.openmetadata.accessservices.discoveryengine.server.DiscoveryConfigurationServices;
-import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDListResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.NullRequestBody;
-import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
-import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.*;
+import org.odpi.openmetadata.commonservices.ffdc.rest.*;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -15,9 +14,34 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/discovery-engine/users/{userId}")
+
+@Tag(name="Discovery Engine OMAS", description="The Discovery Engine OMAS provides APIs and events for metadata discovery tools that are surveying the data landscape and recording information in metadata repositories.", externalDocs=@ExternalDocumentation(description="Discovery Engine Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/discovery-engine/"))
+
 public class DiscoveryConfigurationResource
 {
     private DiscoveryConfigurationServices  restAPI = new DiscoveryConfigurationServices();
+
+
+    /**
+     * Return the connection object for the Discovery Engine OMAS's out topic.
+     *
+     * @param serverName name of the service to route the request to.
+     * @param userId identifier of calling user.
+     * @param callerId unique identifier of the caller
+     *
+     * @return connection object for the out topic or
+     * InvalidParameterException one of the parameters is null or invalid or
+     * UserNotAuthorizedException user not authorized to issue this request or
+     * PropertyServerException problem retrieving the discovery engine definition.
+     */
+    @GetMapping(path = "/topics/out-topic-connection/{callerId}")
+
+    public ConnectionResponse getOutTopicConnection(@PathVariable String serverName,
+                                                    @PathVariable String userId,
+                                                    @PathVariable String callerId)
+    {
+        return restAPI.getOutTopicConnection(serverName, userId, callerId);
+    }
 
 
     /**
@@ -36,7 +60,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-engines")
+    @PostMapping(path = "/discovery-engines")
 
     public GUIDResponse createDiscoveryEngine(@PathVariable String                        serverName,
                                               @PathVariable String                        userId,
@@ -58,7 +82,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-engines/{guid}")
+    @GetMapping(path = "/discovery-engines/{guid}")
 
     public DiscoveryEnginePropertiesResponse getDiscoveryEngineByGUID(@PathVariable String    serverName,
                                                                       @PathVariable String    userId,
@@ -80,7 +104,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-engines/by-name/{name}")
+    @GetMapping(path = "/discovery-engines/by-name/{name}")
 
     public  DiscoveryEnginePropertiesResponse getDiscoveryEngineByName(@PathVariable String    serverName,
                                                                        @PathVariable String    userId,
@@ -103,7 +127,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-engines")
+    @GetMapping(path = "/discovery-engines")
 
     public DiscoveryEngineListResponse getAllDiscoveryEngines(@PathVariable String  serverName,
                                                               @PathVariable String  userId,
@@ -129,7 +153,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-engines/{guid}")
+    @PostMapping(path = "/discovery-engines/{guid}")
 
     public VoidResponse updateDiscoveryEngine(@PathVariable String                           serverName,
                                               @PathVariable String                           userId,
@@ -154,7 +178,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-engines/{guid}/delete")
+    @PostMapping(path = "/discovery-engines/{guid}/delete")
 
     public  VoidResponse    deleteDiscoveryEngine(@PathVariable String             serverName,
                                                   @PathVariable String             userId,
@@ -175,14 +199,14 @@ public class DiscoveryConfigurationResource
      *                    qualifiedName - unique name for the discovery service;
      *                    displayName -  display name for the discovery service;
      *                    description - description of the analysis provided by the discovery service;
-     *                    connection -  connection to instanciate the discovery service implementation.
+     *                    connection -  connection to instantiate the discovery service implementation.
      *
      * @return unique identifier of the discovery service or
      * InvalidParameterException one of the parameters is null or invalid or
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-services")
+    @PostMapping(path = "/discovery-services")
 
     public  GUIDResponse  createDiscoveryService(@PathVariable String                         serverName,
                                                  @PathVariable String                         userId,
@@ -204,7 +228,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-services/{guid}")
+    @GetMapping(path = "/discovery-services/{guid}")
 
     public DiscoveryServicePropertiesResponse getDiscoveryServiceByGUID(@PathVariable String    serverName,
                                                                         @PathVariable String    userId,
@@ -226,7 +250,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-services/by-name/{name}")
+    @GetMapping(path = "/discovery-services/by-name/{name}")
 
     public  DiscoveryServicePropertiesResponse getDiscoveryServiceByName(@PathVariable String    serverName,
                                                                          @PathVariable String    userId,
@@ -249,7 +273,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-services")
+    @GetMapping(path = "/discovery-services")
 
     public  DiscoveryServiceListResponse getAllDiscoveryServices(@PathVariable String  serverName,
                                                                  @PathVariable String  userId,
@@ -272,7 +296,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-services/{guid}/registrations")
+    @GetMapping(path = "/discovery-services/{guid}/registrations")
 
     public GUIDListResponse getDiscoveryServiceRegistrations(@PathVariable String   serverName,
                                                              @PathVariable String   userId,
@@ -297,7 +321,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-services/{guid}")
+    @PostMapping(path = "/discovery-services/{guid}")
 
     public  VoidResponse    updateDiscoveryService(@PathVariable String                             serverName,
                                                    @PathVariable String                             userId,
@@ -323,7 +347,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-services/{guid}/delete")
+    @PostMapping(path = "/discovery-services/{guid}/delete")
 
     public  VoidResponse    deleteDiscoveryService(@PathVariable String             serverName,
                                                    @PathVariable String             userId,
@@ -342,14 +366,14 @@ public class DiscoveryConfigurationResource
      * @param guid unique identifier of the discovery engine.
      * @param requestBody containing:
      *                    guid - unique identifier of the discovery service;
-     *                    assetTypes - list of asset types that this discovery service is able to process.
+     *                    discoveryRequestTypes - list of asset discovery types that this discovery service is able to process.
      *
      * @return void or
      * InvalidParameterException one of the parameters is null or invalid or
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-engines/{guid}/discovery-services")
+    @PostMapping(path = "/discovery-engines/{guid}/discovery-services")
 
     public  VoidResponse  registerDiscoveryServiceWithEngine(@PathVariable String                                  serverName,
                                                              @PathVariable String                                  userId,
@@ -373,7 +397,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-engines/{discoveryEngineGUID}/discovery-services/{discoveryServiceGUID}")
+    @GetMapping(path = "/discovery-engines/{discoveryEngineGUID}/discovery-services/{discoveryServiceGUID}")
 
     public RegisteredDiscoveryServiceResponse getRegisteredDiscoveryService(@PathVariable String  serverName,
                                                                             @PathVariable String  userId,
@@ -398,7 +422,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/discovery-engines/{discoveryEngineGUID}/discovery-services")
+    @GetMapping(path = "/discovery-engines/{discoveryEngineGUID}/discovery-services")
 
     public  GUIDListResponse  getRegisteredDiscoveryServices(@PathVariable String  serverName,
                                                              @PathVariable String  userId,
@@ -424,7 +448,7 @@ public class DiscoveryConfigurationResource
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/discovery-engines/{discoveryEngineGUID}/discovery-services/{discoveryServiceGUID}/delete")
+    @PostMapping(path = "/discovery-engines/{discoveryEngineGUID}/discovery-services/{discoveryServiceGUID}/delete")
 
     public VoidResponse unregisterDiscoveryServiceFromEngine(@PathVariable String           serverName,
                                                              @PathVariable String           userId,

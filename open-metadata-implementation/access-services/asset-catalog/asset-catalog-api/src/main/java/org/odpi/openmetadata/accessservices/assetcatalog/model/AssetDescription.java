@@ -4,10 +4,13 @@ package org.odpi.openmetadata.accessservices.assetcatalog.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -20,36 +23,22 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AssetDescription extends Asset implements Serializable {
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class AssetDescription extends Element implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Map<String, Object> properties;
-    private List<Classification> classifications;
+    /**
+     * The list of relationships
+     * -- GETTER --
+     * Returns the list of available relationships
+     * @return the list of relationships
+     * -- SETTER --
+     * Set up the list of relationships
+     * @param relationships of the element
+     */
     private List<Relationship> relationships;
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
-    }
-
-    public List<Classification> getClassifications() {
-        return classifications;
-    }
-
-    public void setClassifications(List<Classification> classifications) {
-        this.classifications = classifications;
-    }
-
-    public List<Relationship> getRelationships() {
-        return relationships;
-    }
-
-    public void setRelationships(List<Relationship> relationships) {
-        this.relationships = relationships;
-    }
-
 }

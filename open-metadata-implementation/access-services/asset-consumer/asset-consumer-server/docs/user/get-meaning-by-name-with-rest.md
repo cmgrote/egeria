@@ -7,10 +7,11 @@ Return the full definition (meaning) of the terms matching the supplied term nam
 This name may contain wild cards.
 
 ```
-GET {{serverURLRoot}}/servers/{{serverName}}/open-metadata/access-services/asset-consumer/users/{{userId}}/assets/by-name/{{termName}}?elementStart={{startFrom}}&maxElements={{pageSize}}
+GET {serverURLRoot}/servers/{serverName}/open-metadata/access-services/asset-consumer/users/{userId}/assets/by-name/{termName}?elementStart={startFrom}&maxElements={pageSize}
+```
 
-        MeaningListResponse
-
+```java
+MeaningListResponse
 ```
 
 ----

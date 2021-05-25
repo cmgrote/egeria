@@ -2,11 +2,13 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.governanceprogram.properties;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 
-public class ZoneMembers implements Iterator<AssetSummary>
+public class ZoneMembers implements Iterator<AssetProperties>, Serializable
 {
+    private static final long    serialVersionUID = 1L;
 
     /**
      * The iterator can only be used once to step through the elements.  This method returns
@@ -24,10 +26,10 @@ public class ZoneMembers implements Iterator<AssetSummary>
     /**
      * Return the next element in the iteration.
      *
-     * @return Rating next element object that has been cloned.
+     * @return  next element object that has been cloned.
      */
     @Override
-    public AssetSummary next()
+    public AssetProperties next()
     {
         return null;
     }

@@ -4,80 +4,95 @@ package org.odpi.openmetadata.accessservices.assetlineage.server;
 
 
 import org.odpi.openmetadata.accessservices.assetlineage.ffdc.AssetLineageErrorCode;
-import org.odpi.openmetadata.accessservices.assetlineage.handlers.*;
+import org.odpi.openmetadata.accessservices.assetlineage.handlers.AssetContextHandler;
+import org.odpi.openmetadata.accessservices.assetlineage.handlers.ClassificationHandler;
+import org.odpi.openmetadata.accessservices.assetlineage.handlers.GlossaryContextHandler;
+import org.odpi.openmetadata.accessservices.assetlineage.handlers.HandlerHelper;
+import org.odpi.openmetadata.accessservices.assetlineage.handlers.ProcessContextHandler;
+import org.odpi.openmetadata.accessservices.assetlineage.outtopic.AssetLineagePublisher;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstance;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstance;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.exceptions.NewInstanceException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * AssetLineageServicesInstance caches references to OMRS objects for a specific server.
  * It is also responsible for registering itself in the instance map.
  */
-public class AssetLineageServicesInstance extends OCFOMASServiceInstance {
+public class AssetLineageServicesInstance extends OMASServiceInstance {
     private static AccessServiceDescription myDescription = AccessServiceDescription.ASSET_LINEAGE_OMAS;
-    private GlossaryHandler glossaryHandler;
-    private ContextHandler contextHandler;
-    private CommonHandler commonHandler;
-    private ProcessHandler processHandler;
+    private GlossaryContextHandler glossaryContextHandler;
+    private AssetContextHandler assetContextHandler;
+    private ProcessContextHandler processContextHandler;
+    private ClassificationHandler classificationHandler;
+    private AssetLineagePublisher assetLineagePublisher;
+    private HandlerHelper handlerHelper;
 
     /**
      * Set up the handlers for this server.
      *
-     * @param repositoryConnector link to the repository responsible for servicing the REST calls.
-     * @param supportedZones      list of zones that AssetLineage is allowed to serve Assets from.
-     * @param auditLog            destination for audit log events.
+     * @param repositoryConnector        link to the repository responsible for servicing the REST calls.
+     * @param supportedZones             list of zones that AssetLineage is allowed to serve Assets from.
+     * @param lineageClassificationTypes list of lineage classification supported
+     * @param localServerUserId          userId used for server initiated actions
+     * @param auditLog                   destination for audit log events.
      * @throws NewInstanceException a problem occurred during initialization
      */
     public AssetLineageServicesInstance(OMRSRepositoryConnector repositoryConnector,
                                         List<String> supportedZones,
-                                        OMRSAuditLog auditLog) throws NewInstanceException {
-        super(myDescription.getAccessServiceName() + " OMAS",
+                                        Set<String> lineageClassificationTypes,
+                                        String localServerUserId, AuditLog auditLog) throws NewInstanceException {
+        super(myDescription.getAccessServiceFullName(),
                 repositoryConnector,
-                auditLog);
-
-        final String methodName = "new ServiceInstance";
+                auditLog,
+                localServerUserId,
+                repositoryConnector.getMaxPageSize());
 
         super.supportedZones = supportedZones;
 
-        if (repositoryHandler != null)  {
-            glossaryHandler = new GlossaryHandler(serviceName,
-                    serverName,
+        if (repositoryHandler != null) {
+            assetContextHandler = new AssetContextHandler(
                     invalidParameterHandler,
                     repositoryHelper,
-                    repositoryHandler);
+                    repositoryHandler,
+                    supportedZones,
+                    lineageClassificationTypes);
 
-            contextHandler = new ContextHandler(serviceName,
-                    serverName,
+            processContextHandler = new ProcessContextHandler(
                     invalidParameterHandler,
                     repositoryHelper,
-                    repositoryHandler);
+                    repositoryHandler,
+                    assetContextHandler,
+                    supportedZones,
+                    lineageClassificationTypes);
 
-            commonHandler = new CommonHandler(serviceName,
-                    serverName,
+            glossaryContextHandler = new GlossaryContextHandler(
                     invalidParameterHandler,
                     repositoryHelper,
-                    repositoryHandler);
+                    repositoryHandler,
+                    assetContextHandler,
+                    lineageClassificationTypes);
 
-            processHandler = new ProcessHandler(serviceName,
-                    serverName,
+            classificationHandler = new ClassificationHandler(
+                    invalidParameterHandler,
+                    lineageClassificationTypes,
+                    repositoryHelper);
+
+            handlerHelper = new HandlerHelper(
                     invalidParameterHandler,
                     repositoryHelper,
-                    repositoryHandler);
+                    repositoryHandler,
+                    lineageClassificationTypes);
 
-        }else {
-            AssetLineageErrorCode errorCode = AssetLineageErrorCode.OMRS_NOT_INITIALIZED;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+        } else {
+            String methodName = "AssetLineageServicesInstance";
+            throw new NewInstanceException(AssetLineageErrorCode.OMRS_NOT_INITIALIZED.getMessageDefinition(methodName),
                     this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction());
+                    methodName);
         }
     }
 
@@ -86,9 +101,8 @@ public class AssetLineageServicesInstance extends OCFOMASServiceInstance {
      *
      * @return glossary handler
      */
-    GlossaryHandler getGlossaryHandler()
-    {
-        return glossaryHandler;
+    GlossaryContextHandler getGlossaryContextHandler() {
+        return glossaryContextHandler;
     }
 
 
@@ -97,19 +111,8 @@ public class AssetLineageServicesInstance extends OCFOMASServiceInstance {
      *
      * @return context handler
      */
-    ContextHandler getContextHandler()
-    {
-        return contextHandler;
-    }
-
-    /**
-     * Return the specialized common handler for Asset Lineage OMAS.
-     *
-     * @return common handler
-     */
-    CommonHandler getCommonHandler()
-    {
-        return commonHandler;
+    AssetContextHandler getAssetContextHandler() {
+        return assetContextHandler;
     }
 
     /**
@@ -117,11 +120,39 @@ public class AssetLineageServicesInstance extends OCFOMASServiceInstance {
      *
      * @return process handler
      */
-    ProcessHandler getProcessHandler()
-    {
-        return processHandler;
+    ProcessContextHandler getProcessContextHandler() {
+        return processContextHandler;
     }
 
+    /**
+     * Return the specialized classification handler for Asset Lineage OMAS.
+     *
+     * @return process handler
+     */
+    ClassificationHandler getClassificationHandler() {
+        return classificationHandler;
+    }
+
+    /**
+     * Return the handler helper for Asset Lineage OMAS.
+     *
+     * @return process handler
+     */
+    HandlerHelper getHandlerHelper() {
+        return handlerHelper;
+    }
+
+    public AssetLineagePublisher getAssetLineagePublisher() {
+        return assetLineagePublisher;
+    }
+
+    public void setAssetLineagePublisher(AssetLineagePublisher assetLineagePublisher) {
+        this.assetLineagePublisher = assetLineagePublisher;
+    }
+
+    public AuditLog getAuditLog() {
+        return super.getAuditLog();
+    }
 }
 
 

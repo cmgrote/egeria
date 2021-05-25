@@ -6,9 +6,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
-import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceOperationalStatus;
+import org.odpi.openmetadata.adminservices.configuration.registration.ServiceOperationalStatus;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceRegistration;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.VirtualConnection;
 
 import java.util.Map;
 import java.util.Objects;
@@ -24,13 +23,16 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class AccessServiceConfig extends AdminServicesConfigHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private int                            accessServiceId                = 0;
     private String                         accessServiceAdminClass        = null;
     private String                         accessServiceName              = null;
+    private String                         accessServiceFullName          = null;
     private String                         accessServiceURLMarker         = null;
     private String                         accessServiceDescription       = null;
     private String                         accessServiceWiki              = null;
-    private AccessServiceOperationalStatus accessServiceOperationalStatus = null;
+    private ServiceOperationalStatus       accessServiceOperationalStatus = null;
     private Connection                     accessServiceInTopic           = null;
     private Connection                     accessServiceOutTopic          = null;
     private Map<String, Object>            accessServiceOptions           = null;
@@ -59,7 +61,9 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
             accessServiceId = template.getAccessServiceId();
             accessServiceAdminClass = template.getAccessServiceAdminClass();
             accessServiceName = template.getAccessServiceName();
+            accessServiceFullName = template.getAccessServiceFullName();
             accessServiceDescription = template.getAccessServiceDescription();
+            accessServiceURLMarker = template.getAccessServiceURLMarker();
             accessServiceWiki = template.getAccessServiceWiki();
             accessServiceOperationalStatus = template.getAccessServiceOperationalStatus();
             accessServiceInTopic = template.getAccessServiceInTopic();
@@ -79,6 +83,7 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
     {
         this.accessServiceId = accessServiceRegistration.getAccessServiceCode();
         this.accessServiceName = accessServiceRegistration.getAccessServiceName();
+        this.accessServiceFullName = accessServiceRegistration.getAccessServiceFullName();
         this.accessServiceURLMarker = accessServiceRegistration.getAccessServiceURLMarker();
         this.accessServiceAdminClass = accessServiceRegistration.getAccessServiceAdminClassName();
         this.accessServiceDescription = accessServiceRegistration.getAccessServiceDescription();
@@ -145,6 +150,17 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
 
 
     /**
+     * Set up the full name of the access service.
+     *
+     * @param accessServiceFullName String name
+     */
+    public void setAccessServiceFullName(String accessServiceFullName)
+    {
+        this.accessServiceFullName = accessServiceFullName;
+    }
+
+
+    /**
      * Set up the name of the access service.
      *
      * @param accessServiceName String name
@@ -152,6 +168,29 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
     public void setAccessServiceName(String accessServiceName)
     {
         this.accessServiceName = accessServiceName;
+    }
+
+
+    /**
+     * Return the full name of the access service.
+     *
+     * @return String name
+     */
+    public String getAccessServiceFullName()
+    {
+        if (accessServiceFullName == null)
+        {
+            if (accessServiceName == null)
+            {
+                return null;
+            }
+
+            return accessServiceName + " OMAS";
+        }
+        else
+        {
+            return accessServiceFullName;
+        }
     }
 
 
@@ -173,7 +212,7 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
      *
      * @param accessServiceURLMarker url fragment
      */
-    public void setServiceURLMarker(String accessServiceURLMarker)
+    public void setAccessServiceURLMarker(String accessServiceURLMarker)
     {
         this.accessServiceURLMarker = accessServiceURLMarker;
     }
@@ -229,7 +268,7 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
      *
      * @return AccessServiceOperationalStatus enum
      */
-    public AccessServiceOperationalStatus getAccessServiceOperationalStatus()
+    public ServiceOperationalStatus getAccessServiceOperationalStatus()
     {
         return accessServiceOperationalStatus;
     }
@@ -240,7 +279,7 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
      *
      * @param accessServiceOperationalStatus AccessServiceOperationalStatus enum
      */
-    public void setAccessServiceOperationalStatus(AccessServiceOperationalStatus accessServiceOperationalStatus)
+    public void setAccessServiceOperationalStatus(ServiceOperationalStatus accessServiceOperationalStatus)
     {
         this.accessServiceOperationalStatus = accessServiceOperationalStatus;
     }
@@ -343,6 +382,7 @@ public class AccessServiceConfig extends AdminServicesConfigHeader
                 "accessServiceId=" + accessServiceId +
                 ", accessServiceAdminClass='" + accessServiceAdminClass + '\'' +
                 ", accessServiceName='" + accessServiceName + '\'' +
+                ", accessServiceFullName='" + accessServiceFullName + '\'' +
                 ", accessServiceURLMarker='" + accessServiceURLMarker + '\'' +
                 ", accessServiceDescription='" + accessServiceDescription + '\'' +
                 ", accessServiceWiki='" + accessServiceWiki + '\'' +

@@ -2,8 +2,14 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.rest.server.spring;
 
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityProxy;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceStatus;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.*;
+import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
 import org.odpi.openmetadata.repositoryservices.rest.properties.*;
 import org.odpi.openmetadata.repositoryservices.rest.server.OMRSRepositoryRESTServices;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +21,14 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/repository-services/users/{userId}")
+
+@Tag(name="Repository Services - Local Repository",
+        description="The Local Repository Services are part of the Open Metadata Repository Services (OMRS). They provide the " +
+                "interface to the local repository that is used by remote servers to query locally stored metadata.",
+        externalDocs=@ExternalDocumentation(description="Further information",
+                url="https://egeria.odpi.org/open-metadata-implementation/repository-services/"))
+
+
 public class LocalRepositoryServicesResource
 {
     private OMRSRepositoryRESTServices  restAPI = new OMRSRepositoryRESTServices(true);
@@ -39,10 +53,10 @@ public class LocalRepositoryServicesResource
      *
      * @param serverName unique identifier for requested server.
      * @param userId calling user
-     * @return String metadata collection id.
+     * @return String metadata collection id
      * or RepositoryErrorException if there is a problem communicating with the metadata repository.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/metadata-collection-id")
+    @GetMapping(path = "/metadata-collection-id")
 
     public MetadataCollectionIdResponse getMetadataCollectionId(@PathVariable String   serverName,
                                                                 @PathVariable String   userId)
@@ -69,7 +83,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/all")
+    @GetMapping(path = "/types/all")
 
     public TypeDefGalleryResponse getAllTypes(@PathVariable String   serverName,
                                               @PathVariable String   userId)
@@ -92,7 +106,7 @@ public class LocalRepositoryServicesResource
      * UserNotAuthorizedException the userId is not permitted to perform this operation or
      * InvalidParameterException the name of the TypeDef is null.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/by-name")
+    @GetMapping(path = "/types/by-name")
 
     public TypeDefGalleryResponse findTypesByName(@PathVariable String   serverName,
                                                   @PathVariable String   userId,
@@ -114,7 +128,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedefs/by-category")
+    @PostMapping(path = "/types/typedefs/by-category")
 
     public TypeDefListResponse findTypeDefsByCategory(@PathVariable String           serverName,
                                                       @PathVariable String           userId,
@@ -136,7 +150,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/attribute-typedefs/by-category")
+    @PostMapping(path = "/types/attribute-typedefs/by-category")
 
     public AttributeTypeDefListResponse findAttributeTypeDefsByCategory(@PathVariable String                   serverName,
                                                                         @PathVariable String                   userId,
@@ -158,7 +172,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/typedefs/by-property")
+    @GetMapping(path = "/types/typedefs/by-property")
 
     public TypeDefListResponse findTypeDefsByProperty(@PathVariable String            serverName,
                                                       @PathVariable String            userId,
@@ -182,7 +196,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/typedefs/by-external-id")
+    @GetMapping(path = "/types/typedefs/by-external-id")
 
     public TypeDefListResponse findTypesByExternalID(@PathVariable                   String    serverName,
                                                      @PathVariable                   String    userId,
@@ -206,7 +220,7 @@ public class LocalRepositoryServicesResource
      * RepositoryErrorException there is a problem communicating with the metadata repository or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/typedefs/by-property-value")
+    @GetMapping(path = "/types/typedefs/by-property-value")
 
     public TypeDefListResponse searchForTypeDefs(@PathVariable String serverName,
                                                  @PathVariable String userId,
@@ -230,7 +244,7 @@ public class LocalRepositoryServicesResource
      * TypeDefNotKnownException The requested TypeDef is not known in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/typedef/{guid}")
+    @GetMapping(path = "/types/typedef/{guid}")
 
     public TypeDefResponse getTypeDefByGUID(@PathVariable String    serverName,
                                             @PathVariable String    userId,
@@ -254,7 +268,7 @@ public class LocalRepositoryServicesResource
      * TypeDefNotKnownException The requested TypeDef is not known in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/attribute-typedef/{guid}")
+    @GetMapping(path = "/types/attribute-typedef/{guid}")
 
     public AttributeTypeDefResponse getAttributeTypeDefByGUID(@PathVariable String    serverName,
                                                               @PathVariable String    userId,
@@ -279,7 +293,7 @@ public class LocalRepositoryServicesResource
      * TypeDefNotKnownException the requested TypeDef is not found in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/typedef/name/{name}")
+    @GetMapping(path = "/types/typedef/name/{name}")
 
     public TypeDefResponse getTypeDefByName(@PathVariable String    serverName,
                                             @PathVariable String    userId,
@@ -303,7 +317,7 @@ public class LocalRepositoryServicesResource
      * TypeDefNotKnownException the requested TypeDef is not found in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/types/attribute-typedef/name/{name}")
+    @GetMapping(path = "/types/attribute-typedef/name/{name}")
 
     public  AttributeTypeDefResponse getAttributeTypeDefByName(@PathVariable String    serverName,
                                                                @PathVariable String    userId,
@@ -331,7 +345,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types")
+    @PostMapping(path = "/types")
 
     public  VoidResponse addTypeDefGallery(@PathVariable String         serverName,
                                            @PathVariable String         userId,
@@ -359,7 +373,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedef")
+    @PostMapping(path = "/types/typedef")
 
     public VoidResponse addTypeDef(@PathVariable String    serverName,
                                    @PathVariable String    userId,
@@ -387,7 +401,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/attribute-typedef")
+    @PostMapping(path = "/types/attribute-typedef")
 
     public  VoidResponse addAttributeTypeDef(@PathVariable String             serverName,
                                              @PathVariable String             userId,
@@ -413,7 +427,7 @@ public class LocalRepositoryServicesResource
      * InvalidTypeDefException the new TypeDef has invalid contents.
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedef/compatibility")
+    @PostMapping(path = "/types/typedef/compatibility")
 
     public BooleanResponse verifyTypeDef(@PathVariable String    serverName,
                                          @PathVariable String    userId,
@@ -439,7 +453,7 @@ public class LocalRepositoryServicesResource
      * InvalidTypeDefException the new TypeDef has invalid contents or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/attribute-typedef/compatibility")
+    @PostMapping(path = "/types/attribute-typedef/compatibility")
 
     public  BooleanResponse verifyAttributeTypeDef(@PathVariable String            serverName,
                                                    @PathVariable String            userId,
@@ -467,7 +481,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedef/update")
+    @PostMapping(path = "/types/typedef/update")
 
     public TypeDefResponse updateTypeDef(@PathVariable String       serverName,
                                          @PathVariable String       userId,
@@ -497,7 +511,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedef/{guid}/delete")
+    @PostMapping(path = "/types/typedef/{guid}/delete")
 
     public VoidResponse deleteTypeDef(@PathVariable String    serverName,
                                       @PathVariable String    userId,
@@ -528,7 +542,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/attribute-typedef/{guid}/delete")
+    @PostMapping(path = "/types/attribute-typedef/{guid}/delete")
 
     public VoidResponse deleteAttributeTypeDef(@PathVariable String    serverName,
                                                @PathVariable String    userId,
@@ -559,7 +573,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/typedef/{originalTypeDefGUID}/identifier")
+    @PostMapping(path = "/types/typedef/{originalTypeDefGUID}/identifier")
 
     public  TypeDefResponse reIdentifyTypeDef(@PathVariable String                   serverName,
                                               @PathVariable String                   userId,
@@ -592,7 +606,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support this call or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/types/attribute-typedef/{originalAttributeTypeDefGUID}/identifier")
+    @PostMapping(path = "/types/attribute-typedef/{originalAttributeTypeDefGUID}/identifier")
 
     public  AttributeTypeDefResponse reIdentifyAttributeTypeDef(@PathVariable String                    serverName,
                                                                 @PathVariable String                    userId,
@@ -623,7 +637,7 @@ public class LocalRepositoryServicesResource
      *                                  the metadata collection is stored.
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{guid}/existence")
+    @GetMapping(path = "/instances/entity/{guid}/existence")
 
     public EntityDetailResponse isEntityKnown(@PathVariable String     serverName,
                                               @PathVariable String     userId,
@@ -647,7 +661,7 @@ public class LocalRepositoryServicesResource
      * EntityNotKnownException the requested entity instance is not known in the metadata collection.
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{guid}/summary")
+    @GetMapping(path = "/instances/entity/{guid}/summary")
 
     public EntitySummaryResponse getEntitySummary(@PathVariable String     serverName,
                                                   @PathVariable String     userId,
@@ -672,7 +686,7 @@ public class LocalRepositoryServicesResource
      * EntityProxyOnlyException the requested entity instance is only a proxy in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{guid}")
+    @GetMapping(path = "/instances/entity/{guid}")
 
     public EntityDetailResponse getEntityDetail(@PathVariable String    serverName,
                                                 @PathVariable String    userId,
@@ -700,7 +714,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{guid}/history")
+    @PostMapping(path = "/instances/entity/{guid}/history")
 
     public  EntityDetailResponse getEntityDetail(@PathVariable String         serverName,
                                                  @PathVariable String         userId,
@@ -708,6 +722,33 @@ public class LocalRepositoryServicesResource
                                                  @RequestBody  HistoryRequest asOfTime)
     {
         return restAPI.getEntityDetail(serverName, userId, guid, asOfTime);
+    }
+
+
+    /**
+     * Return all historical versions of an entity within the bounds of the provided timestamps. To retrieve all historical
+     * versions of an entity, set both the 'fromTime' and 'toTime' to null.
+     *
+     * @param userId unique identifier for requesting user.
+     * @param guid String unique identifier for the entity.
+     * @param historyRangeRequest detailing the range of times and paging for the results
+     * @return EntityList structure or
+     * InvalidParameterException the guid or date is null or fromTime is after the toTime
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                 the metadata collection is stored.
+     * EntityNotKnownException the requested entity instance is not known in the metadata collection
+     *                                   at the time requested.
+     * EntityProxyOnlyException the requested entity instance is only a proxy in the metadata collection.
+     * FunctionNotSupportedException the repository does not support history.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entity/{guid}/history/all")
+    public  EntityListResponse getEntityDetailHistory(@PathVariable String              serverName,
+                                                      @PathVariable String              userId,
+                                                      @PathVariable String              guid,
+                                                      @RequestBody  HistoryRangeRequest historyRangeRequest)
+    {
+        return restAPI.getEntityDetailHistory(serverName, userId, guid, historyRangeRequest);
     }
 
 
@@ -730,7 +771,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/relationships")
+    @PostMapping(path = "/instances/entity/{entityGUID}/relationships")
 
     public RelationshipListResponse getRelationshipsForEntity(@PathVariable String                     serverName,
                                                               @PathVariable String                     userId,
@@ -762,7 +803,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/relationships/history")
+    @PostMapping(path = "/instances/entity/{entityGUID}/relationships/history")
 
     public RelationshipListResponse getRelationshipsForEntityHistory(@PathVariable String                            serverName,
                                                                      @PathVariable String                            userId,
@@ -772,6 +813,62 @@ public class LocalRepositoryServicesResource
         return restAPI.getRelationshipsForEntityHistory(serverName, userId,
                                                         entityGUID,
                                                         findRequestParameters);
+    }
+
+
+    /**
+     * Return a list of entities that match the supplied conditions.  The results can be returned over many pages.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param findRequestParameters find parameters used to limit the returned results.
+     * @return EntityListResponse:
+     * a list of entities matching the supplied criteria null means no matching entities in the metadata
+     * collection or
+     * InvalidParameterException a parameter is invalid or null or
+     * TypeErrorException the type guid passed on the request is not known by the metadata collection or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * PropertyErrorException the properties specified are not valid for any of the requested types of
+     *                                  entity or
+     * PagingErrorException the paging/sequencing parameters are set up incorrectly or
+     * FunctionNotSupportedException the repository does not support asOfTime parameter or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entities")
+    public  EntityListResponse findEntities(@PathVariable String            serverName,
+                                            @PathVariable String            userId,
+                                            @RequestBody  EntityFindRequest findRequestParameters)
+    {
+        return restAPI.findEntities(serverName, userId, findRequestParameters);
+    }
+
+
+    /**
+     * Return a list of entities that match the supplied conditions.  The results can be returned over many pages.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param findRequestParameters find parameters used to limit the returned results.
+     * @return EntityListResponse:
+     * a list of entities matching the supplied criteria null means no matching entities in the metadata
+     * collection or
+     * InvalidParameterException a parameter is invalid or null or
+     * TypeErrorException the type guid passed on the request is not known by the metadata collection or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * PropertyErrorException the properties specified are not valid for any of the requested types of
+     *                                  entity or
+     * PagingErrorException the paging/sequencing parameters are set up incorrectly or
+     * FunctionNotSupportedException the repository does not support asOfTime parameter or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entities/history")
+    public  EntityListResponse findEntitiesByHistory(@PathVariable String                      serverName,
+                                                     @PathVariable String                      userId,
+                                                     @RequestBody  EntityHistoricalFindRequest findRequestParameters)
+    {
+        return restAPI.findEntitiesByHistory(serverName, userId, findRequestParameters);
     }
 
 
@@ -795,7 +892,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-property")
+    @PostMapping(path = "/instances/entities/by-property")
 
     public  EntityListResponse findEntitiesByProperty(@PathVariable String                    serverName,
                                                       @PathVariable String                    userId,
@@ -825,7 +922,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-property/history")
+    @PostMapping(path = "/instances/entities/by-property/history")
 
     public  EntityListResponse findEntitiesByPropertyHistory(@PathVariable String                              serverName,
                                                              @PathVariable String                              userId,
@@ -856,7 +953,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-classification/{classificationName}")
+    @PostMapping(path = "/instances/entities/by-classification/{classificationName}")
 
     public  EntityListResponse findEntitiesByClassification(@PathVariable String                   serverName,
                                                             @PathVariable String                   userId,
@@ -888,7 +985,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-classification/{classificationName}/history")
+    @PostMapping(path = "/instances/entities/by-classification/{classificationName}/history")
 
     public  EntityListResponse findEntitiesByClassificationHistory(@PathVariable String                             serverName,
                                                                    @PathVariable String                             userId,
@@ -920,7 +1017,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-property-value")
+    @PostMapping(path = "/instances/entities/by-property-value")
 
     public  EntityListResponse findEntitiesByPropertyValue(@PathVariable String                    serverName,
                                                            @PathVariable String                    userId,
@@ -952,7 +1049,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/by-property-value/history")
+    @PostMapping(path = "/instances/entities/by-property-value/history")
 
     public  EntityListResponse findEntitiesByPropertyValueHistory(@PathVariable String                              serverName,
                                                                   @PathVariable String                              userId,
@@ -976,7 +1073,7 @@ public class LocalRepositoryServicesResource
      *                                  the metadata collection is stored or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{guid}/existence")
+    @GetMapping(path = "/instances/relationship/{guid}/existence")
 
     public RelationshipResponse  isRelationshipKnown(@PathVariable String     serverName,
                                                      @PathVariable String     userId,
@@ -1001,7 +1098,7 @@ public class LocalRepositoryServicesResource
      *                                         the requested GUID stored or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{guid}")
+    @GetMapping(path = "/instances/relationship/{guid}")
 
     public RelationshipResponse getRelationship(@PathVariable String     serverName,
                                                 @PathVariable String     userId,
@@ -1028,7 +1125,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{guid}/history")
+    @PostMapping(path = "/instances/relationship/{guid}/history")
 
     public  RelationshipResponse getRelationship(@PathVariable String         serverName,
                                                  @PathVariable String         userId,
@@ -1036,6 +1133,86 @@ public class LocalRepositoryServicesResource
                                                  @RequestBody  HistoryRequest asOfTime)
     {
         return restAPI.getRelationship(serverName, userId, guid, asOfTime);
+    }
+
+
+    /**
+     * Return all historical versions of a relationship within the bounds of the provided timestamps. To retrieve all
+     * historical versions of a relationship, set both the 'fromTime' and 'toTime' to null.
+     *
+     * @param userId unique identifier for requesting user.
+     * @param guid String unique identifier for the relationship.
+     * @param historyRangeRequest detailing the range of times and paging for the results
+     * @return RelationshipList structure or
+     * InvalidParameterException the guid or date is null or fromTime is after the toTime
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                 the metadata collection is stored.
+     * RelationshipNotKnownException the requested relationship instance is not known in the metadata collection
+     *                                   at the time requested.
+     * FunctionNotSupportedException the repository does not support history.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/relationship/{guid}/history/all")
+    public  RelationshipListResponse getRelationshipHistory(@PathVariable String              serverName,
+                                                            @PathVariable String              userId,
+                                                            @PathVariable String              guid,
+                                                            @RequestBody  HistoryRangeRequest historyRangeRequest)
+    {
+        return restAPI.getRelationshipHistory(serverName, userId, guid, historyRangeRequest);
+    }
+
+
+    /**
+     * Return a list of relationships that match the requested conditions.  The results can be broken into pages.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user
+     * @param findRequestParameters find parameters used to limit the returned results.
+     * @return RelationshipListResponse:
+     * a list of relationships.  Null means no matching relationships or
+     * InvalidParameterException one of the parameters is invalid or null or
+     * TypeErrorException the type guid passed on the request is not known by the metadata collection or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * PropertyErrorException the properties specified are not valid for any of the requested types of
+     *                                  relationships or
+     * PagingErrorException the paging/sequencing parameters are set up incorrectly or
+     * FunctionNotSupportedException the repository does not support asOfTime parameter or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/relationships")
+    public  RelationshipListResponse findRelationships(@PathVariable String              serverName,
+                                                       @PathVariable String              userId,
+                                                       @RequestBody  InstanceFindRequest findRequestParameters)
+    {
+        return restAPI.findRelationships(serverName, userId, findRequestParameters);
+    }
+
+
+    /**
+     * Return a list of relationships that match the requested conditions.  The results can be broken into pages.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user
+     * @param findRequestParameters find parameters used to limit the returned results.
+     * @return RelationshipListResponse:
+     * a list of relationships.  Null means no matching relationships or
+     * InvalidParameterException one of the parameters is invalid or null or
+     * TypeErrorException the type guid passed on the request is not known by the metadata collection or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * PropertyErrorException the properties specified are not valid for any of the requested types of
+     *                                  relationships or
+     * PagingErrorException the paging/sequencing parameters are set up incorrectly or
+     * FunctionNotSupportedException the repository does not support asOfTime parameter or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/relationships/history")
+    public  RelationshipListResponse findRelationshipsByHistory(@PathVariable String                        serverName,
+                                                                @PathVariable String                        userId,
+                                                                @RequestBody  InstanceHistoricalFindRequest findRequestParameters)
+    {
+        return restAPI.findRelationshipsByHistory(serverName, userId, findRequestParameters);
     }
 
 
@@ -1058,7 +1235,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/by-property")
+    @PostMapping(path = "/instances/relationships/by-property")
 
     public  RelationshipListResponse findRelationshipsByProperty(@PathVariable String                   serverName,
                                                                  @PathVariable String                   userId,
@@ -1087,7 +1264,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/by-property/history")
+    @PostMapping(path = "/instances/relationships/by-property/history")
 
     public  RelationshipListResponse findRelationshipsByPropertyHistory(@PathVariable String                             serverName,
                                                                         @PathVariable String                             userId,
@@ -1115,7 +1292,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/by-property-value")
+    @PostMapping(path = "/instances/relationships/by-property-value")
 
     public  RelationshipListResponse findRelationshipsByPropertyValue(@PathVariable String                    serverName,
                                                                       @PathVariable String                    userId,
@@ -1144,7 +1321,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/by-property-value/history")
+    @PostMapping(path = "/instances/relationships/by-property-value/history")
 
     public  RelationshipListResponse findRelationshipsByPropertyValueHistory(@PathVariable String                              serverName,
                                                                              @PathVariable String                              userId,
@@ -1174,7 +1351,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{startEntityGUID}/by-linkage")
+    @PostMapping(path = "/instances/entities/from-entity/{startEntityGUID}/by-linkage")
 
     public  InstanceGraphResponse getLinkingEntities(@PathVariable String             serverName,
                                                      @PathVariable String             userId,
@@ -1205,7 +1382,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{startEntityGUID}/by-linkage/history")
+    @PostMapping(path = "/instances/entities/from-entity/{startEntityGUID}/by-linkage/history")
 
     public  InstanceGraphResponse getLinkingEntitiesHistory(@PathVariable String                        serverName,
                                                             @PathVariable String                        userId,
@@ -1238,7 +1415,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{entityGUID}/by-neighborhood")
+    @PostMapping(path = "/instances/entities/from-entity/{entityGUID}/by-neighborhood")
 
     public  InstanceGraphResponse getEntityNeighborhood(@PathVariable String                        serverName,
                                                         @PathVariable String                        userId,
@@ -1271,7 +1448,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{entityGUID}/by-neighborhood/history")
+    @PostMapping(path = "/instances/entities/from-entity/{entityGUID}/by-neighborhood/history")
 
     public  InstanceGraphResponse getEntityNeighborhoodHistory(@PathVariable String                                  serverName,
                                                                @PathVariable String                                  userId,
@@ -1307,7 +1484,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{startEntityGUID}/by-relationship")
+    @PostMapping(path = "/instances/entities/from-entity/{startEntityGUID}/by-relationship")
 
     public  EntityListResponse getRelatedEntities(@PathVariable String                      serverName,
                                                   @PathVariable String                      userId,
@@ -1342,7 +1519,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support asOfTime parameter or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/from-entity/{startEntityGUID}/by-relationship/history")
+    @PostMapping(path = "/instances/entities/from-entity/{startEntityGUID}/by-relationship/history")
 
     public  EntityListResponse getRelatedEntitiesHistory(@PathVariable String                                serverName,
                                                          @PathVariable String                                userId,
@@ -1378,7 +1555,7 @@ public class LocalRepositoryServicesResource
      *                                       the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity")
+    @PostMapping(path = "/instances/entity")
 
     public EntityDetailResponse addEntity(@PathVariable String               serverName,
                                           @PathVariable String               userId,
@@ -1415,7 +1592,7 @@ public class LocalRepositoryServicesResource
      *                                       the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/external")
+    @PostMapping(path = "/instances/entity/external")
 
     public EntityDetailResponse addExternalEntity(@PathVariable String               serverName,
                                                   @PathVariable String               userId,
@@ -1448,7 +1625,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support entity proxies as first class elements or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity-proxy")
+    @PostMapping(path = "/instances/entity-proxy")
 
     public VoidResponse addEntityProxy(@PathVariable String      serverName,
                                        @PathVariable String      userId,
@@ -1475,7 +1652,7 @@ public class LocalRepositoryServicesResource
      *                                      the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/status")
+    @PostMapping(path = "/instances/entity/{entityGUID}/status")
 
     public EntityDetailResponse updateEntityStatus(@PathVariable String           serverName,
                                                    @PathVariable String           userId,
@@ -1503,7 +1680,7 @@ public class LocalRepositoryServicesResource
      *                                characteristics in the TypeDef for this entity's type or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/properties")
+    @PostMapping(path = "/instances/entity/{entityGUID}/properties")
 
     public EntityDetailResponse updateEntityProperties(@PathVariable String                      serverName,
                                                        @PathVariable String                      userId,
@@ -1529,7 +1706,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support undo or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{entityGUID}/previous")
+    @GetMapping(path = "/instances/entity/{entityGUID}/previous")
 
     public EntityDetailResponse undoEntityUpdate(@PathVariable String  serverName,
                                                  @PathVariable String  userId,
@@ -1559,7 +1736,7 @@ public class LocalRepositoryServicesResource
      *                                       soft-deletes (use purgeEntity() to remove the entity permanently) or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{obsoleteEntityGUID}/delete")
+    @PostMapping(path = "/instances/entity/{obsoleteEntityGUID}/delete")
 
     public EntityDetailResponse  deleteEntity(@PathVariable String                        serverName,
                                               @PathVariable String                        userId,
@@ -1586,7 +1763,7 @@ public class LocalRepositoryServicesResource
      * EntityNotDeletedException the entity is not in DELETED status and so can not be purged or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{deletedEntityGUID}/purge")
+    @PostMapping(path = "/instances/entity/{deletedEntityGUID}/purge")
 
     public VoidResponse purgeEntity(@PathVariable String                        serverName,
                                     @PathVariable String                        userId,
@@ -1613,7 +1790,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support soft-delete or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{deletedEntityGUID}/restore")
+    @GetMapping(path = "/instances/entity/{deletedEntityGUID}/restore")
 
     public EntityDetailResponse restoreEntity(@PathVariable String    serverName,
                                               @PathVariable String    userId,
@@ -1643,7 +1820,7 @@ public class LocalRepositoryServicesResource
      *                                characteristics in the TypeDef for this classification type or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/classification/{classificationName}")
+    @PostMapping(path = "/instances/entity/{entityGUID}/classification/{classificationName}")
 
     public EntityDetailResponse classifyEntity(@PathVariable String                      serverName,
                                                @PathVariable String                      userId,
@@ -1652,6 +1829,38 @@ public class LocalRepositoryServicesResource
                                                @RequestBody  InstancePropertiesRequest   propertiesRequestBody)
     {
         return restAPI.classifyEntity(serverName, userId, entityGUID, classificationName, propertiesRequestBody);
+    }
+
+    /**
+     * Add the requested classification to a specific entity.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param entityGUID String unique identifier (guid) for the entity.
+     * @param classificationName String name for the classification.
+     * @param classificationRequestBody values for the classification.
+     * @return EntityDetailResponse:
+     * EntityDetail showing the resulting entity header, properties and classifications or
+     * InvalidParameterException one of the parameters is invalid or null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                  the metadata collection is stored or
+     * EntityNotKnownException the entity identified by the guid is not found in the metadata collection or
+     * ClassificationErrorException the requested classification is either not known or not valid
+     *                                         for the entity or
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                                characteristics in the TypeDef for this classification type or
+     * FunctionNotSupportedException the repository does not support maintenance of metadata.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entity/{entityGUID}/classification/{classificationName}/detailed")
+
+    public EntityDetailResponse  classifyEntity(@PathVariable String                serverName,
+                                                @PathVariable String                userId,
+                                                @PathVariable String                entityGUID,
+                                                @PathVariable String                classificationName,
+                                                @RequestBody  ClassificationRequest classificationRequestBody)
+    {
+        return restAPI.classifyEntity(serverName, userId, entityGUID, classificationName, classificationRequestBody);
     }
 
 
@@ -1672,13 +1881,14 @@ public class LocalRepositoryServicesResource
      * ClassificationErrorException the requested classification is not set on the entity or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/classification/{classificationName}/delete")
+    @PostMapping(path = "/instances/entity/{entityGUID}/classification/{classificationName}/delete")
 
-    public EntityDetailResponse declassifyEntity(@PathVariable String          serverName,
-                                                 @PathVariable String          userId,
-                                                 @PathVariable String          entityGUID,
-                                                 @PathVariable String          classificationName,
-                                                 @RequestBody  OMRSAPIRequest  requestBody)
+    @SuppressWarnings(value = "unused")
+    public EntityDetailResponse declassifyEntity(@PathVariable                  String          serverName,
+                                                 @PathVariable                  String          userId,
+                                                 @PathVariable                  String          entityGUID,
+                                                 @PathVariable                  String          classificationName,
+                                                 @RequestBody(required = false) OMRSAPIRequest  requestBody)
     {
         return restAPI.declassifyEntity(serverName, userId, entityGUID, classificationName);
     }
@@ -1703,7 +1913,7 @@ public class LocalRepositoryServicesResource
      *                                characteristics in the TypeDef for this classification type or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/classification/{classificationName}/properties")
+    @PostMapping(path = "/instances/entity/{entityGUID}/classification/{classificationName}/properties")
 
     public EntityDetailResponse updateEntityClassification(@PathVariable String                      serverName,
                                                            @PathVariable String                      userId,
@@ -1735,7 +1945,7 @@ public class LocalRepositoryServicesResource
      *                                     the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship")
+    @PostMapping(path = "/instances/relationship")
 
     public RelationshipResponse addRelationship(@PathVariable String                    serverName,
                                                 @PathVariable String                    userId,
@@ -1769,7 +1979,7 @@ public class LocalRepositoryServicesResource
      *                                     the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/external")
+    @PostMapping(path = "/instances/relationship/external")
 
     public RelationshipResponse addExternalRelationship(@PathVariable String                    serverName,
                                                         @PathVariable String                    userId,
@@ -1796,7 +2006,7 @@ public class LocalRepositoryServicesResource
      *                                     the requested status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{relationshipGUID}/status")
+    @PostMapping(path = "/instances/relationship/{relationshipGUID}/status")
 
     public RelationshipResponse updateRelationshipStatus(@PathVariable String           serverName,
                                                          @PathVariable String           userId,
@@ -1824,7 +2034,7 @@ public class LocalRepositoryServicesResource
      *                                characteristics in the TypeDef for this relationship's type or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{relationshipGUID}/properties")
+    @PostMapping(path = "/instances/relationship/{relationshipGUID}/properties")
 
     public RelationshipResponse updateRelationshipProperties(@PathVariable String                      serverName,
                                                              @PathVariable String                      userId,
@@ -1850,7 +2060,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support undo or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{relationshipGUID}/previous")
+    @GetMapping(path = "/instances/relationship/{relationshipGUID}/previous")
 
     public RelationshipResponse undoRelationshipUpdate(@PathVariable String  serverName,
                                                        @PathVariable String  userId,
@@ -1879,7 +2089,7 @@ public class LocalRepositoryServicesResource
      *                                     soft-deletes or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{obsoleteRelationshipGUID}/delete")
+    @PostMapping(path = "/instances/relationship/{obsoleteRelationshipGUID}/delete")
 
     public RelationshipResponse deleteRelationship(@PathVariable String                        serverName,
                                                    @PathVariable String                        userId,
@@ -1906,7 +2116,7 @@ public class LocalRepositoryServicesResource
      * RelationshipNotDeletedException the requested relationship is not in DELETED status or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{deletedRelationshipGUID}/purge")
+    @PostMapping(path = "/instances/relationship/{deletedRelationshipGUID}/purge")
 
     public VoidResponse purgeRelationship(@PathVariable String                        serverName,
                                           @PathVariable String                        userId,
@@ -1934,7 +2144,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support soft-deletes
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{deletedRelationshipGUID}/restore")
+    @GetMapping(path = "/instances/relationship/{deletedRelationshipGUID}/restore")
 
     public RelationshipResponse restoreRelationship(@PathVariable String    serverName,
                                                     @PathVariable String    userId,
@@ -1968,7 +2178,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-identification or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/identity")
+    @PostMapping(path = "/instances/entity/{entityGUID}/identity")
 
     public EntityDetailResponse reIdentifyEntity(@PathVariable String                        serverName,
                                                  @PathVariable String                        userId,
@@ -2002,7 +2212,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-typing or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/type")
+    @PostMapping(path = "/instances/entity/{entityGUID}/type")
 
     public EntityDetailResponse reTypeEntity(@PathVariable String                serverName,
                                              @PathVariable String                userId,
@@ -2034,7 +2244,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-homing or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entity/{entityGUID}/home/{homeMetadataCollectionId}")
+    @PostMapping(path = "/instances/entity/{entityGUID}/home/{homeMetadataCollectionId}")
 
     public EntityDetailResponse reHomeEntity(@PathVariable String                        serverName,
                                              @PathVariable String                        userId,
@@ -2074,7 +2284,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-identification or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{relationshipGUID}/identity")
+    @PostMapping(path = "/instances/relationship/{relationshipGUID}/identity")
 
     public RelationshipResponse reIdentifyRelationship(@PathVariable String                        serverName,
                                                        @PathVariable String                        userId,
@@ -2108,7 +2318,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-typing or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{relationshipGUID}/type")
+    @PostMapping(path = "/instances/relationship/{relationshipGUID}/type")
 
     public RelationshipResponse reTypeRelationship(@PathVariable String                serverName,
                                                    @PathVariable String                userId,
@@ -2141,12 +2351,12 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance re-homing or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationship/{relationshipGUID}/home")
+    @PostMapping(path = "/instances/relationship/{relationshipGUID}/home/{homeMetadataCollectionId}")
 
     public RelationshipResponse reHomeRelationship(@PathVariable String                        serverName,
                                                    @PathVariable String                        userId,
                                                    @PathVariable String                        relationshipGUID,
-                                                   @RequestParam String                        homeMetadataCollectionId,
+                                                   @PathVariable String                        homeMetadataCollectionId,
                                                    @RequestParam String                        newHomeMetadataCollectionId,
                                                    @RequestParam(required=false) String        newHomeMetadataCollectionName,
                                                    @RequestBody  TypeDefValidationForRequest   typeDefValidationForRequest)
@@ -2190,13 +2400,128 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/reference-copy")
+    @PostMapping(path = "/instances/entities/reference-copy")
 
     public VoidResponse saveEntityReferenceCopy(@PathVariable String       serverName,
                                                 @PathVariable String       userId,
                                                 @RequestBody  EntityDetail entity)
     {
         return restAPI.saveEntityReferenceCopy(serverName, userId, entity);
+    }
+
+
+    /**
+     * Retrieve any locally homed classifications assigned to the requested entity.  This method is implemented by repository connectors that are able
+     * to store classifications for entities that are homed in another repository.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param entityGUID unique identifier of the entity with classifications to retrieve
+     * @return list of all of the classifications for this entity that are homed in this repository or
+     * InvalidParameterException the entity is null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * EntityNotKnownException the entity is not recognized by this repository or
+     * UserNotAuthorizedException to calling user is not authorized to retrieve this metadata or
+     * FunctionNotSupportedException this method is not supported
+     */
+    @GetMapping(path = "/instances/entity/{entityGUID}/home-classifications")
+
+    public ClassificationListResponse getHomeClassifications(@PathVariable String serverName,
+                                                             @PathVariable String userId,
+                                                             @PathVariable String entityGUID)
+    {
+        return restAPI.getHomeClassifications(serverName, userId, entityGUID);
+    }
+
+
+    /**
+     * Retrieve any locally homed classifications assigned to the requested entity.  This method is implemented by repository connectors that are able
+     * to store classifications for entities that are homed in another repository.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param entityGUID unique identifier of the entity with classifications to retrieve
+     * @param requestBody the time used to determine which version of the entity that is desired.
+     * @return list of all of the classifications for this entity that are homed in this repository or
+     * InvalidParameterException the entity is null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * EntityNotKnownException the entity is not recognized by this repository or
+     * UserNotAuthorizedException to calling user is not authorized to retrieve this metadata or
+     * FunctionNotSupportedException this method is not supported
+     */
+    @PostMapping(path = "/instances/entity/{entityGUID}/home-classifications/history")
+
+    public ClassificationListResponse getHomeClassifications(@PathVariable String         serverName,
+                                                             @PathVariable String         userId,
+                                                             @PathVariable String         entityGUID,
+                                                             @RequestBody  HistoryRequest requestBody)
+    {
+        return restAPI.getHomeClassifications(serverName, userId, entityGUID, requestBody);
+    }
+
+
+    /**
+     * Remove a reference copy of the the entity from the local repository.  This method can be used to
+     * remove reference copies from the local cohort, repositories that have left the cohort,
+     * or entities that have come from open metadata archives.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting server.
+     * @param entity the instance to purge.
+     * @return VoidResponse:
+     * void or
+     * InvalidParameterException one of the parameters is invalid or null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * EntityNotKnownException the entity identified by the guid is not found in the metadata collection or
+     * HomeEntityException the entity belongs to the local repository so creating a reference
+     *                               copy would be invalid or
+     * FunctionNotSupportedException the repository does not support instance reference copies or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entities/reference-copy/delete")
+
+    public VoidResponse deleteEntityReferenceCopy(@PathVariable String                        serverName,
+                                                  @PathVariable String                        userId,
+                                                  @RequestBody  EntityDetail                  entity)
+    {
+        return restAPI.deleteEntityReferenceCopy(serverName, userId, entity);
+    }
+
+
+    /**
+     * Remove a reference copy of the the entity from the local repository.  This method can be used to
+     * remove reference copies from the local cohort, repositories that have left the cohort,
+     * or entities that have come from open metadata archives.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting server.
+     * @param entity the instance to purge.
+     * @return VoidResponse:
+     * void or
+     * InvalidParameterException the entity is null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * TypeErrorException the requested type is not known, or not supported in the metadata repository
+     *                            hosting the metadata collection or
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                                  characteristics in the TypeDef for this entity's type or
+     * HomeEntityException the entity belongs to the local repository so creating a reference
+     *                               copy would be invalid or
+     * EntityConflictException the new entity conflicts with an existing entity or
+     * InvalidEntityException the new entity has invalid contents or
+     * FunctionNotSupportedException the repository does not support instance reference copies or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/entities/reference-copy/purge")
+
+    public VoidResponse purgeEntityReferenceCopy(@PathVariable String                        serverName,
+                                                 @PathVariable String                        userId,
+                                                 @RequestBody  EntityDetail                  entity)
+    {
+        return restAPI.purgeEntityReferenceCopy(serverName, userId, entity);
     }
 
 
@@ -2221,7 +2546,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/reference-copy/{entityGUID}/purge")
+    @PostMapping(path = "/instances/entities/reference-copy/{entityGUID}/purge")
 
     public VoidResponse purgeEntityReferenceCopy(@PathVariable String                        serverName,
                                                  @PathVariable String                        userId,
@@ -2253,7 +2578,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/entities/reference-copy/{entityGUID}/refresh")
+    @PostMapping(path = "/instances/entities/reference-copy/{entityGUID}/refresh")
 
     public VoidResponse refreshEntityReferenceCopy(@PathVariable String                        serverName,
                                                    @PathVariable String                        userId,
@@ -2265,6 +2590,71 @@ public class LocalRepositoryServicesResource
                                                   entityGUID,
                                                   homeMetadataCollectionId,
                                                   typeDefValidationForRequest);
+    }
+
+
+    /**
+     * Save the classification as a reference copy.  The id of the home metadata collection is already set up in the
+     * classification.  The entity may be either a locally homed entity or a reference copy.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param requestBody entity that the classification is attached to and classification to save.
+     *
+     * @return void response or
+     * InvalidParameterException one of the parameters is invalid or null.
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                          the metadata collection is stored.
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                        characteristics in the TypeDef for this classification type.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     * FunctionNotSupportedException the repository does not support maintenance of metadata.
+     * TypeErrorException the requested type is not known, or not supported in the metadata repository
+     *                    hosting the metadata collection.
+     * EntityConflictException the new entity conflicts with an existing entity.
+     * InvalidEntityException the new entity has invalid contents.
+     * FunctionNotSupportedException the repository does not support reference copies of instances.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "instances/entities/classifications/reference-copy")
+
+    public VoidResponse saveClassificationReferenceCopy(@PathVariable String                          serverName,
+                                                        @PathVariable String                          userId,
+                                                        @RequestBody  ClassificationWithEntityRequest requestBody)
+    {
+        return restAPI.saveClassificationReferenceCopy(serverName, userId, requestBody);
+    }
+
+
+    /**
+     * Remove the reference copy of the classification from the local repository. This method can be used to
+     * remove reference copies from the local cohort, repositories that have left the cohort,
+     * or relationships that have come from open metadata archives.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting user.
+     * @param requestBody entity that the classification is attached to and classification to purge.
+     *
+     * @return void response or
+     * InvalidParameterException one of the parameters is invalid or null.
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                        characteristics in the TypeDef for this classification type.
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                          the metadata collection is stored.
+     * TypeErrorException the requested type is not known, or not supported in the metadata repository
+     *                    hosting the metadata collection.
+     * EntityConflictException the new entity conflicts with an existing entity.
+     * InvalidEntityException the new entity has invalid contents.
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     * FunctionNotSupportedException the repository does not support maintenance of metadata.
+     */
+    @PostMapping(path = "instances/entities/classifications/reference-copy/purge")
+
+    public  VoidResponse purgeClassificationReferenceCopy(@PathVariable String                          serverName,
+                                                          @PathVariable String                          userId,
+                                                          @RequestBody  ClassificationWithEntityRequest requestBody)
+    {
+        return restAPI.purgeClassificationReferenceCopy(serverName, userId, requestBody);
     }
 
 
@@ -2293,13 +2683,86 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/reference-copy")
+    @PostMapping(path = "/instances/relationships/reference-copy")
 
     public VoidResponse saveRelationshipReferenceCopy(@PathVariable String         serverName,
                                                       @PathVariable String         userId,
                                                       @RequestBody  Relationship   relationship)
     {
         return restAPI.saveRelationshipReferenceCopy(serverName, userId, relationship);
+    }
+
+
+
+    /**
+     * Remove the reference copy of the relationship from the local repository. This method can be used to
+     * remove reference copies from the local cohort, repositories that have left the cohort,
+     * or relationships that have come from open metadata archives.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting server.
+     * @param relationship the instance to purge.
+     * @return VoidResponse:
+     * void or
+     * InvalidParameterException the relationship is null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * TypeErrorException the requested type is not known, or not supported in the metadata repository
+     *                            hosting the metadata collection or
+     * EntityNotKnownException one of the entities identified by the relationship is not found in the
+     *                                   metadata collection or
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                                  characteristics in the TypeDef for this relationship's type or
+     * HomeRelationshipException the relationship belongs to the local repository so creating a reference
+     *                                     copy would be invalid or
+     * RelationshipConflictException the new relationship conflicts with an existing relationship.
+     * InvalidRelationshipException the new relationship has invalid contents or
+     * FunctionNotSupportedException the repository does not support instance reference copies or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/relationships/reference-copy/delete")
+
+    public VoidResponse deleteRelationshipReferenceCopy(@PathVariable String                        serverName,
+                                                        @PathVariable String                        userId,
+                                                        @RequestBody  Relationship                  relationship)
+    {
+        return restAPI.deleteRelationshipReferenceCopy(serverName, userId, relationship);
+    }
+
+
+    /**
+     * Remove the reference copy of the relationship from the local repository. This method can be used to
+     * remove reference copies from the local cohort, repositories that have left the cohort,
+     * or relationships that have come from open metadata archives.
+     *
+     * @param serverName unique identifier for requested server.
+     * @param userId unique identifier for requesting server.
+     * @param relationship the instance to purge.
+     * @return VoidResponse:
+     * void or
+     * InvalidParameterException the relationship is null or
+     * RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored or
+     * TypeErrorException the requested type is not known, or not supported in the metadata repository
+     *                            hosting the metadata collection or
+     * EntityNotKnownException one of the entities identified by the relationship is not found in the
+     *                                   metadata collection or
+     * PropertyErrorException one or more of the requested properties are not defined, or have different
+     *                                  characteristics in the TypeDef for this relationship's type or
+     * HomeRelationshipException the relationship belongs to the local repository so creating a reference
+     *                                     copy would be invalid or
+     * RelationshipConflictException the new relationship conflicts with an existing relationship.
+     * InvalidRelationshipException the new relationship has invalid contents or
+     * FunctionNotSupportedException the repository does not support instance reference copies or
+     * UserNotAuthorizedException the userId is not permitted to perform this operation.
+     */
+    @PostMapping(path = "/instances/relationships/reference-copy/purge")
+
+    public VoidResponse purgeRelationshipReferenceCopy(@PathVariable String                        serverName,
+                                                       @PathVariable String                        userId,
+                                                       @RequestBody  Relationship                  relationship)
+    {
+        return restAPI.purgeRelationshipReferenceCopy(serverName, userId, relationship);
     }
 
 
@@ -2324,7 +2787,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/reference-copy/{relationshipGUID}/purge")
+    @PostMapping(path = "/instances/relationships/reference-copy/{relationshipGUID}/purge")
 
     public VoidResponse purgeRelationshipReferenceCopy(@PathVariable String                        serverName,
                                                        @PathVariable String                        userId,
@@ -2360,7 +2823,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support instance reference copies or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances/relationships/reference-copy/{relationshipGUID}/refresh")
+    @PostMapping(path = "/instances/relationships/reference-copy/{relationshipGUID}/refresh")
 
     public VoidResponse refreshRelationshipReferenceCopy(@PathVariable String                        serverName,
                                                          @PathVariable String                        userId,
@@ -2400,7 +2863,7 @@ public class LocalRepositoryServicesResource
      * FunctionNotSupportedException the repository does not support reference copies of instances or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/instances")
+    @PostMapping(path = "/instances")
 
     public VoidResponse  saveInstanceReferenceCopies(@PathVariable String                 serverName,
                                                      @PathVariable String                 userId,

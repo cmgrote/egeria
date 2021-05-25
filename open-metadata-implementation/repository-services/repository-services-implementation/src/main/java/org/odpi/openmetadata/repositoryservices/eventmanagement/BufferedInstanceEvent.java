@@ -12,20 +12,52 @@ import org.odpi.openmetadata.repositoryservices.events.future.DelegatableFuture;
  * 
  * @see OMRSRepositoryEventManager
  */
-public class BufferedInstanceEvent {
-    
+public class BufferedInstanceEvent
+{
     private final OMRSInstanceEvent event;
+    
+    private final String messageId;
     private final DelegatableFuture associatedFuture = new DelegatableFuture();
     
-    public BufferedInstanceEvent(OMRSInstanceEvent event) {
+    /**
+     * Constructor
+     * 
+     * @param event event content
+     * @param messageId identifier
+     */
+    public BufferedInstanceEvent(OMRSInstanceEvent event, String messageId)
+    {
         this.event = event;
+        this.messageId = messageId;
     }
+    
+    
+    /**
+     * Gets the associated {@link OMRSInstanceEvent}
+     * 
+     * @return returns event content
+     */
     public OMRSInstanceEvent getEvent() {
         return event;
     }
-    
+
+
+    /**
+     * Gets the {@link DelegatableFuture} associated with the event
+     * @return future object
+     */
     public DelegatableFuture getFuture() {
         return associatedFuture;
+    }
+
+
+    /**
+     * Gets the message id for the event.
+     *
+     * @return messageId
+     */
+    public String getMessageId() {
+        return messageId;
     }
     
 }

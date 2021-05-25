@@ -19,6 +19,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ExternalReference extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of an external reference
      */
@@ -234,7 +236,7 @@ public class ExternalReference extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof ExternalReference))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -244,11 +246,24 @@ public class ExternalReference extends Referenceable
         }
         ExternalReference that = (ExternalReference) objectToCompare;
         return Objects.equals(getReferenceId(), that.getReferenceId()) &&
-                Objects.equals(getLinkDescription(), that.getLinkDescription()) &&
-                Objects.equals(getDisplayName(), that.getDisplayName()) &&
-                Objects.equals(uri, that.uri) &&
-                Objects.equals(getResourceDescription(), that.getResourceDescription()) &&
-                Objects.equals(getVersion(), that.getVersion()) &&
-                Objects.equals(getOrganization(), that.getOrganization());
+                       Objects.equals(getLinkDescription(), that.getLinkDescription()) &&
+                       Objects.equals(getDisplayName(), that.getDisplayName()) &&
+                       Objects.equals(uri, that.uri) &&
+                       Objects.equals(getResourceDescription(), that.getResourceDescription()) &&
+                       Objects.equals(getVersion(), that.getVersion()) &&
+                       Objects.equals(getOrganization(), that.getOrganization());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getReferenceId(), getLinkDescription(), getDisplayName(), uri, getResourceDescription(), getVersion(),
+                            getOrganization());
     }
 }

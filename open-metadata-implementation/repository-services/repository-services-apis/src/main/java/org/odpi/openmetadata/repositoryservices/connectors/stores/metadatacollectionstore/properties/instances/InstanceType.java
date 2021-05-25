@@ -23,6 +23,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class InstanceType extends InstanceElementHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private TypeDefCategory           typeDefCategory         = TypeDefCategory.UNKNOWN_DEF;
     private String                    typeDefGUID             = null;
     private String                    typeDefName             = null;
@@ -119,6 +121,7 @@ public class InstanceType extends InstanceElementHeader
     {
         this.typeDefCategory = typeDefCategory;
     }
+
 
     /**
      * Return the unique identifier for the type of this instance.

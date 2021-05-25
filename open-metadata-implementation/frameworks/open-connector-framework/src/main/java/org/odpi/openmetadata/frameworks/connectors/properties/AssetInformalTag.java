@@ -21,6 +21,8 @@ import java.util.Objects;
  */
 public class AssetInformalTag extends AssetElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     protected InformalTag   informalTagBean;
 
 
@@ -102,12 +104,23 @@ public class AssetInformalTag extends AssetElementHeader
 
 
     /**
+     * Return if the link to the tag is private to the creating user.
+     *
+     * @return boolean
+     */
+    public boolean isPublic()
+    {
+        return informalTagBean.getIsPublic();
+    }
+
+
+    /**
      * Return boolean flag to say whether the tag is private or not.  A private tag is only seen by the
      * person who set it up.  Public tags are visible to everyone who can see the asset description.
      *
      * @return boolean is private flag
      */
-    public boolean isPrivateTag() { return informalTagBean.isPrivateTag(); }
+    public boolean isPrivateTag() { return informalTagBean.getIsPrivateTag(); }
 
 
     /**
@@ -147,6 +160,7 @@ public class AssetInformalTag extends AssetElementHeader
     }
 
 
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -160,7 +174,7 @@ public class AssetInformalTag extends AssetElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetInformalTag))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -169,6 +183,18 @@ public class AssetInformalTag extends AssetElementHeader
             return false;
         }
         AssetInformalTag that = (AssetInformalTag) objectToCompare;
-        return Objects.equals(getInformalTagBean(), that.getInformalTagBean());
+        return Objects.equals(informalTagBean, that.informalTagBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), informalTagBean);
     }
 }

@@ -3,9 +3,7 @@
 package org.odpi.openmetadata.frameworks.connectors.properties.beans;
 
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.*;
 
 import java.util.Objects;
 
@@ -22,7 +20,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ComplexSchemaType extends SchemaType
 {
-    protected  int attributeCount      = 0;
+    private static final long     serialVersionUID = 1L;
+
+    protected int    attributeCount = 0;
+
 
     /**
      * Default constructor used by subclasses
@@ -34,9 +35,7 @@ public class ComplexSchemaType extends SchemaType
 
 
     /**
-     * Copy/clone Constructor the parentAsset is passed separately to the template because it is also
-     * likely to be being cloned in the same operation and we want the definitions clone to point to the
-     * asset clone and not the original asset.
+     * Copy/clone Constructor.
      *
      * @param template template object to copy.
      */
@@ -73,7 +72,7 @@ public class ComplexSchemaType extends SchemaType
     /**
      * Returns a clone of this object as the abstract SchemaElement class.
      *
-     * @return PrimitiveSchemaType object
+     * @return ComplexSchemaType object
      */
     @Override
     public SchemaElement cloneSchemaElement()
@@ -85,7 +84,7 @@ public class ComplexSchemaType extends SchemaType
     /**
      * Returns a clone of this object as the abstract SchemaType class.
      *
-     * @return PrimitiveSchemaType object
+     * @return ComplexSchemaType object
      */
     @Override
     public SchemaType cloneSchemaType()
@@ -103,21 +102,26 @@ public class ComplexSchemaType extends SchemaType
     public String toString()
     {
         return "ComplexSchemaType{" +
-                "attributeCount='" + attributeCount + '\'' +
-                ", displayName='" + getDisplayName() + '\'' +
+                "attributeCount=" + attributeCount +
                 ", versionNumber='" + getVersionNumber() + '\'' +
                 ", author='" + getAuthor() + '\'' +
                 ", usage='" + getUsage() + '\'' +
                 ", encodingStandard='" + getEncodingStandard() + '\'' +
+                ", namespace='" + getNamespace() + '\'' +
+                ", deprecated=" + getIsDeprecated() +
+                ", displayName='" + getDisplayName() + '\'' +
+                ", description='" + getDescription() + '\'' +
                 ", qualifiedName='" + getQualifiedName() + '\'' +
                 ", additionalProperties=" + getAdditionalProperties() +
-                ", extendedProperties=" + getExtendedProperties() +
+                ", meanings=" + getMeanings() +
                 ", type=" + getType() +
                 ", GUID='" + getGUID() + '\'' +
                 ", URL='" + getURL() + '\'' +
                 ", classifications=" + getClassifications() +
+                ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
+
 
     /**
      * Compare the values of the supplied object with those stored in the current object.
@@ -132,7 +136,7 @@ public class ComplexSchemaType extends SchemaType
         {
             return true;
         }
-        if (!(objectToCompare instanceof ComplexSchemaType))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -141,6 +145,18 @@ public class ComplexSchemaType extends SchemaType
             return false;
         }
         ComplexSchemaType that = (ComplexSchemaType) objectToCompare;
-        return Objects.equals(getAttributeCount(), that.getAttributeCount());
+        return getAttributeCount() == that.getAttributeCount();
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getAttributeCount());
     }
 }

@@ -2,18 +2,12 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.dataengine.client;
 
-import org.odpi.openmetadata.accessservices.dataengine.model.Attribute;
-import org.odpi.openmetadata.accessservices.dataengine.model.LineageMapping;
-import org.odpi.openmetadata.accessservices.dataengine.model.PortAlias;
-import org.odpi.openmetadata.accessservices.dataengine.model.PortImplementation;
-import org.odpi.openmetadata.accessservices.dataengine.model.PortType;
+import org.odpi.openmetadata.accessservices.dataengine.model.*;
 import org.odpi.openmetadata.accessservices.dataengine.model.Process;
-import org.odpi.openmetadata.accessservices.dataengine.model.SchemaType;
-import org.odpi.openmetadata.accessservices.dataengine.model.SoftwareServerCapability;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.OwnerType;
 
 import java.util.List;
 
@@ -24,234 +18,202 @@ import java.util.List;
 public interface DataEngineClient {
 
     /**
-     * Creates the process, with all the ports, schema types and corresponding relationships
+     * Create or update the processes, with all the ports, schema types and corresponding relationships including
+     * process hierarchy relationships.
      *
-     * @param userId              the name of the calling user
-     * @param qualifiedName       the qualifiedName name of the process
-     * @param processName         the name of the process
-     * @param description         the description of the process
-     * @param latestChange        the description for the latest change done for the process
-     * @param zoneMembership      the list of zones of the process
-     * @param displayName         the display name of the process
-     * @param formula             the formula for the process
-     * @param owner               the name of the owner for this process
-     * @param ownerType           the type of the owner for this process
-     * @param portImplementations the list of port implementations
-     * @param portAliases         the list of port aliases
-     * @param lineageMappings     the list of lineage mappings
-     *
-     * @return unique identifier of the process in the repository
-     *
-     * @throws org.odpi.openmetadata.commonservices.ffdc.exceptions.InvalidParameterException the bean properties are
-     * invalid
-     * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
-     */
-    String createProcess(String userId, String qualifiedName, String processName, String description,
-                         String latestChange, List<String> zoneMembership, String displayName, String formula,
-                         String owner, OwnerType ownerType, List<PortImplementation> portImplementations,
-                         List<PortAlias> portAliases, List<LineageMapping> lineageMappings)
-            throws
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException;
-
-    /**
-     * Creates the process, with all the ports, schema types and corresponding relationships
-     *
-     * @param userId  the name of the calling user
-     * @param process the process bean
-     *
-     * @return unique identifier of the process in the repository
-     *
-     * @throws org.odpi.openmetadata.commonservices.ffdc.exceptions.InvalidParameterException the bean properties are
-     * invalid
-     * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
-     */
-    String createProcess(String userId, Process process) throws InvalidParameterException, PropertyServerException,
-                                                                UserNotAuthorizedException;
-
-
-    /**
-     * Creates the process, with all the ports, schema types and corresponding relationships
-     *
-     * @param userId  the name of the calling user
+     * @param userId    the name of the calling user
      * @param processes list of processes
      *
      * @return unique identifier of the process in the repository
      *
-     * @throws org.odpi.openmetadata.commonservices.ffdc.exceptions.InvalidParameterException the bean properties are
-     * invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    List<String> createProcesses(String userId, List<Process> processes) throws InvalidParameterException,
-                                                                          PropertyServerException,
-                                                                          UserNotAuthorizedException;
+    List<String> createOrUpdateProcesses(String userId, List<Process> processes) throws InvalidParameterException,
+                                                                                        PropertyServerException,
+                                                                                        UserNotAuthorizedException,
+                                                                                        ConnectorCheckedException;
 
     /**
-     * Create the software server capability entity
+     * Delete a list of processes
      *
-     * @param userId        the name of the calling user
-     * @param qualifiedName the qualifiedName name of the server
-     * @param name          the name of the server
-     * @param description   the description of the server
-     * @param type          the type of the server
-     * @param version       the version of the server
-     * @param patchLevel    the patch level of the server
-     * @param source        the source of the server
+     * @param userId         the name of the calling user
+     * @param qualifiedNames the qualified names of the processes to be deleted
+     * @param guids          the unique identifiers of the processes to be deleted
      *
-     * @return unique identifier of the server in the repository
-     *
-     * @throws InvalidParameterException the bean properties are invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    String createSoftwareServerCapability(String userId, String qualifiedName, String name, String description,
-                                          String type, String version, String patchLevel, String source)
-            throws
-            InvalidParameterException,
-            UserNotAuthorizedException,
-            PropertyServerException;
+    void deleteProcesses(String userId, List<String> qualifiedNames, List<String> guids) throws InvalidParameterException,
+                                                                                                PropertyServerException,
+                                                                                                UserNotAuthorizedException,
+                                                                                                ConnectorCheckedException;
 
     /**
-     * Create the software server capability entity
+     * Create or update the software server capability entity
      *
      * @param userId                   the name of the calling user
      * @param softwareServerCapability the software server capability bean
      *
      * @return unique identifier of the server in the repository
      *
-     * @throws InvalidParameterException the bean properties are invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    String createSoftwareServerCapability(String userId, SoftwareServerCapability softwareServerCapability) throws
-                                                                                                            InvalidParameterException,
-                                                                                                            UserNotAuthorizedException,
-                                                                                                            PropertyServerException;
+    String createExternalDataEngine(String userId, SoftwareServerCapability softwareServerCapability) throws InvalidParameterException,
+                                                                                                             UserNotAuthorizedException,
+                                                                                                             PropertyServerException,
+                                                                                                             ConnectorCheckedException;
 
     /**
-     * Create the schema type entity, with the corresponding schema attributes and relationships
+     * Delete the external data engine
      *
-     * @param userId           the name of the calling user
-     * @param qualifiedName    the qualifiedName name of the schema type
-     * @param displayName      the display name of the schema type
-     * @param author           the author of the schema type
-     * @param encodingStandard the encoding for the schema type
-     * @param usage            the usage for the schema type
-     * @param versionNumber    the version number for the schema type
-     * @param attributeList    the list of attributes for the schema type
+     * @param userId        the name of the calling user
+     * @param qualifiedName the qualified name of the external data engine
+     * @param guid          the unique identifier of the external data engine
      *
-     * @return unique identifier of the schema type in the repository
-     *
-     * @throws InvalidParameterException the bean properties are invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    String createSchemaType(String userId, String qualifiedName, String displayName, String author,
-                            String encodingStandard, String usage, String versionNumber, List<Attribute> attributeList)
-            throws InvalidParameterException,
-                   PropertyServerException,
-                   UserNotAuthorizedException;
+    void deleteExternalDataEngine(String userId, String qualifiedName, String guid) throws InvalidParameterException,
+                                                                                           UserNotAuthorizedException,
+                                                                                           PropertyServerException,
+                                                                                           ConnectorCheckedException;
 
     /**
-     * Create the schema type entity, with the corresponding schema attributes and relationships
+     * Create or update the schema type entity, with the corresponding schema attributes and relationships
      *
      * @param userId     the name of the calling user
      * @param schemaType the schema type bean
      *
      * @return unique identifier of the schema type in the repository
      *
-     * @throws InvalidParameterException the bean properties are invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    String createSchemaType(String userId, SchemaType schemaType) throws InvalidParameterException,
-                                                                         PropertyServerException,
-                                                                         UserNotAuthorizedException;
+    String createOrUpdateSchemaType(String userId, SchemaType schemaType) throws InvalidParameterException,
+                                                                                 PropertyServerException,
+                                                                                 UserNotAuthorizedException,
+                                                                                 ConnectorCheckedException;
 
     /**
-     * Create the port implementation entity, with the corresponding schema type and port schema relationship
+     * Delete the schema type
      *
      * @param userId        the name of the calling user
-     * @param qualifiedName the qualifiedName name of the port
-     * @param displayName   the display name of the port
-     * @param portType      the type of the port
-     * @param schemaType    the schema type attached to the port implementation
+     * @param qualifiedName the qualified name of schema type
+     * @param guid          the unique identifier of the external data engine
+     *
+     * @throws InvalidParameterException  the bean properties are invalid
+     * @throws UserNotAuthorizedException user not authorized to issue this request
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
+     */
+    void deleteSchemaType(String userId, String qualifiedName, String guid) throws InvalidParameterException,
+                                                                                   PropertyServerException,
+                                                                                   UserNotAuthorizedException,
+                                                                                   ConnectorCheckedException;
+
+    /**
+     * Create or update the port implementation entity,with the corresponding schema type and port schema relationship. It attaches the port
+     * implementation to the provided process
+     *
+     * @param userId               the name of the calling user
+     * @param portImplementation   the port implementation bean
+     * @param processQualifiedName the process qualified name
      *
      * @return unique identifier of the port implementation in the repository
      *
-     * @throws org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException the bean properties are
-     * invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  internal problem with the connector
      */
-    String createPortImplementation(String userId, String qualifiedName, String displayName, PortType portType,
-                                    SchemaType schemaType)
-            throws
-            org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException,
-            UserNotAuthorizedException,
-            PropertyServerException;
+    String createOrUpdatePortImplementation(String userId, PortImplementation portImplementation, String processQualifiedName) throws
+                                                                                                                               InvalidParameterException,
+                                                                                                                               UserNotAuthorizedException,
+                                                                                                                               PropertyServerException,
+                                                                                                                               ConnectorCheckedException;
 
     /**
-     * Create the port implementation entity, with the corresponding schema type and port schema relationship
-     *
-     * @param userId             the name of the calling user
-     * @param portImplementation the port implementation bean
-     *
-     * @return unique identifier of the port implementation in the repository
-     *
-     * @throws org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException the bean properties are
-     * invalid
-     * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
-     */
-    String createPortImplementation(String userId, PortImplementation portImplementation) throws
-                                                                                          org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException,
-                                                                                          UserNotAuthorizedException,
-                                                                                          PropertyServerException;
-
-    /**
-     * Create the Port Alias entity with a PortDelegation relationship
+     * Delete the port implementation
      *
      * @param userId        the name of the calling user
-     * @param qualifiedName the qualifiedName name of the port
-     * @param displayName   the display name of the port
-     * @param portType      the type of the port
-     * @param delegatesTo   the qualified name of the delegated port
+     * @param qualifiedName the qualified name of port
+     * @param guid          the unique identifier of the external data engine
      *
-     * @return unique identifier of the port alias in the repository
-     *
-     * @throws org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException the bean properties are
-     * invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
      */
-    String createPortAlias(String userId, String qualifiedName, String displayName, PortType portType,
-                           String delegatesTo) throws
-                                               org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException,
-                                               UserNotAuthorizedException,
-                                               PropertyServerException;
+    void deletePortImplementation(String userId, String qualifiedName, String guid) throws InvalidParameterException,
+                                                                                           PropertyServerException,
+                                                                                           UserNotAuthorizedException,
+                                                                                           ConnectorCheckedException;
 
     /**
-     * Create the Port Alias entity with a PortDelegation relationship
+     * Create or update the port alias entity with a PortDelegation relationship. It attaches the port alias to the provided process
      *
-     * @param userId    the name of the calling user
-     * @param portAlias the port alias bean
+     * @param userId               the name of the calling user
+     * @param portAlias            the port alias bean
+     * @param processQualifiedName the process qualified name
      *
      * @return unique identifier of the port alias in the repository
      *
-     * @throws org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException the bean properties are
-     * invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  internal problem with the connector
      */
-    String createPortAlias(String userId, PortAlias portAlias) throws
-                                                               org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException,
-                                                               UserNotAuthorizedException,
-                                                               PropertyServerException;
+    String createOrUpdatePortAlias(String userId, PortAlias portAlias, String processQualifiedName) throws InvalidParameterException,
+                                                                                                           UserNotAuthorizedException,
+                                                                                                           PropertyServerException,
+                                                                                                           ConnectorCheckedException;
+
+    /**
+     * Delete the port alias
+     *
+     * @param userId        the name of the calling user
+     * @param qualifiedName the qualified name of port
+     * @param guid          the unique identifier of the external data engine
+     *
+     * @throws InvalidParameterException  the bean properties are invalid
+     * @throws UserNotAuthorizedException user not authorized to issue this request
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  problem with the underlying connector (if used)
+     */
+    void deletePortAlias(String userId, String qualifiedName, String guid) throws InvalidParameterException,
+                                                                                  PropertyServerException,
+                                                                                  UserNotAuthorizedException,
+                                                                                  ConnectorCheckedException;
+
+    /**
+     * Add a ProcessHierarchy relationship to a process
+     *
+     * @param userId           the name of the calling user
+     * @param processHierarchy the process hierarchy bean
+     *
+     * @return the unique identifier (guid) of the child of the process hierarchy that was updated
+     *
+     * @throws InvalidParameterException  the bean properties are invalid
+     * @throws UserNotAuthorizedException user not authorized to issue this request
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  internal problem with the connector
+     */
+    String addProcessHierarchy(String userId, ProcessHierarchy processHierarchy) throws InvalidParameterException,
+                                                                                        UserNotAuthorizedException,
+                                                                                        PropertyServerException,
+                                                                                        ConnectorCheckedException;
 
     /**
      * Add lineage mapping relationships between schema types
@@ -259,28 +221,27 @@ public interface DataEngineClient {
      * @param userId          the name of the calling user
      * @param lineageMappings list of lineage mappings
      *
-     * @throws InvalidParameterException the bean properties are invalid
+     * @throws InvalidParameterException  the bean properties are invalid
      * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @throws PropertyServerException    problem accessing the property server
+     * @throws ConnectorCheckedException  internal problem with the connector
      */
     void addLineageMappings(String userId, List<LineageMapping> lineageMappings) throws InvalidParameterException,
                                                                                         UserNotAuthorizedException,
-                                                                                        PropertyServerException;
+                                                                                        PropertyServerException,
+                                                                                        ConnectorCheckedException;
 
     /**
-     * Add ports and process ports relationship to an existing port
+     * Sets external source system name using the data engine client
      *
-     * @param userId      the name of the calling user
-     * @param portGUIDs   the list of port GUIDs
-     * @param processGUID the process GUYID
-     *
-     * @throws InvalidParameterException the bean properties are invalid
-     * @throws UserNotAuthorizedException user not authorized to issue this request
-     * @throws PropertyServerException problem accessing the property server
+     * @param externalSourceName Source system name
      */
-    void addPortsToProcess(String userId, List<String> portGUIDs, String processGUID)
-            throws
-            InvalidParameterException,
-            UserNotAuthorizedException,
-            PropertyServerException;
+    void setExternalSourceName(String externalSourceName);
+
+    /**
+     * Returns the name of the source system using data engine client
+     *
+     * @return Source system name
+     */
+    String getExternalSourceName();
 }

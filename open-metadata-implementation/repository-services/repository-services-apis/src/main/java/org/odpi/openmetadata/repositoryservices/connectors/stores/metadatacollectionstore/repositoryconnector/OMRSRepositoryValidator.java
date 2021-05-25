@@ -4,9 +4,12 @@ package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacolle
 
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.MatchCriteria;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.search.SearchClassifications;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.search.SearchProperties;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.*;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -172,7 +175,7 @@ public interface OMRSRepositoryValidator
     boolean validTypeDefId(String          sourceName,
                            String          typeDefGUID,
                            String          typeDefName,
-                           long            typeDefVersion,
+                           String          typeDefVersion,
                            TypeDefCategory category);
 
 
@@ -189,7 +192,7 @@ public interface OMRSRepositoryValidator
     boolean validAttributeTypeDefId(String                   sourceName,
                                     String                   attributeTypeDefGUID,
                                     String                   attributeTypeDefName,
-                                    long                     attributeTypeDefVersion,
+                                    String                   attributeTypeDefVersion,
                                     AttributeTypeDefCategory category);
 
 
@@ -324,9 +327,29 @@ public interface OMRSRepositoryValidator
                             String name,
                             String methodName) throws InvalidParameterException;
 
+    /**
+     * Validate that a TypeDef's identifiers are not null and return the type.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param guidParameterName  name of the parameter that passed the guid.
+     * @param nameParameterName  name of the parameter that passed the name.
+     * @param guid  unique identifier for a type or an instance passed on the request
+     * @param name  name of TypeDef.
+     * @param methodName  method receiving the call
+     * @return retrieved type
+     * @throws InvalidParameterException  no guid provided
+     */
+    TypeDef getValidTypeDefFromIds(String sourceName,
+                                   String guidParameterName,
+                                   String nameParameterName,
+                                   String guid,
+                                   String name,
+                                   String methodName) throws InvalidParameterException;
+
+
 
     /**
-     * Validate that an AttributeTypeDef's identifiers are not null and are recognized.
+     * Validate that an AttributeTypeDef's identifiers are not null.
      *
      * @param sourceName  source of the request (used for logging)
      * @param guidParameterName  name of the parameter that passed the guid.
@@ -342,6 +365,28 @@ public interface OMRSRepositoryValidator
                                      String guid,
                                      String name,
                                      String methodName) throws InvalidParameterException;
+
+
+    /**
+     * Validate that an AttributeTypeDef's identifiers are not null and are recognized
+     * and return the type.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param guidParameterName  name of the parameter that passed the guid.
+     * @param nameParameterName  name of the parameter that passed the name.
+     * @param guid  unique identifier for a type or an instance passed on the request
+     * @param name  name of TypeDef.
+     * @param methodName  method receiving the call
+     * @return retrieved type
+     * @throws InvalidParameterException  no guid, or name provided
+     */
+    AttributeTypeDef getValidAttributeTypeDefFromIds(String sourceName,
+                                                     String guidParameterName,
+                                                     String nameParameterName,
+                                                     String guid,
+                                                     String name,
+                                                     String methodName) throws InvalidParameterException;
+
 
 
     /**
@@ -377,18 +422,40 @@ public interface OMRSRepositoryValidator
 
 
     /**
+     * Validate that the types and subtypes (if specified) fit each other.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param guidParameterName  name of the parameter that passed the guid
+     * @param guid  unique identifier for a type passed on the request
+     * @param subtypeParameterName  name of the parameter that passed a list of subtype guids
+     * @param subtypeGuids  list of unique identifiers for the subtypes passed on the request
+     * @param methodName  method receiving the call
+     * @throws TypeErrorException  unknown type guid, or subtype guids that are not subtypes of the provided guid
+     */
+    void validateOptionalTypeGUIDs(String sourceName,
+                                   String guidParameterName,
+                                   String guid,
+                                   String subtypeParameterName,
+                                   List<String> subtypeGuids,
+                                   String methodName) throws TypeErrorException;
+
+
+    /**
      * Verify that a TypeDefPatch is not null.
      *
      * @param sourceName  source of the request (used for logging)
      * @param patch  patch to test
      * @param methodName  calling method
+     * @return current value of the type
      * @throws InvalidParameterException  the patch is null
+     * @throws TypeDefNotKnownException the type is not known
      * @throws PatchErrorException  the patch is invalid
      */
-    void validateTypeDefPatch(String       sourceName,
-                              TypeDefPatch patch,
-                              String       methodName) throws InvalidParameterException,
-                                                              PatchErrorException;
+    TypeDef validateTypeDefPatch(String       sourceName,
+                                 TypeDefPatch patch,
+                                 String       methodName) throws InvalidParameterException,
+                                                                 TypeDefNotKnownException,
+                                                                 PatchErrorException;
 
 
     /**
@@ -466,6 +533,24 @@ public interface OMRSRepositoryValidator
                          TypeDef typeDef,
                          String  methodName) throws InvalidParameterException,
                                                     InvalidTypeDefException;
+
+    /**
+     * Validate that the supplied type is a valid active type.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param typeParameterName  the name of the parameter that passed the type
+     * @param typeDefSummary  the type to test
+     * @param category  the expected category of the type
+     * @param methodName  the name of the method that supplied the type
+     * @throws InvalidParameterException  the type is null or contains invalid values
+     * @throws TypeErrorException  the type is not active
+     */
+    void validateActiveType(String          sourceName,
+                            String          typeParameterName,
+                            TypeDefSummary  typeDefSummary,
+                            TypeDefCategory category,
+                            String          methodName) throws TypeErrorException, InvalidParameterException;
+
 
 
     /**
@@ -647,6 +732,18 @@ public interface OMRSRepositoryValidator
 
 
     /**
+     * Validate that a home metadata collection identifier in an classification is not null.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param classification classification to test.
+     * @param methodName method receiving the call
+     * @throws RepositoryErrorException no guid provided
+     */
+    void validateHomeMetadataGUID(String           sourceName,
+                                  Classification   classification,
+                                  String           methodName) throws RepositoryErrorException;
+
+    /**
      * Validate that the asOfTime parameter is not for the future.
      *
      * @param sourceName  source of the request (used for logging)
@@ -674,6 +771,23 @@ public interface OMRSRepositoryValidator
                                  String parameterName,
                                  Date   asOfTime,
                                  String methodName) throws InvalidParameterException;
+
+
+    /**
+     * Validate that the time parameters are not inverted ('from' later than 'to').
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param parameterName name of the parameter that passed the guid.
+     * @param fromTime the earliest point in time from which to retrieve historical versions of the instance (inclusive)
+     * @param toTime the latest point in time from which to retrieve historical versions of the instance (exclusive)
+     * @param methodName method receiving the call
+     * @throws InvalidParameterException 'fromTime' is later than 'toTime'
+     */
+    void validateDateRange(String sourceName,
+                           String parameterName,
+                           Date   fromTime,
+                           Date   toTime,
+                           String methodName) throws InvalidParameterException;
 
 
     /**
@@ -817,6 +931,36 @@ public interface OMRSRepositoryValidator
 
 
     /**
+     * Validate the property-based search conditions.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param parameterName  name of the parameter that passed the property-based conditions
+     * @param matchProperties  property-based conditions
+     * @param methodName  method receiving the call
+     * @throws InvalidParameterException  property-based conditions are invalid
+     */
+    void validateSearchProperties(String sourceName,
+                                  String parameterName,
+                                  SearchProperties matchProperties,
+                                  String methodName) throws InvalidParameterException;
+
+
+    /**
+     * Validate the classification-based search conditions.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param parameterName  name of the parameter that passed the classification-based conditions
+     * @param matchClassifications  classification-based conditions
+     * @param methodName  method receiving the call
+     * @throws InvalidParameterException  classification-based conditions are invalid
+     */
+    void validateSearchClassifications(String sourceName,
+                                       String parameterName,
+                                       SearchClassifications matchClassifications,
+                                       String methodName) throws InvalidParameterException;
+
+
+    /**
      * Validate that the properties for a metadata instance match its TypeDef.
      *
      * @param sourceName  source of the request (used for logging)
@@ -885,6 +1029,23 @@ public interface OMRSRepositoryValidator
                                InstanceHeader instance);
 
 
+    /**
+     * Verify whether the instance passed to this method is of the type indicated by the type guid and restricted by
+     * the list of subtype guids.
+     * A null type guid matches all instances (ie result is true).  A null instance returns false.
+     *
+     * @param sourceName  name of caller.
+     * @param instanceTypeGUID  unique identifier of the type (or null).
+     * @param subtypeGUIDs  list of unique identifiers of the subtypes to include (or null).
+     * @param instance  instance to test.
+     * @return boolean
+     */
+    boolean verifyInstanceType(String         sourceName,
+                               String         instanceTypeGUID,
+                               List<String>   subtypeGUIDs,
+                               InstanceHeader instance);
+
+
 
     /**
      * Verify that an entity has been successfully retrieved from the repository and has valid contents.
@@ -948,23 +1109,6 @@ public interface OMRSRepositoryValidator
                               InstanceHeader instance) throws RepositoryErrorException;
 
 
-    /**
-     * Validate that the supplied type is a valid active type.
-     *
-     * @param sourceName  source of the request (used for logging)
-     * @param typeParameterName  the name of the parameter that passed the type
-     * @param typeDefSummary  the type to test
-     * @param category  the expected category of the type
-     * @param methodName  the name of the method that supplied the type
-     * @throws InvalidParameterException  the type is null or contains invalid values
-     * @throws TypeErrorException  the type is not active
-     */
-    void validateType(String          sourceName,
-                      String          typeParameterName,
-                      TypeDefSummary  typeDefSummary,
-                      TypeDefCategory category,
-                      String          methodName) throws TypeErrorException, InvalidParameterException;
-
 
     /**
      * Verify that the instance retrieved from the repository has a valid instance type that matches the
@@ -991,7 +1135,8 @@ public interface OMRSRepositoryValidator
 
 
     /**
-     * Verify that the supplied instance is in one of the supplied statuses.
+     * Verify that the supplied instance is in one of the supplied statuses. Note that if the supplied statuses are
+     * null, then only statuses that are not DELETE are considered valid.
      *
      * @param validStatuses  list of statuses the instance should be in any one of them
      * @param instance  instance to test
@@ -1080,6 +1225,39 @@ public interface OMRSRepositoryValidator
 
 
     /**
+     * Verify that an entity instance can be updated by the metadataCollection. This method is used
+     * when the metadataCollection is called to update the status properties or classification of an
+     * entity instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    void validateEntityCanBeUpdated(String         sourceName,
+                                    String         metadataCollectionId,
+                                    InstanceHeader instance,
+                                    String         methodName) throws InvalidParameterException;
+
+
+    /**
+     * Verify that an entity instance can be rehomed by the metadataCollection. This method is used
+     * when the metadataCollection is called to rehome an entity instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    void validateEntityCanBeRehomed(String         sourceName,
+                                    String         metadataCollectionId,
+                                    InstanceHeader instance,
+                                    String         methodName) throws InvalidParameterException;
+
+
+    /**
      * Verify the status of a relationship to check it has not been deleted.  This method is used
      * when retrieving metadata instances from a store that supports soft delete.
      *
@@ -1104,6 +1282,39 @@ public interface OMRSRepositoryValidator
     void validateRelationshipIsDeleted(String         sourceName,
                                        InstanceHeader instance,
                                        String         methodName) throws RelationshipNotDeletedException;
+
+
+    /**
+     * Verify that a relationship instance can be updated by the metadataCollection. This method is used
+     * when the metadataCollection is called to update the status or properties of a relationship instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    void validateRelationshipCanBeUpdated(String         sourceName,
+                                          String         metadataCollectionId,
+                                          InstanceHeader instance,
+                                          String         methodName) throws InvalidParameterException;
+
+
+    /**
+     * Verify that a relationship instance can be rehomed by the metadataCollection. This method is used
+     * when the metadataCollection is called to rehome a relationship instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    void validateRelationshipCanBeRehomed(String         sourceName,
+                                          String         metadataCollectionId,
+                                          InstanceHeader instance,
+                                          String         methodName) throws InvalidParameterException;
+
 
 
     /**
@@ -1178,6 +1389,41 @@ public interface OMRSRepositoryValidator
                                                  InstanceAuditHeader instanceHeader,
                                                  InstanceProperties  instanceProperties,
                                                  MatchCriteria       matchCriteria) throws InvalidParameterException;
+
+
+    /**
+     * Retrieve a numeric representation of the provided value, or null if it cannot be converted to a number.
+     *
+     * @param value to convert
+     * @return BigDecimal
+     */
+    BigDecimal getNumericRepresentation(InstancePropertyValue value);
+
+
+    /**
+     * Determine if the instance properties match the property-based conditions.
+     *
+     * @param matchProperties  the property-based conditions to match.
+     * @param instanceHeader the header of the instance.
+     * @param instanceProperties  the properties from the instance.
+     * @return boolean flag indicating whether the two sets of properties match
+     * @throws InvalidParameterException invalid search criteria
+     */
+    boolean verifyMatchingInstancePropertyValues(SearchProperties    matchProperties,
+                                                 InstanceAuditHeader instanceHeader,
+                                                 InstanceProperties  instanceProperties) throws InvalidParameterException;
+
+
+    /**
+     * Determine if the instance properties match the classification-based conditions.
+     *
+     * @param matchClassifications  the classification-based conditions to match.
+     * @param entity  the entity instance.
+     * @return boolean flag indicating whether the classifications match
+     * @throws InvalidParameterException invalid search criteria
+     */
+    boolean verifyMatchingClassifications(SearchClassifications matchClassifications,
+                                          EntitySummary         entity) throws InvalidParameterException;
 
 
     /**

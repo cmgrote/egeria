@@ -4,6 +4,10 @@ package org.odpi.openmetadata.conformance.server;
 
 import org.odpi.openmetadata.adminservices.configuration.properties.ConformanceSuiteConfig;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
+import org.odpi.openmetadata.conformance.workbenches.performance.PerformanceWorkPad;
+import org.odpi.openmetadata.conformance.workbenches.performance.PerformanceWorkbench;
+import org.odpi.openmetadata.conformance.workbenches.performance.connectorconsumer.PerformanceSuiteConnectorConsumer;
+import org.odpi.openmetadata.conformance.workbenches.performance.listener.PerformanceSuiteOMRSTopicListener;
 import org.odpi.openmetadata.conformance.workbenches.repository.connectorconsumer.ConformanceSuiteConnectorConsumer;
 import org.odpi.openmetadata.conformance.workbenches.OpenMetadataConformanceWorkbench;
 import org.odpi.openmetadata.conformance.beans.OpenMetadataConformanceWorkbenchWorkPad;
@@ -74,41 +78,56 @@ public class ConformanceSuiteOperationalServices
 
         if (enterpriseTopicConnector == null)
         {
-            ConformanceSuiteErrorCode errorCode    = ConformanceSuiteErrorCode.NO_ENTERPRISE_TOPIC;
-            String                    errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(localServerName);
+            ConformanceSuiteErrorCode errorCode              = ConformanceSuiteErrorCode.NO_ENTERPRISE_TOPIC;
+            String                    errorMessage           = errorCode.getErrorMessageId()
+                                                             + errorCode.getFormattedErrorMessage(localServerName);
+            String[]                  errorMessageParameters = { localServerName };
 
             throw new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
                                                       this.getClass().getName(),
                                                       methodName,
                                                       errorMessage,
+                                                      errorCode.getErrorMessageId(),
+                                                      errorMessageParameters,
                                                       errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      errorCode.getUserAction(),
+                                                      null,
+                                                      null);
         }
 
         if (enterpriseConnectorManager == null)
         {
-            ConformanceSuiteErrorCode errorCode    = ConformanceSuiteErrorCode.NO_ENTERPRISE_CONNECTOR_MANAGER;
-            String                    errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(localServerName);
+            ConformanceSuiteErrorCode errorCode              = ConformanceSuiteErrorCode.NO_ENTERPRISE_CONNECTOR_MANAGER;
+            String                    errorMessage           = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(localServerName);
+            String[]                  errorMessageParameters = { localServerName };
 
             throw new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
                                                       this.getClass().getName(),
                                                       methodName,
                                                       errorMessage,
+                                                      errorCode.getErrorMessageId(),
+                                                      errorMessageParameters,
                                                       errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      errorCode.getUserAction(),
+                                                      null,
+                                                      null);
         }
         else if (! enterpriseConnectorManager.isEnterpriseAccessEnabled())
         {
-            ConformanceSuiteErrorCode errorCode    = ConformanceSuiteErrorCode.NO_ENTERPRISE_ACCESS;
-            String                    errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(localServerName);
+            ConformanceSuiteErrorCode errorCode              = ConformanceSuiteErrorCode.NO_ENTERPRISE_ACCESS;
+            String                    errorMessage           = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(localServerName);
+            String[]                  errorMessageParameters = { localServerName };
 
             throw new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
                                                       this.getClass().getName(),
                                                       methodName,
                                                       errorMessage,
+                                                      errorCode.getErrorMessageId(),
+                                                      errorMessageParameters,
                                                       errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      errorCode.getUserAction(),
+                                                      null,
+                                                      null);
         }
 
         /*
@@ -136,6 +155,7 @@ public class ConformanceSuiteOperationalServices
 
         if (conformanceSuiteConfig.getRepositoryWorkbenchConfig() != null)
         {
+            final String workBenchName = "Repository Conformance Workbench";
             RepositoryConformanceWorkPad   repositoryConformanceWorkPad = new RepositoryConformanceWorkPad(localServerUserId,
                                                                                                            localServerPassword,
                                                                                                            maxPageSize,
@@ -146,7 +166,7 @@ public class ConformanceSuiteOperationalServices
             RepositoryConformanceWorkbench repositoryConformanceWorkbench = new RepositoryConformanceWorkbench(repositoryConformanceWorkPad);
             runningWorkbenches.add(repositoryConformanceWorkbench);
 
-            Thread repositoryWorkbenchThread = new Thread(repositoryConformanceWorkbench, "Repository Conformance Workbench");
+            Thread repositoryWorkbenchThread = new Thread(repositoryConformanceWorkbench, workBenchName);
             repositoryWorkbenchThread.start();
 
             ConformanceSuiteConnectorConsumer connectorConsumer = new ConformanceSuiteConnectorConsumer(repositoryConformanceWorkPad);
@@ -154,7 +174,31 @@ public class ConformanceSuiteOperationalServices
 
             ConformanceSuiteOMRSTopicListener omrsTopicListener = new ConformanceSuiteOMRSTopicListener(repositoryConformanceWorkPad);
 
-            enterpriseTopicConnector.registerListener(omrsTopicListener);
+            enterpriseTopicConnector.registerListener(omrsTopicListener, workBenchName);
+        }
+
+        if (conformanceSuiteConfig.getRepositoryPerformanceConfig() != null)
+        {
+            final String workBenchName = "Repository Performance Workbench";
+            PerformanceWorkPad performanceWorkPad = new PerformanceWorkPad(localServerUserId,
+                    localServerPassword,
+                    maxPageSize,
+                    auditLog,
+                    conformanceSuiteConfig.getRepositoryPerformanceConfig());
+            workbenchWorkPads.add(performanceWorkPad);
+
+            PerformanceWorkbench performanceWorkbench = new PerformanceWorkbench(performanceWorkPad);
+            runningWorkbenches.add(performanceWorkbench);
+
+            Thread performanceWorkbenchThread = new Thread(performanceWorkbench, workBenchName);
+            performanceWorkbenchThread.start();
+
+            PerformanceSuiteConnectorConsumer connectorConsumer = new PerformanceSuiteConnectorConsumer(performanceWorkPad);
+            enterpriseConnectorManager.registerConnectorConsumer(connectorConsumer);
+
+            PerformanceSuiteOMRSTopicListener omrsTopicListener = new PerformanceSuiteOMRSTopicListener(performanceWorkPad);
+
+            enterpriseTopicConnector.registerListener(omrsTopicListener, workBenchName);
         }
 
         instanceMap.setNewInstance(localServerName, new ConformanceServicesInstance(new TechnologyUnderTestWorkPad(workbenchWorkPads),

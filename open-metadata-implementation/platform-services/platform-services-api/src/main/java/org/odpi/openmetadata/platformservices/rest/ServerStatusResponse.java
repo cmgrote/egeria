@@ -21,11 +21,15 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ServerStatusResponse extends FFDCResponseBase
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                          serverName      = null;
+    private String                          serverType      = null;
     private boolean                         isActive        = true;
     private Date                            serverStartTime = null;
     private Date                            serverEndTime   = null;
     private List<OMAGServerInstanceHistory> serverHistory   = null;
+
 
     /**
      * Default constructor
@@ -55,11 +59,10 @@ public class ServerStatusResponse extends FFDCResponseBase
         }
     }
 
-
     /**
      * Return the name of the server where the services are running.
      *
-     * @return name of server
+     * @return name of server		      * @return name of server
      */
     public String getServerName()
     {
@@ -75,6 +78,28 @@ public class ServerStatusResponse extends FFDCResponseBase
     public void setServerName(String serverName)
     {
         this.serverName = serverName;
+    }
+
+
+    /**
+     * Return the type of server that is hosting these services.
+     *
+     * @return string name
+     */
+    public String getServerType()
+    {
+        return serverType;
+    }
+
+
+    /**
+     * Set up the type of server that is hosting these services.
+     *
+     * @param serverType string name
+     */
+    public void setServerType(String serverType)
+    {
+        this.serverType = serverType;
     }
 
 
@@ -98,7 +123,6 @@ public class ServerStatusResponse extends FFDCResponseBase
     {
         isActive = active;
     }
-
 
     /**
      * Return the time that the server last started.
@@ -165,7 +189,6 @@ public class ServerStatusResponse extends FFDCResponseBase
         }
     }
 
-
     /**
      * Set up the list of start and stop times for the previous restarts of the server.
      *
@@ -175,6 +198,7 @@ public class ServerStatusResponse extends FFDCResponseBase
     {
         this.serverHistory = serverHistory;
     }
+
 
 
     /**
@@ -191,7 +215,6 @@ public class ServerStatusResponse extends FFDCResponseBase
                 ", serverStartTime=" + serverStartTime +
                 ", serverEndTime=" + serverEndTime +
                 ", serverHistory=" + serverHistory +
-                ", active=" + isActive() +
                 ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionClassName='" + getExceptionClassName() + '\'' +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
@@ -225,10 +248,11 @@ public class ServerStatusResponse extends FFDCResponseBase
         }
         ServerStatusResponse that = (ServerStatusResponse) objectToCompare;
         return isActive() == that.isActive() &&
-                Objects.equals(getServerName(), that.getServerName()) &&
-                Objects.equals(getServerStartTime(), that.getServerStartTime()) &&
-                Objects.equals(getServerEndTime(), that.getServerEndTime()) &&
-                Objects.equals(getServerHistory(), that.getServerHistory());
+              Objects.equals(getServerName(), that.getServerName()) &&
+              Objects.equals(getServerStartTime(), that.getServerStartTime()) &&
+              Objects.equals(getServerEndTime(), that.getServerEndTime()) &&
+              Objects.equals(getServerHistory(), that.getServerHistory());
+
     }
 
 
@@ -240,7 +264,6 @@ public class ServerStatusResponse extends FFDCResponseBase
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), getServerName(), isActive(), getServerStartTime(), getServerEndTime(),
-                            getServerHistory());
+        return Objects.hash(super.hashCode(), getServerName(), isActive(), getServerStartTime(), getServerEndTime(), getServerHistory());
     }
 }

@@ -22,6 +22,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class TypeDefSummary extends TypeDefLink
 {
+    private static final long    serialVersionUID = 1L;
+
     protected long            version     = 0L;
     protected String          versionName = null;
     protected TypeDefCategory category    = TypeDefCategory.UNKNOWN_DEF;
@@ -45,11 +47,11 @@ public class TypeDefSummary extends TypeDefLink
      * @param version     active version number for the TypeDef
      * @param versionName active version name for the TypeDef
      */
-    public TypeDefSummary(TypeDefCategory category,
-                          String          guid,
-                          String          name,
-                          long            version,
-                          String          versionName)
+    TypeDefSummary(TypeDefCategory category,
+                   String          guid,
+                   String          name,
+                   long            version,
+                   String          versionName)
     {
         super(guid, name);
 
@@ -165,10 +167,10 @@ public class TypeDefSummary extends TypeDefLink
 
 
     /**
-     * Verify that supplied object has the same properties.
+     * Validate that an object is equal depending on their stored values.
      *
-     * @param objectToCompare object to test
-     * @return result
+     * @param objectToCompare object
+     * @return boolean result
      */
     @Override
     public boolean equals(Object objectToCompare)
@@ -177,7 +179,7 @@ public class TypeDefSummary extends TypeDefLink
         {
             return true;
         }
-        if (!(objectToCompare instanceof TypeDefSummary))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -186,8 +188,20 @@ public class TypeDefSummary extends TypeDefLink
             return false;
         }
         TypeDefSummary that = (TypeDefSummary) objectToCompare;
-        return getVersion() == that.getVersion() &&
-                Objects.equals(getVersionName(), that.getVersionName()) &&
-                getCategory() == that.getCategory();
+        return version == that.version &&
+                       Objects.equals(versionName, that.versionName) &&
+                       category == that.category;
+    }
+
+
+    /**
+     * Return a hash code based on the values of this object.
+     *
+     * @return in hash code
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), version, versionName, category);
     }
 }

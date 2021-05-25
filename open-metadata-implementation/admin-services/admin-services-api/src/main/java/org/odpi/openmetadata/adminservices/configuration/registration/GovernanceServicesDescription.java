@@ -4,61 +4,64 @@ package org.odpi.openmetadata.adminservices.configuration.registration;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * GovernanceServicesDescription provides a list of registered governance servers.
+ * GovernanceServicesDescription provides a list of subsystems that support the various governance servers.
  */
 public enum GovernanceServicesDescription implements Serializable
 {
-    DISCOVERY_ENGINE_SERVICES        (2000,
-                                      "Discovery Engine Services",
-                                      "discovery-server",
-                                      "Run automated discovery services",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/discovery-engine-services/"),
     SECURITY_SYNC_SERVICES           (2001,
                                       "Security Sync Services",
                                       null,
                                       "Keep security enforcement engine up-to-date",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/security-sync-services/"),
-    STEWARDSHIP_SERVICES             (2002,
-                                      "Stewardship Services",
-                                      "stewardship-server",
-                                      "Run automated stewardship actions",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/stewardship-services/"),
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/security-sync-services/"),
     OPEN_LINEAGE_SERVICES            (2003,
                                       "Open Lineage Services",
                                       "open-lineage",
                                       "Store and query asset lineage",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/open-lineage-services/"),
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/open-lineage-services/"),
     VIRTUALIZATION_SERVICES          (2004,
                                       "Virtualization Services",
                                       null,
                                       "Run virtualization services",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/virtualization-services/"),
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/virtualization-services/"),
     CONFORMANCE_SUITE_SERVICES       (2005,
                                       "Conformance Suite Services",
                                       "conformance-suite",
                                       "Run automated open metadata conformance suite services",
-                                      "https://odpi.github.io/egeria/open-metadata-conformance-suite/"),
+                                      "https://egeria.odpi.org/open-metadata-conformance-suite/"),
     SECURITY_OFFICER_SERVICES        (2006,
                                       "Security Officer Services",
                                       null,
                                       "Manage security tags and other operational security settings",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/security-officer-services/"),
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/security-officer-services/"),
     DATA_ENGINE_PROXY_SERVICES       (2007,
                                       "Data Engine Proxy Services",
                                       null,
                                       "Integrate Data Engines that are not self-capable of integrating directly with the Data Engine OMAS",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/data-engine-proxy-services/"),
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/data-engine-proxy-services/"),
     DATA_PLATFORM_SERVICES           (2008,
                                       "Data Platform Services",
                                       null,
                                       "Publish metadata on data platforms that are not self-capable of integrating directly with the Data Platform OMAS",
-                                      "https://odpi.github.io/egeria/open-metadata-implementation/governance-servers/data-platform-services/");
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/data-platform-services/"),
+    INTEGRATION_DAEMON_SERVICES      (2009,
+                                      "Integration Daemon Services",
+                                      null,
+                                      "Host one or more integration services that are exchanging metadata with third party technologies",
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/integration-daemon-services/"),
+    ENGINE_HOST_SERVICES             (2010,
+                                      "Engine Host Services",
+                                      null,
+                                      "Host one or more engine services that are actively managing governance of open metadata and the digital landscape",
+                                      "https://egeria.odpi.org/open-metadata-implementation/governance-servers/engine-host-services/"),
+    ;
 
 
-    private static final long     serialVersionUID    = 1L;
+    private static final long serialVersionUID = 1L;
 
     private int    serviceCode;
     private String serviceName;
@@ -68,7 +71,7 @@ public enum GovernanceServicesDescription implements Serializable
 
 
     /**
-     * Return a list containing each of the access service descriptions defined in this enum class.
+     * Return a list containing each of the governance service descriptions defined in this enum class.
      *
      * @return List of enums
      */
@@ -76,13 +79,9 @@ public enum GovernanceServicesDescription implements Serializable
     {
         List<GovernanceServicesDescription> serviceDescriptionList = new ArrayList<>();
 
-        serviceDescriptionList.add(GovernanceServicesDescription.DISCOVERY_ENGINE_SERVICES);
-        serviceDescriptionList.add(GovernanceServicesDescription.SECURITY_SYNC_SERVICES);
-        serviceDescriptionList.add(GovernanceServicesDescription.STEWARDSHIP_SERVICES);
         serviceDescriptionList.add(GovernanceServicesDescription.OPEN_LINEAGE_SERVICES);
-        serviceDescriptionList.add(GovernanceServicesDescription.VIRTUALIZATION_SERVICES);
+        serviceDescriptionList.add(GovernanceServicesDescription.INTEGRATION_DAEMON_SERVICES);
         serviceDescriptionList.add(GovernanceServicesDescription.CONFORMANCE_SUITE_SERVICES);
-        serviceDescriptionList.add(GovernanceServicesDescription.SECURITY_OFFICER_SERVICES);
         serviceDescriptionList.add(GovernanceServicesDescription.DATA_ENGINE_PROXY_SERVICES);
 
         return serviceDescriptionList;
@@ -90,13 +89,34 @@ public enum GovernanceServicesDescription implements Serializable
 
 
     /**
+     * Return a set of non null url markers (short names) of the governance services
+     *
+     * @return set of url markers
+     */
+    public static Set<String> getGovernanceServersURLMarkers()
+    {
+        Set<String> urlMarkerSet = new HashSet<>();
+        for (GovernanceServicesDescription governanceServicesDescription:getGovernanceServersDescriptionList())
+        {
+            String urlMarker = governanceServicesDescription.getServiceURLMarker();
+            if (urlMarker != null)
+            {
+                urlMarkerSet.add(urlMarker);
+            }
+        }
+
+        return urlMarkerSet;
+    }
+
+
+    /**
      * Default Constructor
      *
-     * @param serviceCode ordinal for this access service
-     * @param serviceName symbolic name for this access service
+     * @param serviceCode ordinal for this governance service
+     * @param serviceName symbolic name for this governance service
      * @param serviceURLMarker string used in URLs
-     * @param serviceDescription short description for this access service
-     * @param serviceWiki wiki page for the access service for this access service
+     * @param serviceDescription short description for this governance service
+     * @param serviceWiki wiki page for the governance service for this governance service
      */
     GovernanceServicesDescription(int    serviceCode,
                                   String serviceName,
@@ -158,7 +178,7 @@ public enum GovernanceServicesDescription implements Serializable
 
 
     /**
-     * Return the URL for the wiki page describing this access service.
+     * Return the URL for the wiki page describing this governance service.
      *
      * @return String URL name for the wiki page
      */

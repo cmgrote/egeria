@@ -32,8 +32,12 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
         })
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        property = "typeDefName")
+        property = "typeDefName",
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        visible = true)
 public class GlossaryViewEntityDetail{
+
+    private static final String QUALIFIED_NAME = "qualifiedName";
 
     private String typeDefName;
     private String createdBy;
@@ -96,6 +100,14 @@ public class GlossaryViewEntityDetail{
 
     public Map<String, String> allProperties() {
         return properties;
+    }
+
+    public String getQualifiedName(){
+        return properties.get(QUALIFIED_NAME);
+    }
+
+    public void setQualifiedName(String qualifiedName){
+        properties.put(QUALIFIED_NAME, qualifiedName);
     }
 
     public List<GlossaryViewClassification> getClassifications() {

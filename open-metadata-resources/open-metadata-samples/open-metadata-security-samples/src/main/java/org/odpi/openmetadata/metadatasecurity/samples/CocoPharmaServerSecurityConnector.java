@@ -6,12 +6,20 @@ package org.odpi.openmetadata.metadatasecurity.samples;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
+import org.odpi.openmetadata.metadatasecurity.OpenMetadataAssetSecurity;
+import org.odpi.openmetadata.metadatasecurity.OpenMetadataConnectionSecurity;
+import org.odpi.openmetadata.metadatasecurity.OpenMetadataServerSecurity;
+import org.odpi.openmetadata.metadatasecurity.OpenMetadataServiceSecurity;
 import org.odpi.openmetadata.metadatasecurity.connectors.OpenMetadataServerSecurityConnector;
+import org.odpi.openmetadata.metadatasecurity.properties.Asset;
+import org.odpi.openmetadata.metadatasecurity.properties.Connection;
 import org.odpi.openmetadata.metadatasecurity.properties.AssetAuditHeader;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OpenMetadataRepositorySecurity;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.AttributeTypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDef;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefPatch;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefSummary;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +32,11 @@ import java.util.Map;
  * users that overrides the default behavior of that open metadata security connector that does
  * not allow any access to anything.
  */
-public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurityConnector
+public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurityConnector implements OpenMetadataRepositorySecurity,
+                                                                                                      OpenMetadataServerSecurity,
+                                                                                                      OpenMetadataServiceSecurity,
+                                                                                                      OpenMetadataConnectionSecurity,
+                                                                                                      OpenMetadataAssetSecurity
 {
     /*
      * These variables represent the different groups of user.  Typically these would be
@@ -39,8 +51,11 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
     private List<String>              serverInvestigators = new ArrayList<>();
     private List<String>              metadataArchitects  = new ArrayList<>();
     private List<String>              npaAccounts         = new ArrayList<>();
+    private List<String>              externalUsers       = new ArrayList<>();
 
     private List<String>              defaultZoneMembership = new ArrayList<>();
+    private List<String>              zonesForExternals     = new ArrayList<>();
+
 
     private Map<String, List<String>> zoneAccess   = new HashMap<>();
     private Map<String, String>       ownerZones   = new HashMap<>();
@@ -51,6 +66,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
     private final String personalFilesZoneName   = "personal-files";
     private final String quarantineZoneName      = "quarantine";
     private final String dataLakeZoneName        = "data-lake";
+    private final String externalAccessZoneName  = "external-access";
 
 
     /**
@@ -75,7 +91,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         final String trashCanZoneName        = "trash-can";
 
         /*
-         * Coco Pharmaceuticals personnel
+         * Coco Pharmaceuticals personas
          */
         final String zachNowUserId        = "zach";
         final String steveStarterUserId   = "steves";
@@ -100,7 +116,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         final String sidneySeekerUserId   = "sidneyseeker";
         final String tomTallyUserId       = "tomtally";
         final String julieStitchedUserId  = "juliestitched";
-        final String desSignaUserId       = "designa";
+        final String desSignaUserId       = "dessigna";
         final String angelaCummingUserId  = "angelacummings";
         final String julesKeeperUserId    = "jukeskeeper";
         final String stewFasterUserId     = "stewFaster";
@@ -108,15 +124,22 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         /*
          * System (NPA) accounts
          */
-        final String archiverUserId    = "archiver01";
-        final String etlEngineUserId   = "dlETL";
-        final String cocoMDS1UserId    = "cocoMDS1npa";
-        final String cocoMDS2UserId    = "cocoMDS2npa";
-        final String cocoMDS3UserId    = "cocoMDS3npa";
-        final String cocoMDS4UserId    = "cocoMDS4npa";
-        final String cocoMDS5UserId    = "cocoMDS5npa";
-        final String cocoMDS6UserId    = "cocoMDS6npa";
-        final String cocoMDSxUserId    = "cocoMDSxnpa";
+
+        final String cocoMDS1UserId     = "cocoMDS1npa";
+        final String cocoMDS2UserId     = "cocoMDS2npa";
+        final String cocoMDS3UserId     = "cocoMDS3npa";
+        final String cocoMDS4UserId     = "cocoMDS4npa";
+        final String cocoMDS5UserId     = "cocoMDS5npa";
+        final String cocoMDS6UserId     = "cocoMDS6npa";
+        final String cocoMDSxUserId     = "cocoMDSxnpa";
+        final String archiverUserId     = "archiver01";
+        final String etlEngineUserId    = "dlETL";
+        final String governDL01UserId   = "governDL01npa";
+        final String exchangeDL01UserId = "exchangeDL01npa";
+        final String findItDL01UserId   = "findItDL01npa";
+        final String fixItDL01UserId    = "fixItDL01npa";
+        final String onboardDL01UserId  = "onboardDL01npa";
+        final String monitorDL01UserId  = "monitorDL01npa";
 
         /*
          * Set up default zone membership
@@ -162,6 +185,12 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         allUsers.add(cocoMDS5UserId);
         allUsers.add(cocoMDS6UserId);
         allUsers.add(cocoMDSxUserId);
+        allUsers.add(governDL01UserId);
+        allUsers.add(exchangeDL01UserId);
+        allUsers.add(findItDL01UserId);
+        allUsers.add(fixItDL01UserId);
+        allUsers.add(onboardDL01UserId);
+        allUsers.add(monitorDL01UserId);
 
         allEmployees.add(zachNowUserId);
         allEmployees.add(steveStarterUserId);
@@ -187,6 +216,8 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
         assetOnboarding.add(peterProfileUserId);
         assetOnboarding.add(erinOverviewUserId);
+        assetOnboarding.add(findItDL01UserId);
+        assetOnboarding.add(fixItDL01UserId);
         assetOnboardingExit.add(erinOverviewUserId);
 
         serverAdmins.add(garyGeekeUserId);
@@ -195,6 +226,13 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
         metadataArchitects.add(erinOverviewUserId);
         metadataArchitects.add(peterProfileUserId);
+
+        externalUsers.add(grantAbleUserId);
+        externalUsers.add(julieStitchedUserId);
+        externalUsers.add(angelaCummingUserId);
+        externalUsers.add(robbieRecordsUserId);
+
+        zonesForExternals.add(externalAccessZoneName);
 
         npaAccounts.add(archiverUserId);
         npaAccounts.add(etlEngineUserId);
@@ -205,6 +243,13 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         npaAccounts.add(cocoMDS5UserId);
         npaAccounts.add(cocoMDS6UserId);
         npaAccounts.add(cocoMDSxUserId);
+        npaAccounts.add(findItDL01UserId);
+        npaAccounts.add(fixItDL01UserId);
+        npaAccounts.add(governDL01UserId);
+        npaAccounts.add(exchangeDL01UserId);
+        npaAccounts.add(onboardDL01UserId);
+        npaAccounts.add(monitorDL01UserId);
+        assetOnboarding.addAll(npaAccounts);
 
         List<String> zoneSetUp = new ArrayList<>();
 
@@ -220,6 +265,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         zoneAccess.put(personalFilesZoneName, allEmployees);
         zoneAccess.put(quarantineZoneName, assetOnboarding);
         zoneAccess.put(dataLakeZoneName, allEmployees);
+        zoneAccess.put(externalAccessZoneName, externalUsers);
 
         zoneSetUp.add(callieQuartileUserId);
         zoneSetUp.add(tessaTubeUserId);
@@ -244,8 +290,6 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
         zoneSetUp = new ArrayList<>();
         zoneSetUp.add(garyGeekeUserId);
-        zoneSetUp.add(erinOverviewUserId);
-        zoneSetUp.add(peterProfileUserId);
 
         zoneAccess.put(infrastructureZoneName, zoneSetUp);
 
@@ -266,6 +310,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         zoneSetUp = new ArrayList<>();
         zoneSetUp.add(garyGeekeUserId);
         zoneSetUp.add(erinOverviewUserId);
+        zoneSetUp.add(ivorPadlockUserId);
         zoneSetUp.add(julesKeeperUserId);
         zoneSetUp.add(pollyTaskerUserId);
         zoneSetUp.add(faithBrokerUserId);
@@ -447,6 +492,94 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
     }
 
 
+    /**
+     * Select a connection from the list of connections attached to an asset.  Some connections change the userId to
+     * provide a higher level of access that a specific user account.  These connections are processed first so that the user gets the
+     * most secure connection to use if they are allowed.  In Coco Pharmaceuticals, these types of connections are only available to
+     * engines working in the data lake.
+     *
+     * @param userId calling user
+     * @param asset asset requested by caller
+     * @param connections list of attached connections
+     * @return selected connection or null (pretend there are no connections attached to the asset) or
+     * @throws UserNotAuthorizedException the user is not authorized to access this service
+     */
+    @Override
+    public Connection validateUserForAssetConnectionList(String           userId,
+                                                         Asset            asset,
+                                                         List<Connection> connections) throws UserNotAuthorizedException
+    {
+        UserNotAuthorizedException caughtException = null;
+
+        if ((connections != null) && (! connections.isEmpty()))
+        {
+            List<Connection> unsecuredConnections = new ArrayList<>();
+
+            /*
+             * Need to process the secured connections first.
+             */
+            for (Connection connection : connections)
+            {
+                if (connection != null)
+                {
+                    if ((connection.getClearPassword() == null) &&
+                        (connection.getEncryptedPassword() == null) &&
+                        (connection.getSecuredProperties() == null))
+                    {
+                        /*
+                         * Put the unsecured connection by to process after all of the secured connections have been processed.
+                         */
+                        unsecuredConnections.add(connection);
+                    }
+                    else
+                    {
+                        /*
+                         * This is a secured connection.
+                         */
+                        try
+                        {
+                            validateUserForConnection(userId, connection);
+                            return connection;
+                        }
+                        catch (UserNotAuthorizedException error)
+                        {
+                            caughtException = error;
+                        }
+                    }
+                }
+            }
+
+            /*
+             * Now process the secured connections.
+             */
+            for (Connection connection : unsecuredConnections)
+            {
+                if (connection != null)
+                {
+                    try
+                    {
+                        validateUserForConnection(userId, connection);
+                        return connection;
+                    }
+                    catch (UserNotAuthorizedException error)
+                    {
+                        caughtException = error;
+                    }
+                }
+            }
+        }
+
+        /*
+         * No connection is available to this user.  If an exception has been returned then use it.
+         */
+        if (caughtException != null)
+        {
+            throw caughtException;
+        }
+
+        return null;
+    }
+
 
     /**
      * Tests for whether a specific user should have access to an asset based on its zones.
@@ -471,52 +604,67 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
          */
         if ((assetZones == null) || (assetZones.isEmpty()))
         {
-            testZones = new ArrayList<>();
-            testZones.add(quarantineZoneName);
+            testZones = defaultZoneMembership;
         }
         else
         {
             testZones = assetZones;
         }
 
-        for (String zoneName : testZones)
+        /*
+         * If the quarantine zone is included in the list of zones then only the rules for the quarantine
+         * zone are considered.
+         */
+        if (testZones.contains(quarantineZoneName))
         {
-            if (zoneName != null)
+            List<String> zoneAccounts = zoneAccess.get(quarantineZoneName);
+
+            if ((zoneAccounts != null) && (zoneAccounts.contains(userId)))
             {
-                /*
-                 * The data lake zone is special - only npaAccounts can update assets in the data lake zone.
-                 * Another user may update these assets only if they have access via another one of the asset's zone.
-                 */
-                if ((zoneName.equals(dataLakeZoneName)) && (updateRequested))
+                return true;
+            }
+        }
+        else /* allow access to the asset if any other zone permits it */
+        {
+            for (String zoneName : testZones)
+            {
+                if (zoneName != null)
                 {
-                    if (npaAccounts.contains(userId))
+                    /*
+                     * The data lake zone is special - only npaAccounts can update assets in the data lake zone.
+                     * Another user may update these assets only if they have access via another one of the asset's zone.
+                     */
+                    if ((zoneName.equals(dataLakeZoneName)) && (updateRequested))
                     {
-                        return true;
+                        if (npaAccounts.contains(userId))
+                        {
+                            return true;
+                        }
                     }
-                }
 
-                /*
-                 * Access to personal files is only permitted by the owner of the asset.  If they assign the
-                 * asset to another zone, this may allow others to read and change the asset.
-                 */
-                else if (zoneName.equals(personalFilesZoneName))
-                {
-                    if (userIsAssetOwner)
+                    /*
+                     * Access to personal files is only permitted by the owner of the asset.  If they assign the
+                     * asset to another zone, this may allow others to read and change the asset.
+                     */
+                    else if (zoneName.equals(personalFilesZoneName))
                     {
-                        return true;
+                        if (userIsAssetOwner)
+                        {
+                            return true;
+                        }
                     }
-                }
 
-                /*
-                 * Standard look up of user's assigned to zones
-                 */
-                else
-                {
-                    List<String> zoneAccounts = zoneAccess.get(zoneName);
-
-                    if ((zoneAccounts != null) && (zoneAccounts.contains(userId)))
+                    /*
+                     * Standard look up of user's assigned to zones
+                     */
+                    else
                     {
-                        return true;
+                        List<String> zoneAccounts = zoneAccess.get(zoneName);
+
+                        if ((zoneAccounts != null) && (zoneAccounts.contains(userId)))
+                        {
+                            return true;
+                        }
                     }
                 }
             }
@@ -701,6 +849,31 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
         }
     }
 
+    /**
+     * Determine the appropriate setting for the supported zones depending on the user and the
+     * default supported zones set up for the service.  This is called whenever an asset is accessed.
+     *
+     * @param supportedZones default setting of the supported zones for the service
+     * @param serviceName name of the called service
+     * @param user name of the user
+     *
+     * @return list of supported zones for the user
+     * @throws InvalidParameterException one of the parameter values is invalid
+     * @throws PropertyServerException there is a problem calculating the zones
+     */
+    @Override
+    public List<String> setSupportedZonesForUser(List<String>  supportedZones,
+                                                 String        serviceName,
+                                                 String        user) throws InvalidParameterException,
+                                                                            PropertyServerException
+    {
+        if (externalUsers.contains(user))
+        {
+            return zonesForExternals;
+        }
+
+        return supportedZones;
+    }
 
 
     /**
@@ -718,18 +891,16 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      * @throws PropertyServerException there is a problem calculating the zones
      */
     @Override
-    public List<String> initializeAssetZones(List<String>  defaultZones,
-                                             Asset         asset) throws InvalidParameterException,
-                                                                         PropertyServerException
+    public List<String> setAssetZonesToDefault(List<String>  defaultZones,
+                                               Asset         asset) throws InvalidParameterException,
+                                                                           PropertyServerException
     {
-        if (asset != null)
+        if ((defaultZones == null) || (defaultZones.isEmpty()))
         {
-            if (asset.getZoneMembership() == null)
-            {
-                return defaultZoneMembership;
-            }
+            return super.setAssetZonesToDefault(defaultZoneMembership, asset);
         }
-        return super.initializeAssetZones(defaultZones, asset);
+
+        return super.setAssetZonesToDefault(defaultZones, asset);
     }
 
 
@@ -749,9 +920,51 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      * @throws InvalidParameterException one of the asset values is invalid
      * @throws PropertyServerException there is a problem calculating the zones
      */
+    @Deprecated
+    public List<String> verifyAssetZones(List<String>  defaultZones,
+                                         List<String>  supportedZones,
+                                         Asset         originalAsset,
+                                         Asset         updatedAsset) throws InvalidParameterException,
+                                                                            PropertyServerException
+    {
+        if (updatedAsset != null)
+        {
+            if (updatedAsset.getOwner() != null)
+            {
+                return addZoneName(updatedAsset.getZoneMembership(),
+                                   ownerZones.get(updatedAsset.getOwner()));
+            }
+            else
+            {
+                return updatedAsset.getZoneMembership();
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Determine the appropriate setting for the asset zones depending on the content of the asset and the
+     * settings of both default zones and supported zones.  This method is called whenever an asset's
+     * values are changed.
+     *
+     * The default behavior is to keep the updated zones as they are.
+     *
+     * @param defaultZones setting of the default zones for the service
+     * @param supportedZones setting of the supported zones for the service
+     * @param publishZones setting of the supported zones for the service
+     * @param originalAsset original values for the asset
+     * @param updatedAsset updated values for the asset
+     *
+     * @return list of zones to set in the asset
+     * @throws InvalidParameterException one of the asset values is invalid
+     * @throws PropertyServerException there is a problem calculating the zones
+     */
     @Override
     public List<String> verifyAssetZones(List<String>  defaultZones,
                                          List<String>  supportedZones,
+                                         List<String>  publishZones,
                                          Asset         originalAsset,
                                          Asset         updatedAsset) throws InvalidParameterException,
                                                                             PropertyServerException
@@ -894,12 +1107,14 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
                                             newAsset.getZoneMembership()))
                         {
                             /*
-                             * Perform special processing for quarantine zone.
-                             * The owner must be specified
+                             * Perform special processing for quarantine zone. The owner must be specified.
+                             * The quarantine zone can only be removed by NPA accounts or a different person
+                             * to the person who set up the asset.
                              */
-                            if ((newAsset.getOwner() != null) && (newAsset.getOwnerType() != null))
+                            if (newAsset.getOwner() != null)
                             {
-                                if (validateSeparationOfDuties(userId, originalAssetAuditHeader))
+                                if (npaAccounts.contains(userId) ||
+                                            (validateSeparationOfDuties(userId, originalAssetAuditHeader)))
                                 {
                                     return;
                                 }
@@ -914,9 +1129,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
                             }
                             else
                             {
-                                super.throwIncompleteAsset(userId,
-                                                           newAsset,
-                                                           methodName);
+                                super.throwIncompleteAsset(userId, newAsset, "owner", methodName);
                             }
                         }
                         else
@@ -926,9 +1139,7 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
                     }
                     else
                     {
-                        super.throwIncompleteAsset(userId,
-                                                   newAsset,
-                                                   methodName);
+                        super.throwIncompleteAsset(userId, newAsset, "zoneMembership", methodName);
                     }
                 }
             }
@@ -950,8 +1161,8 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
     @Override
-    public void  validateUserForAssetAttachmentUpdate(String     userId,
-                                                      Asset      asset) throws UserNotAuthorizedException
+    public void  validateUserForAssetAttachmentUpdate(String userId,
+                                                      Asset  asset) throws UserNotAuthorizedException
     {
         if (asset != null)
         {
@@ -1042,11 +1253,11 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      */
 
     /**
-     * Tests for whether a specific user should have the right to create a typeDef within a repository.
+     * Tests for whether a specific user should have the right to create a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef type details
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
     @Override
@@ -1072,11 +1283,41 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
 
     /**
-     * Tests for whether a specific user should have read access to a specific typeDef within a repository.
+     * Tests for whether a specific user should have the right to create a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param attributeTypeDef type details
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    @Override
+    public void  validateUserForTypeCreate(String           userId,
+                                           String           metadataCollectionName,
+                                           AttributeTypeDef attributeTypeDef) throws UserNotAuthorizedException
+    {
+        if (metadataArchitects.contains(userId))
+        {
+            return;
+        }
+
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeCreate(userId, metadataCollectionName, attributeTypeDef);
+    }
+
+
+    /**
+     * Tests for whether a specific user should have read access to a specific type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param typeDef type details
      * @throws UserNotAuthorizedException the user is not authorized to retrieve types
      */
     @Override
@@ -1102,33 +1343,73 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
 
     /**
+     * Tests for whether a specific user should have read access to a specific type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param attributeTypeDef type details
+     * @throws UserNotAuthorizedException the user is not authorized to retrieve types
+     */
+    @Override
+    public void  validateUserForTypeRead(String     userId,
+                                         String     metadataCollectionName,
+                                         AttributeTypeDef    attributeTypeDef) throws UserNotAuthorizedException
+    {
+        if (allUsers.contains(userId))
+        {
+            return;
+        }
+
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeRead(userId, metadataCollectionName, attributeTypeDef);
+    }
+
+
+    /**
      * Tests for whether a specific user should have the right to update a typeDef within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef current typeDef details
+     * @param patch proposed changes to type
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
     @Override
-    public void  validateUserForTypeUpdate(String     userId,
-                                           String     metadataCollectionName,
-                                           TypeDef    typeDef) throws UserNotAuthorizedException
+    public void  validateUserForTypeUpdate(String       userId,
+                                           String       metadataCollectionName,
+                                           TypeDef      typeDef,
+                                           TypeDefPatch patch) throws UserNotAuthorizedException
     {
         if (metadataArchitects.contains(userId))
         {
             return;
         }
 
-        super.validateUserForTypeUpdate(userId, metadataCollectionName, typeDef);
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeUpdate(userId, metadataCollectionName, typeDef, patch);
     }
 
 
     /**
-     * Tests for whether a specific user should have the right to delete a typeDef within a repository.
+     * Tests for whether a specific user should have the right to delete a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef type details
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
     @Override
@@ -1141,7 +1422,119 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
             return;
         }
 
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
         super.validateUserForTypeDelete(userId, metadataCollectionName, typeDef);
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to delete a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param attributeTypeDef type details
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    @Override
+    public void  validateUserForTypeDelete(String              userId,
+                                           String              metadataCollectionName,
+                                           AttributeTypeDef    attributeTypeDef) throws UserNotAuthorizedException
+    {
+        if (metadataArchitects.contains(userId))
+        {
+            return;
+        }
+
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeDelete(userId, metadataCollectionName, attributeTypeDef);
+    }
+
+
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the identifiers for a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param originalTypeDef type details
+     * @param newTypeDefGUID the new identifier for the type.
+     * @param newTypeDefName new name for this type.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    @Override
+    public void  validateUserForTypeReIdentify(String  userId,
+                                               String  metadataCollectionName,
+                                               TypeDef originalTypeDef,
+                                               String  newTypeDefGUID,
+                                               String  newTypeDefName) throws UserNotAuthorizedException
+    {
+        if (metadataArchitects.contains(userId))
+        {
+            return;
+        }
+
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeReIdentify(userId, metadataCollectionName, originalTypeDef, newTypeDefGUID, newTypeDefName);
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the identifiers for a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param originalAttributeTypeDef type details
+     * @param newTypeDefGUID the new identifier for the type.
+     * @param newTypeDefName new name for this type.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    @Override
+    public void  validateUserForTypeReIdentify(String           userId,
+                                               String           metadataCollectionName,
+                                               AttributeTypeDef originalAttributeTypeDef,
+                                               String           newTypeDefGUID,
+                                               String           newTypeDefName) throws UserNotAuthorizedException
+    {
+        if (metadataArchitects.contains(userId))
+        {
+            return;
+        }
+
+        if (localServerUserId != null)
+        {
+            if (localServerUserId.equals(userId))
+            {
+                return;
+            }
+        }
+
+        super.validateUserForTypeReIdentify(userId,
+                                            metadataCollectionName,
+                                            originalAttributeTypeDef,
+                                            newTypeDefGUID,
+                                            newTypeDefName);
     }
 
 
@@ -1159,13 +1552,19 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param instance instance details
+     * @param entityTypeGUID unique identifier (guid) for the new entity's type.
+     * @param initialProperties initial list of properties for the new entity null means no properties.
+     * @param initialClassifications initial list of classifications for the new entity null means no classifications.
+     * @param initialStatus initial status typically DRAFT, PREPARED or ACTIVE.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
     @Override
-    public void  validateUserForEntityCreate(String       userId,
-                                             String       metadataCollectionName,
-                                             EntityDetail instance) throws UserNotAuthorizedException
+    public void  validateUserForEntityCreate(String                     userId,
+                                             String                     metadataCollectionName,
+                                             String                     entityTypeGUID,
+                                             InstanceProperties         initialProperties,
+                                             List<Classification>       initialClassifications,
+                                             InstanceStatus             initialStatus) throws UserNotAuthorizedException
     {
     }
 
@@ -1176,13 +1575,35 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
+     * @return entity to return (may be altered by the connector)
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
     @Override
-    public void  validateUserForEntityRead(String          userId,
-                                           String          metadataCollectionName,
-                                           EntityDetail    instance) throws UserNotAuthorizedException
+    public EntityDetail  validateUserForEntityRead(String       userId,
+                                                   String       metadataCollectionName,
+                                                   EntityDetail instance) throws UserNotAuthorizedException
     {
+        if ("cocoMDS2".equals(serverName))
+        {
+            /*
+             * The cocoMDS2 server connects to all cohorts and so its repository may contain entities from all
+             * repositories.  As such it does not return reference copy entities.
+             */
+            if (instance.getMetadataCollectionName() == null)
+            {
+                /*
+                 * An exception here is a configuration or logic error because the metadata collection name should be set up
+                 * in the Coco Pharmaceuticals environment.
+                 */
+                return super.validateUserForEntityRead(userId, metadataCollectionName, instance);
+            }
+            else if (! instance.getMetadataCollectionName().equals(metadataCollectionName))
+            {
+                return null;
+            }
+        }
+
+        return instance;
     }
 
 
@@ -1235,20 +1656,62 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
 
     /**
+     * Tests for whether a specific user should have the right to add a classification to an entity instance
+     * within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param classificationName String name for the classification.
+     * @param properties list of properties for the classification.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForEntityClassificationAdd(String               userId,
+                                                        String               metadataCollectionName,
+                                                        EntityDetail         instance,
+                                                        String               classificationName,
+                                                        InstanceProperties   properties) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
      * Tests for whether a specific user should have the right to update the classification for an entity instance
      * within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
-     * @param classification classification details
+     * @param classificationName String name for the classification.
+     * @param properties list of properties for the classification.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
     @Override
-    public void  validateUserForEntityClassificationUpdate(String          userId,
-                                                           String          metadataCollectionName,
-                                                           EntityDetail    instance,
-                                                           Classification  classification) throws UserNotAuthorizedException
+    public void  validateUserForEntityClassificationUpdate(String               userId,
+                                                           String               metadataCollectionName,
+                                                           EntityDetail         instance,
+                                                           String               classificationName,
+                                                           InstanceProperties   properties) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to delete a classification from an entity instance
+     * within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param classificationName String name for the classification.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForEntityClassificationDelete(String               userId,
+                                                           String               metadataCollectionName,
+                                                           EntityDetail         instance,
+                                                           String               classificationName) throws UserNotAuthorizedException
     {
     }
 
@@ -1270,17 +1733,97 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
 
 
     /**
-     * Tests for whether a specific user should have the right to create a instance within a repository.
+     * Tests for whether a specific user should have the right to restore a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param deletedEntityGUID String unique identifier (guid) for the entity.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForEntityRestore(String       userId,
+                                              String       metadataCollectionName,
+                                              String       deletedEntityGUID) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the guid on a instance within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
+     * @param newGUID the new guid for the instance.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
     @Override
-    public void  validateUserForRelationshipCreate(String       userId,
-                                                   String       metadataCollectionName,
-                                                   Relationship instance) throws UserNotAuthorizedException
+    public void  validateUserForEntityReIdentification(String       userId,
+                                                       String       metadataCollectionName,
+                                                       EntityDetail instance,
+                                                       String       newGUID) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the type of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newTypeDefSummary details of this instance's new TypeDef.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForEntityReTyping(String         userId,
+                                               String         metadataCollectionName,
+                                               EntityDetail   instance,
+                                               TypeDefSummary newTypeDefSummary) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the home of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newHomeMetadataCollectionId unique identifier for the new home metadata collection/repository.
+     * @param newHomeMetadataCollectionName display name for the new home metadata collection/repository.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForEntityReHoming(String         userId,
+                                               String         metadataCollectionName,
+                                               EntityDetail   instance,
+                                               String         newHomeMetadataCollectionId,
+                                               String         newHomeMetadataCollectionName) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to create a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param relationshipTypeGUID unique identifier (guid) for the new relationship's type.
+     * @param initialProperties initial list of properties for the new entity null means no properties.
+     * @param entityOneSummary the unique identifier of one of the entities that the relationship is connecting together.
+     * @param entityTwoSummary the unique identifier of the other entity that the relationship is connecting together.
+     * @param initialStatus initial status typically DRAFT, PREPARED or ACTIVE.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForRelationshipCreate(String               userId,
+                                                   String               metadataCollectionName,
+                                                   String               relationshipTypeGUID,
+                                                   InstanceProperties   initialProperties,
+                                                   EntitySummary        entityOneSummary,
+                                                   EntitySummary        entityTwoSummary,
+                                                   InstanceStatus       initialStatus) throws UserNotAuthorizedException
     {
     }
 
@@ -1291,13 +1834,15 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
+     * @return relationship to return (may be altered by the connector)
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
     @Override
-    public void  validateUserForRelationshipRead(String          userId,
-                                                 String          metadataCollectionName,
-                                                 Relationship    instance) throws UserNotAuthorizedException
+    public Relationship validateUserForRelationshipRead(String          userId,
+                                                        String          metadataCollectionName,
+                                                        Relationship    instance) throws UserNotAuthorizedException
     {
+        return instance;
     }
 
 
@@ -1330,5 +1875,121 @@ public class CocoPharmaServerSecurityConnector extends OpenMetadataServerSecurit
                                                    String       metadataCollectionName,
                                                    Relationship instance) throws UserNotAuthorizedException
     {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to restore a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param deletedRelationshipGUID String unique identifier (guid) for the relationship.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForRelationshipRestore(String       userId,
+                                                    String       metadataCollectionName,
+                                                    String       deletedRelationshipGUID) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the guid on a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newGUID the new guid for the instance.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForRelationshipReIdentification(String       userId,
+                                                             String       metadataCollectionName,
+                                                             Relationship instance,
+                                                             String       newGUID) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the type of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newTypeDefSummary details of this instance's new TypeDef.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForRelationshipReTyping(String         userId,
+                                                     String         metadataCollectionName,
+                                                     Relationship   instance,
+                                                     TypeDefSummary newTypeDefSummary) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the home of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newHomeMetadataCollectionId unique identifier for the new home metadata collection/repository.
+     * @param newHomeMetadataCollectionName display name for the new home metadata collection/repository.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    @Override
+    public void  validateUserForRelationshipReHoming(String         userId,
+                                                     String         metadataCollectionName,
+                                                     Relationship   instance,
+                                                     String         newHomeMetadataCollectionId,
+                                                     String         newHomeMetadataCollectionName) throws UserNotAuthorizedException
+    {
+    }
+
+
+    /**
+     * Tests for whether a reference copy should be saved to the repository.
+     *
+     * @param instance instance details
+     * @return flag indicating whether the reference copy should be saved
+     */
+    public boolean  validateEntityReferenceCopySave(EntityDetail instance)
+    {
+        /*
+         * The cocoMDS6 server is linked to the manufacturing IOT devices as well as the core cohort
+         * and so it does not save reference copies so that the IOT metadata does not clutter the cocoMDS6 repository
+         * (and hence becomes visible in the core cohort.
+         */
+        if ("cocoMDS6".equals(serverName))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Tests for whether a reference copy should be saved to the repository.
+     *
+     * @param instance instance details
+     * @return flag indicating whether the reference copy should be saved
+     */
+    public boolean  validateRelationshipReferenceCopySave(Relationship instance)
+    {
+        /*
+         * The cocoMDS6 server is linked to the manufacturing IOT devices as well as the core cohort
+         * and so it does not save reference copies so that the IOT metadata does not clutter the cocoMDS6 repository
+         * (and hence becomes visible in the core cohort.
+         */
+        if ("cocoMDS6".equals(serverName))
+        {
+            return false;
+        }
+
+        return true;
     }
 }

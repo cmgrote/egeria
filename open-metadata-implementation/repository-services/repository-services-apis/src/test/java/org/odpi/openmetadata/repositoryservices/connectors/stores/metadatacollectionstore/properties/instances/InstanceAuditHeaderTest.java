@@ -6,9 +6,8 @@ package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacolle
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.io.Serializable;
+import java.util.*;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -18,25 +17,27 @@ import static org.testng.Assert.assertTrue;
  */
 public class InstanceAuditHeaderTest
 {
-    private InstanceType           type                   = new InstanceType();
-    private InstanceProvenanceType instanceProvenanceType = InstanceProvenanceType.LOCAL_COHORT;
-    private String                 metadataCollectionId   = "TestMetadataCollectionId";
-    private String                 metadataCollectionName = "TestMetadataCollectionName";
-    private String                 replicatedBy           = "TestReplicatedBy";
-    private String                 instanceLicense        = "TestInstanceLicense";
-    private String                 createdBy              = "TestAuthor";
-    private String                 updatedBy              = "TestEditor";
-    private Date                   createTime             = new Date(23);
-    private Date                   updateTime             = new Date(45);
-    private List<String>           maintainedBy           = new ArrayList<>();
-    private long                   version                = 30L;
-    private InstanceStatus         currentStatus          = InstanceStatus.UNKNOWN;
-    private InstanceStatus         statusOnDelete         = InstanceStatus.UNKNOWN;
+    private InstanceType                type                   = new InstanceType();
+    private InstanceProvenanceType      instanceProvenanceType = InstanceProvenanceType.LOCAL_COHORT;
+    private String                      metadataCollectionId   = "TestMetadataCollectionId";
+    private String                      metadataCollectionName = "TestMetadataCollectionName";
+    private String                      replicatedBy           = "TestReplicatedBy";
+    private String                      instanceLicense        = "TestInstanceLicense";
+    private String                      createdBy              = "TestAuthor";
+    private String                      updatedBy              = "TestEditor";
+    private Date                        createTime             = new Date(23);
+    private Date                        updateTime             = new Date(45);
+    private List<String>                maintainedBy           = new ArrayList<>();
+    private long                        version                = 30L;
+    private InstanceStatus              currentStatus          = InstanceStatus.UNKNOWN;
+    private InstanceStatus              statusOnDelete         = InstanceStatus.UNKNOWN;
+    private Map<String, Serializable>   mappingProperties      = new HashMap<>();
 
 
     public InstanceAuditHeaderTest()
     {
         maintainedBy.add("TestMaintainer");
+        mappingProperties.put("TestProperty", "TestValue");
     }
 
 
@@ -49,6 +50,7 @@ public class InstanceAuditHeaderTest
     {
         InstanceAuditHeader testObject = new InstanceAuditHeaderMock();
 
+        testObject.setHeaderVersion(InstanceAuditHeader.CURRENT_AUDIT_HEADER_VERSION);
         testObject.setType(type);
         testObject.setInstanceProvenanceType(instanceProvenanceType);
         testObject.setMetadataCollectionId(metadataCollectionId);
@@ -63,6 +65,7 @@ public class InstanceAuditHeaderTest
         testObject.setVersion(version);
         testObject.setStatus(currentStatus);
         testObject.setStatusOnDelete(statusOnDelete);
+        testObject.setMappingProperties(mappingProperties);
 
         return testObject;
     }
@@ -75,6 +78,7 @@ public class InstanceAuditHeaderTest
      */
     private void validateObject(InstanceAuditHeader   testObject)
     {
+        assertTrue(testObject.getHeaderVersion() == InstanceAuditHeader.CURRENT_AUDIT_HEADER_VERSION);
         assertTrue(testObject.getType().equals(type));
         assertTrue(testObject.getInstanceProvenanceType().equals(instanceProvenanceType));
         assertTrue(testObject.getMetadataCollectionId().equals(metadataCollectionId));
@@ -89,6 +93,7 @@ public class InstanceAuditHeaderTest
         assertTrue(testObject.getVersion() == version);
         assertTrue(testObject.getStatus().equals(currentStatus));
         assertTrue(testObject.getStatusOnDelete().equals(statusOnDelete));
+        assertTrue(testObject.getMappingProperties().equals(mappingProperties));
     }
 
 
@@ -113,9 +118,13 @@ public class InstanceAuditHeaderTest
         assertTrue(testObject.getVersion() == 0L);
         assertTrue(testObject.getStatus() == null);
         assertTrue(testObject.getStatusOnDelete() == null);
+        assertTrue(testObject.getMappingProperties() == null);
 
         testObject.setMaintainedBy(new ArrayList<>());
         assertTrue(testObject.getMaintainedBy() == null);
+
+        testObject.setMappingProperties(new HashMap<>());
+        assertTrue(testObject.getMappingProperties() == null);
 
         InstanceAuditHeader anotherTestObject = getTestObject();
 

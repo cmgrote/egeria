@@ -2,7 +2,7 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.commonservices.ocf.metadatamanagement.converters;
 
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Classification;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementClassification;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Referenceable;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceProperties;
@@ -24,12 +24,14 @@ public class ReferenceableConverter extends ElementHeaderConverter
      * @param entity properties to convert
      * @param repositoryHelper helper object to parse entity
      * @param serviceName name of this component
+     * @param serverName called server
      */
     public ReferenceableConverter(EntityDetail         entity,
                                   OMRSRepositoryHelper repositoryHelper,
-                                  String               serviceName)
+                                  String               serviceName,
+                                  String               serverName)
     {
-        super(entity, repositoryHelper, serviceName);
+        super(entity, repositoryHelper, serviceName, serverName);
     }
 
 
@@ -40,13 +42,15 @@ public class ReferenceableConverter extends ElementHeaderConverter
      * @param relationship properties to convert
      * @param repositoryHelper helper object to parse entity/relationship
      * @param serviceName name of this component
+     * @param serverName called server
      */
     public ReferenceableConverter(EntityDetail         entity,
                                   Relationship         relationship,
                                   OMRSRepositoryHelper repositoryHelper,
-                                  String               serviceName)
+                                  String               serviceName,
+                                  String               serverName)
     {
-        super(entity, relationship, repositoryHelper, serviceName);
+        super(entity, relationship, repositoryHelper, serviceName, serverName);
     }
 
 
@@ -67,13 +71,33 @@ public class ReferenceableConverter extends ElementHeaderConverter
 
 
     /**
+     * Return the converted bean.
+     *
+     * @return bean populated with properties from the entity supplied in the constructor
+     */
+    public Referenceable getBean()
+    {
+        Referenceable  bean = null;
+
+        if (entity != null)
+        {
+            bean = new Referenceable();
+
+            updateBean(bean);
+        }
+
+        return bean;
+    }
+
+
+    /**
      * Extract the classifications from the entity.
      *
      * @return list of bean classifications
      */
-    private List<Classification> getClassificationsFromEntity()
+    private List<ElementClassification> getClassificationsFromEntity()
     {
-        List<Classification> classifications = null;
+        List<ElementClassification> classifications = null;
 
         if (entity != null)
         {
@@ -87,7 +111,7 @@ public class ReferenceableConverter extends ElementHeaderConverter
                 {
                     if (entityClassification != null)
                     {
-                        Classification beanClassification = new Classification();
+                        ElementClassification beanClassification = new ElementClassification();
 
                         beanClassification.setClassificationName(entityClassification.getName());
                         beanClassification.setClassificationProperties(repositoryHelper.getInstancePropertiesAsMap(entityClassification.getProperties()));
@@ -101,9 +125,10 @@ public class ReferenceableConverter extends ElementHeaderConverter
 
 
     /**
-     * Extract the classifications from the entity.
+     * Extract the properties for the requested classification from the entity.
      *
-     * @return list of bean classifications
+     * @param classificationName name of classification
+     * @return list of properties for the named classification
      */
     protected InstanceProperties getClassificationProperties(String  classificationName)
     {

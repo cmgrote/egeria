@@ -4,7 +4,7 @@ package org.odpi.openmetadata.accessservices.assetowner.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Classification;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementClassification;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -20,23 +20,23 @@ import static org.testng.Assert.assertTrue;
  */
 public class AssetOwnerEventTest
 {
-    private AssetOwnerEventType  eventType                = AssetOwnerEventType.NEW_ASSET_EVENT;
-    private Asset                originalAsset            = new Asset();
+    private AssetOwnerEventType         eventType                = AssetOwnerEventType.NEW_ASSET_EVENT;
+    private Asset                       originalAsset            = new Asset();
     private Asset               asset           = new Asset();
     private String              url             = "TestURL";
     private String              guid            = "TestGUID";
     private String              typeId          = "TestTypeId";
     private String              typeName        = "TestTypeName";
-    private long                 typeVersion              = 7;
-    private String               typeDescription          = "TestTypeDescription";
-    private String               qualifiedName            = "TestQualifiedName";
-    private String               displayName              = "TestDisplayName";
-    private String               description              = "TestDescription";
-    private String               owner                    = "TestOwner";
-    private Map<String, String>  additionalProperties     = new HashMap<>();
-    private List<Classification> classifications          = new ArrayList<>();
-    private Classification       classification           = new Classification();
-    private Map<String, Object>  classificationProperties = new HashMap<>();
+    private long                        typeVersion              = 7;
+    private String                      typeDescription          = "TestTypeDescription";
+    private String                      qualifiedName            = "TestQualifiedName";
+    private String                      displayName              = "TestDisplayName";
+    private String                      description              = "TestDescription";
+    private String                      owner                    = "TestOwner";
+    private Map<String, String>         additionalProperties     = new HashMap<>();
+    private List<ElementClassification> classifications          = new ArrayList<>();
+    private ElementClassification       classification           = new ElementClassification();
+    private Map<String, Object>         classificationProperties = new HashMap<>();
 
 
     /**
@@ -180,7 +180,7 @@ public class AssetOwnerEventTest
         {
             jsonString = objectMapper.writeValueAsString(getTestObject());
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -189,7 +189,7 @@ public class AssetOwnerEventTest
         {
             validateResultObject(objectMapper.readValue(jsonString, AssetOwnerEvent.class));
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -203,7 +203,7 @@ public class AssetOwnerEventTest
         {
             jsonString = objectMapper.writeValueAsString(superObject);
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -212,7 +212,7 @@ public class AssetOwnerEventTest
         {
             validateResultObject((AssetOwnerEvent) objectMapper.readValue(jsonString, AssetOwnerEventHeader.class));
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }

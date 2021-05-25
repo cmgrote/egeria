@@ -27,12 +27,12 @@ import java.util.Map;
  */
 public class PersonalProfileManagement implements PersonalProfileManagementInterface
 {
-    private String                  serverName;       /* Initialized in constructor */
-    private String                  omasServerURL;    /* Initialized in constructor */
-    private RESTClient              restClient;       /* Initialized in constructor */
+    private String                     serverName;       /* Initialized in constructor */
+    private String                     omasServerURL;    /* Initialized in constructor */
+    private CommunityProfileRESTClient restClient;       /* Initialized in constructor */
 
-    private InvalidParameterHandler invalidParameterHandler = new InvalidParameterHandler();
-    private RESTExceptionHandler    exceptionHandler        = new RESTExceptionHandler();
+    private InvalidParameterHandler              invalidParameterHandler = new InvalidParameterHandler();
+    private CommunityProfileRESTExceptionHandler exceptionHandler        = new CommunityProfileRESTExceptionHandler();
 
 
     /**
@@ -52,7 +52,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
 
         this.serverName = serverName;
         this.omasServerURL = omasServerURL;
-        this.restClient = new RESTClient(serverName, omasServerURL);
+        this.restClient = new CommunityProfileRESTClient(serverName, omasServerURL);
     }
 
 
@@ -78,7 +78,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
 
         this.serverName = serverName;
         this.omasServerURL = omasServerURL;
-        this.restClient = new RESTClient(serverName, omasServerURL, userId, password);
+        this.restClient = new CommunityProfileRESTClient(serverName, omasServerURL, userId, password);
     }
 
 
@@ -101,6 +101,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public String createPersonalProfile(String              userId,
                                         String              profileUserId,
                                         String              qualifiedName,
@@ -140,10 +141,6 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                   serverName,
                                                                   userId);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUID();
     }
 
@@ -162,9 +159,11 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @param additionalProperties  additional properties about the individual.
      *
      * @throws InvalidParameterException the known name is null or the qualifiedName does not match the profileGUID.
+     * @throws NoProfileForUserException unable to locate the profile for this userId.
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public void   updatePersonalProfile(String              userId,
                                         String              profileGUID,
                                         String              qualifiedName,
@@ -201,17 +200,13 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
         requestBody.setAdditionalProperties(additionalProperties);
 
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  omasServerURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  profileGUID);
+        restClient.callVoidPostRESTCall(methodName,
+                                        omasServerURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        profileGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowNoProfileForUserException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
     }
 
 
@@ -222,10 +217,10 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @param profileGUID unique identifier for the profile.
      * @param qualifiedName personnel/serial/unique employee number of the individual.
      * @throws InvalidParameterException the qualifiedName or guid is null.
-     *
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public void   deletePersonalProfile(String              userId,
                                         String              profileGUID,
                                         String              qualifiedName) throws InvalidParameterException,
@@ -254,10 +249,8 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                   userId,
                                                                   profileGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
         exceptionHandler.detectAndThrowNoProfileForUserException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        exceptionHandler.detectAndThrowStandardExceptions(methodName, restResult);
     }
 
 
@@ -274,6 +267,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public long getKarmaPoints(String userId,
                                String profileUserId) throws InvalidParameterException,
                                                             NoProfileForUserException,
@@ -297,6 +291,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public List<ContactMethod> getContactDetails(String userId,
                                                  String profileUserId) throws InvalidParameterException,
                                                                               NoProfileForUserException,
@@ -323,6 +318,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String addContactMethod(String            userId,
                                    String            profileUserId,
                                    ContactMethodType type,
@@ -371,6 +367,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public PersonalProfile getPersonalProfileByGUID(String        userId,
                                                     String        profileGUID) throws InvalidParameterException,
                                                                                       PropertyServerException,
@@ -391,9 +388,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                                        userId,
                                                                                        profileGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        exceptionHandler.detectAndThrowStandardExceptions(methodName, restResult);
 
         return restResult.getPersonalProfile();
     }
@@ -411,6 +406,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public PersonalProfile getPersonalProfileForUser(String        userId,
                                                      String        profileUserId) throws InvalidParameterException,
                                                                                          PropertyServerException,
@@ -432,9 +428,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                                        profileUserId);
 
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        exceptionHandler.detectAndThrowStandardExceptions(methodName, restResult);
 
         return restResult.getPersonalProfile();
     }
@@ -452,6 +446,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException the server is not available, or there is a problem retrieving the profile.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public PersonalProfile getPersonalProfileByQualifiedName(String         userId,
                                                              String         qualifiedName) throws InvalidParameterException,
                                                                                                   PropertyServerException,
@@ -472,11 +467,6 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                                        userId,
                                                                                        qualifiedName);
 
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getPersonalProfile();
     }
 
@@ -494,6 +484,7 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
      * @throws PropertyServerException the server is not available.
      * @throws UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
+    @Override
     public List<PersonalProfile> getPersonalProfilesByName(String        userId,
                                                            String        name) throws InvalidParameterException,
                                                                                       PropertyServerException,
@@ -514,9 +505,9 @@ public class PersonalProfileManagement implements PersonalProfileManagementInter
                                                                                                userId,
                                                                                                name);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        exceptionHandler.detectAndThrowInvalidParameterException(restResult);
+        exceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+        exceptionHandler.detectAndThrowPropertyServerException(restResult);
 
         return restResult.getPersonalProfiles();
     }

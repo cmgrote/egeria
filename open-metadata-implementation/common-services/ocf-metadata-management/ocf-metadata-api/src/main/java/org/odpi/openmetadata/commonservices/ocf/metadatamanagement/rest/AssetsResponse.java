@@ -24,6 +24,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class AssetsResponse extends PagedResponse
 {
+    private static final long    serialVersionUID = 1L;
+
     private List<Asset> assets   = null;
 
 
@@ -53,9 +55,9 @@ public class AssetsResponse extends PagedResponse
 
 
     /**
-     * Return the list of glossary terms in the response.
+     * Return the list of assets in the response.
      *
-     * @return list of glossary terms
+     * @return list of assets
      */
     public List<Asset> getAssets()
     {
@@ -82,7 +84,7 @@ public class AssetsResponse extends PagedResponse
 
 
     /**
-     * Set up the list of glossary terms for the response.
+     * Set up the list of assets for the response.
      *
      * @param assets list
      */
@@ -90,10 +92,7 @@ public class AssetsResponse extends PagedResponse
     {
         this.assets = assets;
     }
-
-
-
-
+    
 
     /**
      * JSON-style toString

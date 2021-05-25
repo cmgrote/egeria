@@ -5,10 +5,10 @@
 
 The vocabulary for the glossary is organized into a
 hierarchy of categories.
-These categories effectively provide a folder structure
+These categories effectively provide a element structure
 for the glossary.
 
-![UML](0320-Category-Hierarchy.png)
+![UML](0320-Category-Hierarchy.png#pagewidth)
 
 * **GlossaryCategory** represents a category in a glossary. 
 * **CategoryAnchor** links each category to exactly one Glossary object.

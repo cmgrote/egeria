@@ -2,10 +2,16 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.frameworks.discovery;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLoggingComponent;
+import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.discovery.ffdc.DiscoveryServiceException;
 import org.odpi.openmetadata.frameworks.discovery.ffdc.ODFErrorCode;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -16,10 +22,22 @@ import org.odpi.openmetadata.frameworks.discovery.ffdc.ODFErrorCode;
  * Some discovery services manage the invocation of other discovery services.  These discovery services are called
  * discovery pipelines.
  */
-public abstract class DiscoveryService extends ConnectorBase
+public abstract class DiscoveryService extends ConnectorBase implements AuditLoggingComponent
 {
     protected String           discoveryServiceName = "<Unknown>";
     protected DiscoveryContext discoveryContext = null;
+    protected AuditLog         auditLog = null;
+
+    /**
+     * Receive an audit log object that can be used to record audit log messages.  The caller has initialized it
+     * with the correct component description and log destinations.
+     *
+     * @param auditLog audit log object
+     */
+    public void setAuditLog(AuditLog auditLog)
+    {
+        this.auditLog = auditLog;
+    }
 
 
     /**
@@ -60,26 +78,72 @@ public abstract class DiscoveryService extends ConnectorBase
 
 
     /**
-     * Indicates that the discovery service is completely configured and can begin processing.
+     * Retrieve and validate the list of embedded connectors and cast them to discovery service connector.
+     * This is used by DiscoveryPipelines and DiscoveryScanningServices.
      *
-     * @throws DiscoveryServiceException there is a problem within the discovery service.
+     * @param embeddedConnectors list of supplied connector instances supplied by the Connector Broker.
+     *
+     * @return list of discovery service connectors
+     *
+     * @throws DiscoveryServiceException one of the embedded connectors is not a discovery service
      */
+    protected List<DiscoveryService> getEmbeddedDiscoveryServices(List<Connector>  embeddedConnectors) throws DiscoveryServiceException
+    {
+        final String           methodName        = "getEmbeddedDiscoveryServices";
+        List<DiscoveryService> discoveryServices = null;
+
+        if (embeddedConnectors != null)
+        {
+            discoveryServices = new ArrayList<>();
+
+            for (Connector embeddedConnector : embeddedConnectors)
+            {
+                if (embeddedConnector != null)
+                {
+                    if (embeddedConnector instanceof DiscoveryService)
+                    {
+                        discoveryServices.add((DiscoveryService)embeddedConnector);
+                    }
+                    else
+                    {
+                        throw new DiscoveryServiceException(ODFErrorCode.INVALID_EMBEDDED_DISCOVERY_SERVICE.getMessageDefinition(discoveryServiceName),
+                                                            this.getClass().getName(),
+                                                            methodName);
+                    }
+                }
+            }
+
+            if (discoveryServices.isEmpty())
+            {
+                discoveryServices = null;
+            }
+        }
+
+        return discoveryServices;
+    }
+
+
+    /**
+     * Indicates that the discovery service is completely configured and can begin processing.
+     * This is where the function of the discovery service is implemented.
+     *
+     * This is a standard method from the Open Connector Framework (OCF) so
+     * be sure to call super.start() in your version.
+     *
+     * @throws ConnectorCheckedException there is a problem within the discovery service.
+     */
+    @Override
     public void start() throws ConnectorCheckedException
     {
         super.start();
 
+        final String methodName = "start";
+
         if (discoveryContext == null)
         {
-            final String methodName = "start";
-            ODFErrorCode errorCode    = ODFErrorCode.NULL_DISCOVERY_CONTEXT;
-            String       errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(discoveryServiceName);
-
-            throw new DiscoveryServiceException(errorCode.getHTTPErrorCode(),
+            throw new DiscoveryServiceException(ODFErrorCode.NULL_DISCOVERY_CONTEXT.getMessageDefinition(discoveryServiceName),
                                                 this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                methodName);
         }
     }
 
@@ -94,28 +158,27 @@ public abstract class DiscoveryService extends ConnectorBase
     protected void handleUnexpectedException(String      methodName,
                                              Throwable   error) throws ConnectorCheckedException
     {
-        ODFErrorCode errorCode    = ODFErrorCode.UNEXPECTED_EXCEPTION;
-        String       errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(discoveryServiceName,
-                                                                                                       error.getClass().getName(),
-                                                                                                       methodName,
-                                                                                                       error.getMessage());
-
-        throw new DiscoveryServiceException(errorCode.getHTTPErrorCode(),
+        throw new DiscoveryServiceException(ODFErrorCode.UNEXPECTED_EXCEPTION.getMessageDefinition(discoveryServiceName,
+                                                                                                   error.getClass().getName(),
+                                                                                                   methodName,
+                                                                                                   error.getMessage()),
                                             this.getClass().getName(),
-                                            methodName,
-                                            errorMessage,
-                                            errorCode.getSystemAction(),
-                                            errorCode.getUserAction());
+                                            methodName);
     }
 
 
     /**
-     * Free up any resources held since the connector is no longer needed.
+     * Free up any resources held since the connector is no longer needed.  This is a standard
+     * method from the Open Connector Framework (OCF).  If you need to override this method
+     * be sure to call super.disconnect() in your version.
      *
-     * @throws ConnectorCheckedException there is a problem within the connector.
+     * @throws ConnectorCheckedException there is a problem within the discovery service.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
+        final String methodName = "disconnect";
+
         super.disconnect();
     }
 }

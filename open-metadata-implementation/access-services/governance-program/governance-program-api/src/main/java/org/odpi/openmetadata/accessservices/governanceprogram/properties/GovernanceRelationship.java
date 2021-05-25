@@ -4,6 +4,7 @@ package org.odpi.openmetadata.accessservices.governanceprogram.properties;
 
 import com.fasterxml.jackson.annotation.*;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -16,8 +17,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class GovernanceRelationship extends GovernanceHeader
+public class GovernanceRelationship implements Serializable
 {
+    private static final long    serialVersionUID = 1L;
+
     private String rationale = null;
 
 
@@ -76,17 +79,15 @@ public class GovernanceRelationship extends GovernanceHeader
     {
         return "GovernanceRelationship{" +
                 "rationale='" + rationale + '\'' +
-                ", GUID='" + getGUID() + '\'' +
-                ", type='" + getType() + '\'' +
-                ", title='" + getTitle() + '\'' +
                 '}';
     }
 
 
+
     /**
-     * Equals method that returns true if containing properties are the same.
+     * Compare the values of the supplied object with those stored in the current object.
      *
-     * @param objectToCompare object to compare
+     * @param objectToCompare supplied object
      * @return boolean result of comparison
      */
     @Override
@@ -96,15 +97,23 @@ public class GovernanceRelationship extends GovernanceHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof GovernanceRelationship))
-        {
-            return false;
-        }
-        if (!super.equals(objectToCompare))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
         GovernanceRelationship that = (GovernanceRelationship) objectToCompare;
-        return Objects.equals(getRationale(), that.getRationale());
+        return Objects.equals(rationale, that.rationale);
+    }
+
+
+    /**
+     * Return has code based on properties.
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(rationale);
     }
 }

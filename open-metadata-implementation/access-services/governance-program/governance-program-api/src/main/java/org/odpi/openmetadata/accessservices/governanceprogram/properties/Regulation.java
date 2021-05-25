@@ -18,8 +18,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class Regulation extends GovernanceDriver
+public class Regulation extends GovernanceDriverProperties
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                   jurisdiction = null;
     private List<CertificationType>  certificationTypes = null;
 
@@ -30,7 +32,6 @@ public class Regulation extends GovernanceDriver
     public Regulation()
     {
         super();
-        setType("Regulation");
     }
 
 
@@ -108,30 +109,30 @@ public class Regulation extends GovernanceDriver
                 ", certificationTypes=" + certificationTypes +
                 ", relatedGovernanceDrivers=" + getRelatedGovernanceDrivers() +
                 ", governancePolicies=" + getGovernancePolicies() +
+                ", title='" + getTitle() + '\'' +
+                ", summary='" + getSummary() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", scope='" + getScope() + '\'' +
                 ", status=" + getStatus() +
                 ", priority='" + getPriority() + '\'' +
                 ", implications=" + getImplications() +
                 ", outcomes=" + getOutcomes() +
-                ", externalReferences=" + getExternalReferences() +
-                ", additionalProperties=" + getAdditionalProperties() +
                 ", governanceMetrics=" + getGovernanceMetrics() +
                 ", governanceZones=" + getGovernanceZones() +
-                ", GUID='" + getGUID() + '\'' +
-                ", type='" + getType() + '\'' +
-                ", documentId='" + getDocumentId() + '\'' +
-                ", title='" + getTitle() + '\'' +
-                ", summary='" + getSummary() + '\'' +
+                ", typeName='" + getTypeName() + '\'' +
+                ", qualifiedName='" + getQualifiedName() + '\'' +
+                ", additionalProperties=" + getAdditionalProperties() +
+                ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
 
 
+
     /**
-     * Test the properties of the Regulation to determine if the supplied object is equal to this one.
+     * Compare the values of the supplied object with those stored in the current object.
      *
-     * @param objectToCompare object
-     * @return boolean evaluation
+     * @param objectToCompare supplied object
+     * @return boolean result of comparison
      */
     @Override
     public boolean equals(Object objectToCompare)
@@ -140,7 +141,7 @@ public class Regulation extends GovernanceDriver
         {
             return true;
         }
-        if (!(objectToCompare instanceof Regulation))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -149,7 +150,19 @@ public class Regulation extends GovernanceDriver
             return false;
         }
         Regulation that = (Regulation) objectToCompare;
-        return Objects.equals(getJurisdiction(), that.getJurisdiction()) &&
-                Objects.equals(getCertificationTypes(), that.getCertificationTypes());
+        return Objects.equals(jurisdiction, that.jurisdiction) &&
+                       Objects.equals(certificationTypes, that.certificationTypes);
+    }
+
+
+    /**
+     * Return has code based on properties.
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), jurisdiction, certificationTypes);
     }
 }

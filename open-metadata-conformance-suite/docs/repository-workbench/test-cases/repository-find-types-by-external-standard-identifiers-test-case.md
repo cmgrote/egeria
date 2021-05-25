@@ -29,16 +29,16 @@ operations to validate that all possible searches work correctly.
       "class" : "OpenMetadataTestCaseResult",
       "testCaseId" : "repository-find-types-by-external-standard-identifiers",
       "testCaseName" : "Repository find type definitions by external standard identifiers test case",
-      "testCaseDescriptionURL" : "https://odpi.github.io/egeria/open-metadata-conformance-suite/docs/repository-workbench/repository-find-types-by-external-standard-identifiers-test-case.md",
+      "testCaseDescriptionURL" : "https://egeria.odpi.org/open-metadata-conformance-suite/docs/repository-workbench/repository-find-types-by-external-standard-identifiers-test-case.md",
       "assertionMessage" : "Type definitions can be extracted by external standard identifiers",
       "successfulAssertions" : [ "All type definitions returned for external standard mappings." ],
       "unsuccessfulAssertions" : [ ],
       "discoveredProperties" : {
         "Number of type definitions mapped to external standard identifiers" : 0
       }
-}      
-    
+}
 ```
+
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 Copyright Contributors to the ODPi Egeria project.

@@ -23,10 +23,17 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
     protected String              tutType;
     protected int                 maxPageSize;
 
+    protected boolean             workbenchComplete;
+
     protected List<OpenMetadataConformanceTestEvidence>  testEvidenceList = new ArrayList<>();
 
     protected Map<String, OpenMetadataTestCase>    testCaseMap = new HashMap<>();
 
+    /*
+     * Add time of last received event - this is to help with determining whether workbench has completed
+     */
+    protected Date lastActive = new Date();
+    private static final long DELAY_TIME = 10000l;  // 10 seconds - time to wait after activity has quiesced before reporting completion
 
     /**
      * Constructor takes properties that are common to all work pads.
@@ -57,6 +64,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         this.localServerPassword = localServerPassword;
         this.tutType = tutType;
         this.maxPageSize = maxPageSize;
+        this.workbenchComplete = false;
     }
 
 
@@ -72,7 +80,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
 
 
     /**
-     * Return hte name of this workbench.
+     * Return the name of this workbench.
      *
      * @return name
      */
@@ -114,6 +122,40 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         return localServerUserId;
     }
 
+    /**
+     * Return the completion state of the workbench.
+     *
+     * @return boolean - whether workbench is complete
+     */
+    public OpenMetadataConformanceWorkbenchStatus getWorkbenchStatus()
+    {
+        OpenMetadataConformanceWorkbenchStatus status = new OpenMetadataConformanceWorkbenchStatus();
+        status.setWorkbenchId(workbenchId);
+        if (workbenchComplete) {
+            /*
+             * The synchronous tests are complete, but check whether the workbench has quiesced.
+             */
+            Date now = new Date();
+            long millis = now.getTime() - lastActive.getTime();
+            if (millis >= DELAY_TIME)
+            {
+                status.setWorkbenchComplete();
+            }
+
+        }
+        return status;
+    }
+
+    /**
+     * Set the completion state of the workbench to true.
+     * This signifies that the synchronous portion of the tests have completed.
+     * The workbench may still be processing asynchronous events which trigger further tests.
+     *
+     */
+    public void setWorkbenchComplete()
+    {
+        this.workbenchComplete = true;
+    }
 
 
     /**
@@ -172,11 +214,47 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
 
 
     /**
+     * Retrieve the set of test case IDs registered with this work pad.
+     *
+     * @return the test case IDs
+     */
+    synchronized Set<String> getTestCaseIds()
+    {
+        return new TreeSet<>(testCaseMap.keySet());
+    }
+
+
+    /**
+     * Accumulate the set of profile names registered with this work pad.
+     *
+     * @return the profile names
+     */
+    public abstract List<String> getProfileNames();
+
+
+    /**
+     * Accumulate the evidences for a given profile.
+     *
+     * @param profileName for which to obtain the detailed results
+     * @return the test evidence organized by profile and requirement within profile
+     */
+    public abstract OpenMetadataConformanceProfileResults getProfileResults(String profileName);
+
+
+    /**
      * Accumulate the evidences for each profile
      *
-     * @return the test evidence organized by profile and requirement withing profile
+     * @return the test evidence organized by profile and requirement within profile
      */
     public abstract List<OpenMetadataConformanceProfileResults> getProfileResults();
+
+
+    /**
+     * Accumulate the summarized evidences for each profile
+     *
+     * @return the summarized test evidence organized by profile and requirement within profile
+     */
+    public abstract List<OpenMetadataConformanceProfileSummary> getProfileSummaries();
 
 
     /**
@@ -323,14 +401,18 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
      * @param testCaseId identifier of the reporting test case
      * @param testCaseName name of the reporting test case
      * @param testCaseDocumentationURL link to the test case documentation.
-     * @param assertionMessage details of the assertion
+     * @param assertionId details of the assertion
+     * @param methodName the method that the condition tests
+     * @param elapsedTime of the test executing (in milliseconds)
      */
     public synchronized void addSuccessfulCondition(Integer  profileId,
                                                     Integer  requirementId,
                                                     String   testCaseId,
                                                     String   testCaseName,
                                                     String   testCaseDocumentationURL,
-                                                    String   assertionMessage)
+                                                    String   assertionId,
+                                                    String   methodName,
+                                                    Long     elapsedTime)
     {
         OpenMetadataConformanceTestEvidence  testEvidence = new OpenMetadataConformanceTestEvidence();
 
@@ -339,8 +421,14 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         testEvidence.setTestCaseId(testCaseId);
         testEvidence.setTestCaseName(testCaseName);
         testEvidence.setTestCaseDescriptionURL(testCaseDocumentationURL);
-        testEvidence.setAssertionMessage(assertionMessage);
+        testEvidence.setAssertionId(assertionId);
         testEvidence.setTestEvidenceType(OpenMetadataConformanceTestEvidenceType.SUCCESSFUL_ASSERTION);
+        if (methodName != null) {
+            testEvidence.setMethodName(methodName);
+        }
+        if (elapsedTime != null) {
+            testEvidence.setElapsedTime(elapsedTime);
+        }
 
         testEvidenceList.add(testEvidence);
     }
@@ -354,14 +442,18 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
      * @param testCaseId identifier of the reporting test case
      * @param testCaseName name of the reporting test case
      * @param testCaseDocumentationURL link to the test case documentation.
-     * @param assertionMessage details of the assertion
+     * @param assertionId details of the assertion
+     * @param methodName the method that the condition tests
+     * @param elapsedTime of the test executing (in milliseconds)
      */
     public synchronized void addUnsuccessfulCondition(Integer  profileId,
                                                       Integer  requirementId,
                                                       String   testCaseId,
                                                       String   testCaseName,
                                                       String   testCaseDocumentationURL,
-                                                      String   assertionMessage)
+                                                      String   assertionId,
+                                                      String   methodName,
+                                                      Long     elapsedTime)
     {
         OpenMetadataConformanceTestEvidence  testEvidence = new OpenMetadataConformanceTestEvidence();
 
@@ -370,8 +462,14 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         testEvidence.setTestCaseId(testCaseId);
         testEvidence.setTestCaseName(testCaseName);
         testEvidence.setTestCaseDescriptionURL(testCaseDocumentationURL);
-        testEvidence.setAssertionMessage(assertionMessage);
+        testEvidence.setAssertionId(assertionId);
         testEvidence.setTestEvidenceType(OpenMetadataConformanceTestEvidenceType.UNSUCCESSFUL_ASSERTION);
+        if (methodName != null) {
+            testEvidence.setMethodName(methodName);
+        }
+        if (elapsedTime != null) {
+            testEvidence.setElapsedTime(elapsedTime);
+        }
 
         testEvidenceList.add(testEvidence);
     }
@@ -385,14 +483,14 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
      * @param testCaseId identifier of the reporting test case
      * @param testCaseName name of the reporting test case
      * @param testCaseDocumentationURL link to the test case documentation.
-     * @param assertionMessage details of the assertion
+     * @param assertionId details of the assertion
      */
     public synchronized void addNotSupportedCondition(Integer  profileId,
                                                       Integer  requirementId,
                                                       String   testCaseId,
                                                       String   testCaseName,
                                                       String   testCaseDocumentationURL,
-                                                      String   assertionMessage)
+                                                      String   assertionId)
     {
         OpenMetadataConformanceTestEvidence  testEvidence = new OpenMetadataConformanceTestEvidence();
 
@@ -401,7 +499,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         testEvidence.setTestCaseId(testCaseId);
         testEvidence.setTestCaseName(testCaseName);
         testEvidence.setTestCaseDescriptionURL(testCaseDocumentationURL);
-        testEvidence.setAssertionMessage(assertionMessage);
+        testEvidence.setAssertionId(assertionId);
         testEvidence.setTestEvidenceType(OpenMetadataConformanceTestEvidenceType.NOT_SUPPORTED_FUNCTION);
 
         testEvidenceList.add(testEvidence);
@@ -450,7 +548,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
      * @param testCaseId identifier of the reporting test case
      * @param testCaseName name of the reporting test case
      * @param testCaseDocumentationURL link to the test case documentation.
-     * @param assertionMessage message associated with the exception.
+     * @param assertionId message associated with the exception.
      * @param exception exception
      */
     synchronized void  addUnexpectedException(Integer              profileId,
@@ -458,7 +556,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
                                               String               testCaseId,
                                               String               testCaseName,
                                               String               testCaseDocumentationURL,
-                                              String               assertionMessage,
+                                              String               assertionId,
                                               ExceptionBean        exception)
     {
         OpenMetadataConformanceTestEvidence  testEvidence = new OpenMetadataConformanceTestEvidence();
@@ -468,7 +566,7 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         testEvidence.setTestCaseId(testCaseId);
         testEvidence.setTestCaseName(testCaseName);
         testEvidence.setTestCaseDescriptionURL(testCaseDocumentationURL);
-        testEvidence.setAssertionMessage(assertionMessage);
+        testEvidence.setAssertionId(assertionId);
         testEvidence.setConformanceException(exception);
         testEvidence.setTestEvidenceType(OpenMetadataConformanceTestEvidenceType.UNEXPECTED_EXCEPTION);
 
@@ -600,6 +698,38 @@ public abstract class OpenMetadataConformanceWorkbenchWorkPad
         }
 
         return workbenchResults;
+    }
+
+    /**
+     * Return the summarized results determined so far by the workbench.
+     *
+     * @return workbench summary results object
+     */
+    synchronized OpenMetadataConformanceWorkbenchSummary getWorkbenchSummary()
+    {
+        OpenMetadataConformanceWorkbenchSummary workbenchSummary = new OpenMetadataConformanceWorkbenchSummary();
+
+        workbenchSummary.setWorkbenchId(workbenchId);
+        workbenchSummary.setWorkbenchName(workbenchName);
+        workbenchSummary.setVersionNumber(workbenchVersionNumber);
+        workbenchSummary.setTutName(tutName);
+        workbenchSummary.setTutType(tutType);
+
+        workbenchSummary.setProfileSummaries(getProfileSummaries());
+
+        return workbenchSummary;
+    }
+
+    /**
+     *  Register any activity to help with working out when the workbench has quiesced.
+     *  Any kind of activity is significant, especially if beyond the end of the synchronous tests.
+     */
+    public void registerActivity()
+    {
+        /*
+         * Record the current date and time...
+         */
+        lastActive = new Date();
     }
 
 

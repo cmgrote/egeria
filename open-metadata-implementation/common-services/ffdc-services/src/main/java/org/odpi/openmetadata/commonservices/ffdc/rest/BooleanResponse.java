@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -20,7 +21,9 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class BooleanResponse extends FFDCResponseBase
 {
-    private boolean   flag = false;
+    private static final long    serialVersionUID = 1L;
+
+    private boolean   flag = true;
 
 
     /**
@@ -43,7 +46,7 @@ public class BooleanResponse extends FFDCResponseBase
 
         if (template != null)
         {
-            flag = template.isFlag();
+            flag = template.getFlag();
         }
     }
 
@@ -53,14 +56,14 @@ public class BooleanResponse extends FFDCResponseBase
      *
      * @return boolean
      */
-    public boolean isFlag()
+    public boolean getFlag()
     {
         return flag;
     }
 
 
     /**
-     * set up the boolean result.
+     * Set up the boolean result.
      *
      * @param flag boolean
      */
@@ -80,9 +83,13 @@ public class BooleanResponse extends FFDCResponseBase
     {
         return "BooleanResponse{" +
                 "flag=" + flag +
-                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +
@@ -113,7 +120,7 @@ public class BooleanResponse extends FFDCResponseBase
         }
         BooleanResponse
                 that = (BooleanResponse) objectToCompare;
-        return isFlag() == that.isFlag();
+        return getFlag() == that.getFlag();
     }
 
 
@@ -125,6 +132,6 @@ public class BooleanResponse extends FFDCResponseBase
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), isFlag());
+        return Objects.hash(super.hashCode(), getFlag());
     }
 }

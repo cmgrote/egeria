@@ -20,6 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class EntityProxy extends EntitySummary
 {
+    private static final long    serialVersionUID = 1L;
+
     private InstanceProperties uniqueProperties = null;
 
 
@@ -70,7 +72,9 @@ public class EntityProxy extends EntitySummary
         {
             return null;
         }
-        else if (uniqueProperties.getInstanceProperties() == null)
+        else if ((uniqueProperties.getInstanceProperties() == null) &&
+                 (uniqueProperties.getEffectiveFromTime() == null) &&
+                 (uniqueProperties.getEffectiveToTime() == null))
         {
             return null;
         }

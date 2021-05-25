@@ -5,12 +5,13 @@ package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacolle
 
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.SequencingOrder;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.search.SearchClassifications;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.utilities.OMRSRepositoryPropertiesHelper;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * OMRSRepositoryHelper provides methods to repository connectors and repository event mappers to help
@@ -19,7 +20,7 @@ import java.util.Map;
  * OMRSRepositoryHelper's purpose is to create an object that the repository connectors and event mappers can
  * create, use and discard without needing to know how to connect to the repository content manager.
  */
-public interface OMRSRepositoryHelper
+public interface OMRSRepositoryHelper extends OMRSRepositoryPropertiesHelper
 {
     /**
      * Return the list of typeDefs and attributeTypeDefs active in the local repository.
@@ -181,6 +182,29 @@ public interface OMRSRepositoryHelper
 
 
     /**
+     * Add the supplied property to an instance properties object.  If the instance property object
+     * supplied is null, a new instance properties object is created.
+     *
+     * @param sourceName name of caller
+     * @param properties properties object to add property to, may be null.
+     * @param propertyName name of property
+     * @param enumTypeGUID unique Id of Enum requested
+     * @param enumTypeName unique name of enum requested
+     * @param ordinal numeric value of property
+     * @param methodName calling method name
+     * @return instance properties object.
+     * @throws TypeErrorException the enum type is not recognized
+     */
+    InstanceProperties addEnumPropertyToInstance(String             sourceName,
+                                                 InstanceProperties properties,
+                                                 String             propertyName,
+                                                 String             enumTypeGUID,
+                                                 String             enumTypeName,
+                                                 int                ordinal,
+                                                 String             methodName) throws TypeErrorException;
+
+
+    /**
      * Validate that the type of an instance is of the expected/desired type.  The actual instance may be a subtype
      * of the expected type of course.
      *
@@ -192,6 +216,17 @@ public interface OMRSRepositoryHelper
     boolean  isTypeOf(String sourceName,
                       String actualTypeName,
                       String expectedTypeName);
+
+
+    /**
+     * Return the list of type names for all of the subtypes of an entity type.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param superTypeName name of the super type - this value is not included in the result.
+     * @return list of type names (a null means the type is not know or it has no sub types)
+     */
+    List<String>  getSubTypesOf(String sourceName,
+                                String superTypeName);
 
 
     /**
@@ -208,20 +243,33 @@ public interface OMRSRepositoryHelper
 
 
     /**
+     * Return the names of all of the type definitions that define the supplied property name.
+     *
+     * @param sourceName name of the caller.
+     * @param propertyName property name to query.
+     * @param methodName calling method.
+     * @return set of names of the TypeDefs that define a property with this name
+     */
+    Set<String> getAllTypeDefsForProperty(String sourceName,
+                                          String propertyName,
+                                          String methodName);
+
+
+    /**
      * Returns an updated TypeDef that has had the supplied patch applied.  It throws an exception if any part of
      * the patch is incompatible with the original TypeDef.  For example, if there is a mismatch between
      * the type or version that either represents.
      *
      * @param sourceName       source of the TypeDef (used for logging)
+     * @param originalTypeDef typeDef to update
      * @param typeDefPatch     patch to apply
-     * @param originalTypeDef  typeDef to patch
      * @return updated TypeDef
+     * @throws InvalidParameterException the original typeDef or typeDefPatch is null
      * @throws PatchErrorException        the patch is either badly formatted, or does not apply to the supplied TypeDef
-     * @throws InvalidParameterException  the TypeDefPatch is null.
      */
     TypeDef applyPatch(String       sourceName,
                        TypeDef      originalTypeDef,
-                       TypeDefPatch typeDefPatch) throws PatchErrorException, InvalidParameterException;
+                       TypeDefPatch typeDefPatch) throws InvalidParameterException, PatchErrorException;
 
 
     /**
@@ -256,11 +304,74 @@ public interface OMRSRepositoryHelper
      * @return partially filled out entity needs classifications and properties
      * @throws TypeErrorException  the type name is not recognized.
      */
+    @Deprecated
     EntityDetail getSkeletonEntity(String                 sourceName,
                                    String                 metadataCollectionId,
                                    InstanceProvenanceType provenanceType,
                                    String                 userName,
                                    String                 typeName) throws TypeErrorException;
+
+
+    /**
+     * Return an entity with the header and type information filled out.  The caller only needs to add properties
+     * and classifications to complete the set up of the entity.
+     *
+     * @param sourceName             source of the request (used for logging)
+     * @param metadataCollectionId   unique identifier for the home metadata collection
+     * @param metadataCollectionName unique name for the home metadata collection
+     * @param provenanceType         origin of the entity
+     * @param userName               name of the creator
+     * @param typeName               name of the type
+     * @return partially filled out entity needs classifications and properties
+     * @throws TypeErrorException  the type name is not recognized.
+     */
+    EntityDetail getSkeletonEntity(String                 sourceName,
+                                   String                 metadataCollectionId,
+                                   String                 metadataCollectionName,
+                                   InstanceProvenanceType provenanceType,
+                                   String                 userName,
+                                   String                 typeName) throws TypeErrorException;
+
+
+    /**
+     * Return an entity with the header and type information filled out.  The caller only needs to classifications
+     * to complete the set up of the entity.
+     *
+     * @param sourceName            source of the request (used for logging)
+     * @param metadataCollectionId  unique identifier for the home metadata collection
+     * @param provenanceType        origin of the entity
+     * @param userName              name of the creator
+     * @param typeName              name of the type
+     * @return partially filled out entity needs classifications
+     * @throws TypeErrorException  the type name is not recognized.
+     */
+    @Deprecated
+    EntitySummary getSkeletonEntitySummary(String                 sourceName,
+                                           String                 metadataCollectionId,
+                                           InstanceProvenanceType provenanceType,
+                                           String                 userName,
+                                           String                 typeName) throws TypeErrorException;
+
+
+    /**
+     * Return an entity with the header and type information filled out.  The caller only needs to classifications
+     * to complete the set up of the entity.
+     *
+     * @param sourceName             source of the request (used for logging)
+     * @param metadataCollectionId   unique identifier for the home metadata collection
+     * @param metadataCollectionName unique name for the home metadata collection
+     * @param provenanceType         origin of the entity
+     * @param userName               name of the creator
+     * @param typeName               name of the type
+     * @return partially filled out entity needs classifications
+     * @throws TypeErrorException  the type name is not recognized.
+     */
+    EntitySummary getSkeletonEntitySummary(String                 sourceName,
+                                           String                 metadataCollectionId,
+                                           String                 metadataCollectionName,
+                                           InstanceProvenanceType provenanceType,
+                                           String                 userName,
+                                           String                 typeName) throws TypeErrorException;
 
 
     /**
@@ -281,6 +392,50 @@ public interface OMRSRepositoryHelper
 
 
     /**
+     * Return a classification with the header and type information filled out.  The caller only needs to add properties
+     * and possibility origin information if it is propagated to complete the set up of the classification.
+     *
+     * @param sourceName              source of the request (used for logging)
+     * @param metadataCollectionId    unique identifier for the home metadata collection
+     * @param provenanceType          type of home for the new classification
+     * @param userName                name of the creator
+     * @param classificationTypeName  name of the classification type
+     * @param entityTypeName          name of the type for the entity that this classification is to be attached to.
+     * @return partially filled out classification needs properties and possibly origin information
+     * @throws TypeErrorException  the type name is not recognized as a classification type.
+     */
+    Classification getSkeletonClassification(String                 sourceName,
+                                             String                 metadataCollectionId,
+                                             InstanceProvenanceType provenanceType,
+                                             String                 userName,
+                                             String                 classificationTypeName,
+                                             String                 entityTypeName) throws TypeErrorException;
+
+
+    /**
+     * Return a classification with the header and type information filled out.  The caller only needs to add properties
+     * and possibility origin information if it is propagated to complete the set up of the classification.
+     *
+     * @param sourceName              source of the request (used for logging)
+     * @param metadataCollectionId    unique identifier for the home metadata collection
+     * @param metadataCollectionName  unique name for the home metadata collection
+     * @param provenanceType          type of home for the new classification
+     * @param userName                name of the creator
+     * @param classificationTypeName  name of the classification type
+     * @param entityTypeName          name of the type for the entity that this classification is to be attached to.
+     * @return partially filled out classification needs properties and possibly origin information
+     * @throws TypeErrorException  the type name is not recognized as a classification type.
+     */
+    Classification getSkeletonClassification(String                 sourceName,
+                                             String                 metadataCollectionId,
+                                             String                 metadataCollectionName,
+                                             InstanceProvenanceType provenanceType,
+                                             String                 userName,
+                                             String                 classificationTypeName,
+                                             String                 entityTypeName) throws TypeErrorException;
+
+
+    /**
      * Return a relationship with the header and type information filled out.  The caller only needs to add properties
      * to complete the set up of the relationship.
      *
@@ -294,6 +449,27 @@ public interface OMRSRepositoryHelper
      */
     Relationship getSkeletonRelationship(String                 sourceName,
                                          String                 metadataCollectionId,
+                                         InstanceProvenanceType provenanceType,
+                                         String                 userName,
+                                         String                 typeName) throws TypeErrorException;
+
+
+    /**
+     * Return a relationship with the header and type information filled out.  The caller only needs to add properties
+     * to complete the set up of the relationship.
+     *
+     * @param sourceName             source of the request (used for logging)
+     * @param metadataCollectionId   unique identifier for the home metadata collection
+     * @param metadataCollectionName unique name for the home metadata collection
+     * @param provenanceType         origin type of the relationship
+     * @param userName               name of the creator
+     * @param typeName               name of the relationship's type
+     * @return partially filled out relationship needs properties
+     * @throws TypeErrorException  the type name is not recognized as a relationship type.
+     */
+    Relationship getSkeletonRelationship(String                 sourceName,
+                                         String                 metadataCollectionId,
+                                         String                 metadataCollectionName,
                                          InstanceProvenanceType provenanceType,
                                          String                 userName,
                                          String                 typeName) throws TypeErrorException;
@@ -335,6 +511,30 @@ public interface OMRSRepositoryHelper
 
 
     /**
+     * Return a filled out entity.  It just needs to add the classifications.
+     *
+     * @param sourceName             source of the request (used for logging)
+     * @param metadataCollectionName unique name for the home metadata collection
+     * @param metadataCollectionId   unique identifier for the home metadata collection
+     * @param provenanceType         origin of the entity
+     * @param userName               name of the creator
+     * @param typeName               name of the type
+     * @param properties             properties for the entity
+     * @param classifications        list of classifications for the entity
+     * @return an entity that is filled out
+     * @throws TypeErrorException  the type name is not recognized as an entity type
+     */
+    EntityDetail getNewEntity(String                 sourceName,
+                              String                 metadataCollectionId,
+                              String                 metadataCollectionName,
+                              InstanceProvenanceType provenanceType,
+                              String                 userName,
+                              String                 typeName,
+                              InstanceProperties     properties,
+                              List<Classification>   classifications) throws TypeErrorException;
+
+
+    /**
      * Return a filled out relationship which just needs the entity proxies added.
      *
      * @param sourceName            source of the request (used for logging)
@@ -355,10 +555,34 @@ public interface OMRSRepositoryHelper
 
 
     /**
+     * Return a filled out relationship which just needs the entity proxies added.
+     *
+     * @param sourceName             source of the request (used for logging)
+     * @param metadataCollectionId   unique identifier for the home metadata collection
+     * @param metadataCollectionName unique name for the home metadata collection
+     * @param provenanceType         origin of the relationship
+     * @param userName               name of the creator
+     * @param typeName               name of the type
+     * @param properties             properties for the relationship
+     * @return a relationship that is filled out
+     * @throws TypeErrorException  the type name is not recognized as a relationship type
+     */
+    Relationship getNewRelationship(String                 sourceName,
+                                    String                 metadataCollectionId,
+                                    String                 metadataCollectionName,
+                                    InstanceProvenanceType provenanceType,
+                                    String                 userName,
+                                    String                 typeName,
+                                    InstanceProperties     properties) throws TypeErrorException;
+
+
+    /**
      * Return a classification with the header and type information filled out.  The caller only needs to add properties
      * to complete the set up of the classification.
      *
      * @param sourceName      source of the request (used for logging)
+     * @param metadataCollectionId  unique identifier for the home metadata collection
+     * @param provenanceType        origin of the classification
      * @param userName        name of the creator
      * @param typeName        name of the type
      * @param entityTypeName  name of the type for the entity that this classification is to be attached to.
@@ -368,6 +592,62 @@ public interface OMRSRepositoryHelper
      * @return partially filled out classification needs properties and possibly origin information
      * @throws TypeErrorException  the type name is not recognized as a classification type.
      */
+    Classification getNewClassification(String                 sourceName,
+                                        String                 metadataCollectionId,
+                                        InstanceProvenanceType provenanceType,
+                                        String                 userName,
+                                        String                 typeName,
+                                        String                 entityTypeName,
+                                        ClassificationOrigin   classificationOrigin,
+                                        String                 classificationOriginGUID,
+                                        InstanceProperties     properties) throws TypeErrorException;
+
+
+    /**
+     * Return a classification with the header and type information filled out.  The caller only needs to add properties
+     * to complete the set up of the classification.
+     *
+     * @param sourceName      source of the request (used for logging)
+     * @param metadataCollectionId    unique identifier for the home metadata collection
+     * @param metadataCollectionName  unique name for the home metadata collection
+     * @param provenanceType        origin of the classification
+     * @param userName        name of the creator
+     * @param typeName        name of the type
+     * @param entityTypeName  name of the type for the entity that this classification is to be attached to.
+     * @param classificationOrigin     is this explicitly assigned or propagated
+     * @param classificationOriginGUID  if propagated this the GUID of the origin
+     * @param properties      properties for the classification
+     * @return partially filled out classification needs properties and possibly origin information
+     * @throws TypeErrorException  the type name is not recognized as a classification type.
+     */
+    Classification getNewClassification(String                 sourceName,
+                                        String                 metadataCollectionId,
+                                        String                 metadataCollectionName,
+                                        InstanceProvenanceType provenanceType,
+                                        String                 userName,
+                                        String                 typeName,
+                                        String                 entityTypeName,
+                                        ClassificationOrigin   classificationOrigin,
+                                        String                 classificationOriginGUID,
+                                        InstanceProperties     properties) throws TypeErrorException;
+
+
+    /**
+     * Return a classification with the header and type information filled out.  The caller only needs to add properties
+     * to complete the set up of the classification.  This method is deprecated because it does not take the provenance information.
+     * The implementation of this method sets the provenance information to "LOCAL_COHORT".
+     *
+     * @param sourceName     source of the request (used for logging)
+     * @param userName       name of the creator
+     * @param typeName       name of the type
+     * @param entityTypeName name of the type for the entity that this classification is to be attached to
+     * @param classificationOrigin source of the classification (assigned or propagated)
+     * @param classificationOriginGUID unique identifier of element that originated the classification if propagated
+     * @param properties     properties for the classification
+     * @return partially filled out classification needs properties and possibly origin information
+     * @throws TypeErrorException the type name is not recognized as a classification type.
+     */
+    @Deprecated
     Classification getNewClassification(String               sourceName,
                                         String               userName,
                                         String               typeName,
@@ -375,6 +655,37 @@ public interface OMRSRepositoryHelper
                                         ClassificationOrigin classificationOrigin,
                                         String               classificationOriginGUID,
                                         InstanceProperties   properties) throws TypeErrorException;
+
+
+    /**
+     * Throws an exception if an entity is classified with the supplied classification name.
+     * It is typically used when adding new classifications to entities.
+     *
+     * @param sourceName          source of the request (used for logging)
+     * @param entity              entity to update
+     * @param classificationName  classification to retrieve
+     * @param methodName          calling method
+     * @throws ClassificationErrorException  the classification is not attached to the entity
+     */
+    void checkEntityNotClassifiedEntity(String        sourceName,
+                                        EntitySummary entity,
+                                        String        classificationName,
+                                        String        methodName) throws ClassificationErrorException;
+
+
+    /**
+     * Add a classification to an existing entity.
+     *
+     * @param sourceName          source of the request (used for logging)
+     * @param classificationList  entity classifications to update
+     * @param newClassification   classification to add
+     * @param methodName          calling method
+     * @return updated entity
+     */
+    List<Classification> addClassificationToList(String                 sourceName,
+                                                 List<Classification>   classificationList,
+                                                 Classification         newClassification,
+                                                 String                 methodName);
 
 
     /**
@@ -393,7 +704,7 @@ public interface OMRSRepositoryHelper
 
 
     /**
-     * Return the names classification from an existing entity.
+     * Return the named classification from an existing entity and throws an exception if it is not.
      *
      * @param sourceName          source of the request (used for logging)
      * @param entity              entity to update
@@ -402,10 +713,25 @@ public interface OMRSRepositoryHelper
      * @return located classification
      * @throws ClassificationErrorException  the classification is not attached to the entity
      */
-    Classification getClassificationFromEntity(String       sourceName,
-                                               EntityDetail entity,
-                                               String       classificationName,
-                                               String       methodName) throws ClassificationErrorException;
+    Classification getClassificationFromEntity(String        sourceName,
+                                               EntitySummary entity,
+                                               String        classificationName,
+                                               String        methodName) throws ClassificationErrorException;
+
+
+    /**
+     * Return the classifications from the requested metadata collection.  Not, this method does not cope with metadata collection ids of null.
+     *
+     * @param sourceName         source of the request (used for logging)
+     * @param entity             entity to update
+     * @param metadataCollectionId metadata collection to retrieve
+     * @param methodName         calling method
+     * @return located classification
+     */
+    List<Classification> getHomeClassificationsFromEntity(String       sourceName,
+                                                          EntityDetail entity,
+                                                          String       metadataCollectionId,
+                                                          String       methodName);
 
 
     /**
@@ -538,492 +864,6 @@ public interface OMRSRepositoryHelper
                           String       entityGUID,
                           Relationship relationship);
 
-
-    /**
-     * Return the requested property or null if property is not found.  If the property is not
-     * a string property then a logic exception is thrown
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    String getStringProperty(String             sourceName,
-                             String             propertyName,
-                             InstanceProperties properties,
-                             String             methodName);
-
-
-    /**
-     * Return the requested property or null if property is not found.  If the property is found, it is removed from
-     * the InstanceProperties structure.  If the property is not a string property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    String removeStringProperty(String             sourceName,
-                                String             propertyName,
-                                InstanceProperties properties,
-                                String             methodName);
-
-
-    /**
-     * Return the requested property or null if property is not found.  If the property is found, it is removed from
-     * the InstanceProperties structure. If the property is not a map property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    InstanceProperties getMapProperty(String             sourceName,
-                                      String             propertyName,
-                                      InstanceProperties properties,
-                                      String             methodName);
-
-
-
-    /**
-     * Locates and extracts a property from an instance that is of type map and then converts its values into a Java map.
-     * If the property is not a map property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties values of the property
-     * @param methodName method of caller
-     * @return map property value or null
-     */
-    Map<String, String> getStringMapFromProperty(String             sourceName,
-                                                 String             propertyName,
-                                                 InstanceProperties properties,
-                                                 String             methodName);
-
-
-    /**
-     * Locates and extracts a property from an instance that is of type map and then converts its values into a Java map.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not a map property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties values of the property
-     * @param methodName method of caller
-     * @return map property value or null
-     */
-    Map<String, String> removeStringMapFromProperty(String             sourceName,
-                                                    String             propertyName,
-                                                    InstanceProperties properties,
-                                                    String             methodName);
-
-
-    /**
-     * Locates and extracts a property from an instance that is of type map and then converts its values into a Java map.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not a map property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties values of the property
-     * @param methodName method of caller
-     * @return map property value or null
-     */
-    Map<String, Object> getMapFromProperty(String             sourceName,
-                                           String             propertyName,
-                                           InstanceProperties properties,
-                                           String             methodName);
-
-
-    /**
-     * Locates and extracts a property from an instance that is of type map and then converts its values into a Java map.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not a map property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties values of the property
-     * @param methodName method of caller
-     * @return map property value or null
-     */
-    Map<String, Object> removeMapFromProperty(String             sourceName,
-                                              String             propertyName,
-                                              InstanceProperties properties,
-                                              String             methodName);
-
-    /**
-     * Convert an instance properties object into a map.
-     *
-     * @param instanceProperties packed properties
-     * @return properties stored in Java map
-     */
-    Map<String, Object> getInstancePropertiesAsMap(InstanceProperties instanceProperties);
-
-
-    /**
-     * Locates and extracts a string array property and extracts its values.
-     * If the property is not an array property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties all of the properties of the instance
-     * @param methodName method of caller
-     * @return array property value or null
-     */
-    List<String> getStringArrayProperty(String             sourceName,
-                                        String             propertyName,
-                                        InstanceProperties properties,
-                                        String             methodName);
-
-
-    /**
-     * Locates and extracts a string array property and extracts its values.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not an array property then a logic exception is thrown.
-     *
-     * @param sourceName source of call
-     * @param propertyName name of requested map property
-     * @param properties all of the properties of the instance
-     * @param methodName method of caller
-     * @return array property value or null
-     */
-    List<String> removeStringArrayProperty(String             sourceName,
-                                           String             propertyName,
-                                           InstanceProperties properties,
-                                           String             methodName);
-
-
-    /**
-     * Return the requested property or 0 if property is not found.  If the property is not
-     * an int property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    int    getIntProperty(String             sourceName,
-                          String             propertyName,
-                          InstanceProperties properties,
-                          String             methodName);
-
-
-    /**
-     * Return the requested property or 0 if property is not found.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not an int property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    int    removeIntProperty(String             sourceName,
-                             String             propertyName,
-                             InstanceProperties properties,
-                             String             methodName);
-
-
-    /**
-     * Return the requested property or null if property is not found.  If the property is not
-     * a date property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    Date   getDateProperty(String             sourceName,
-                           String             propertyName,
-                           InstanceProperties properties,
-                           String             methodName);
-
-
-    /**
-     * Return the requested property or null if property is not found.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not a date property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    Date   removeDateProperty(String             sourceName,
-                              String             propertyName,
-                              InstanceProperties properties,
-                              String             methodName);
-
-
-    /**
-     * Return the requested property or false if property is not found.  If the property is not
-     * a boolean property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    boolean getBooleanProperty(String             sourceName,
-                               String             propertyName,
-                               InstanceProperties properties,
-                               String             methodName);
-
-
-    /**
-     * Return the requested property or false if property is not found.
-     * If the property is found, it is removed from the InstanceProperties structure.
-     * If the property is not a boolean property then a logic exception is thrown.
-     *
-     * @param sourceName  source of call
-     * @param propertyName  name of requested property
-     * @param properties  properties from the instance.
-     * @param methodName  method of caller
-     * @return string property value or null
-     */
-    boolean removeBooleanProperty(String             sourceName,
-                                  String             propertyName,
-                                  InstanceProperties properties,
-                                  String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addStringPropertyToInstance(String             sourceName,
-                                                   InstanceProperties properties,
-                                                   String             propertyName,
-                                                   String             propertyValue,
-                                                   String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addIntPropertyToInstance(String             sourceName,
-                                                InstanceProperties properties,
-                                                String             propertyName,
-                                                int                propertyValue,
-                                                String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addLongPropertyToInstance(String             sourceName,
-                                                 InstanceProperties properties,
-                                                 String             propertyName,
-                                                 long               propertyValue,
-                                                 String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addFloatPropertyToInstance(String             sourceName,
-                                                  InstanceProperties properties,
-                                                  String             propertyName,
-                                                  float              propertyValue,
-                                                  String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addDatePropertyToInstance(String             sourceName,
-                                                 InstanceProperties properties,
-                                                 String             propertyName,
-                                                 Date               propertyValue,
-                                                 String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param propertyValue  value of property
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addBooleanPropertyToInstance(String             sourceName,
-                                                    InstanceProperties properties,
-                                                    String             propertyName,
-                                                    boolean            propertyValue,
-                                                    String             methodName);
-
-
-    /**
-     * Add the supplied property to an instance properties object.  If the instance property object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName  name of caller
-     * @param properties  properties object to add property to may be null.
-     * @param propertyName  name of property
-     * @param ordinal  numeric value of property
-     * @param symbolicName  String value of property
-     * @param description  String description of property value
-     * @param methodName  calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addEnumPropertyToInstance(String             sourceName,
-                                                 InstanceProperties properties,
-                                                 String             propertyName,
-                                                 int                ordinal,
-                                                 String             symbolicName,
-                                                 String             description,
-                                                 String             methodName);
-
-
-    /**
-     * Add the supplied array property to an instance properties object.  The supplied array is stored as a single
-     * property in the instances properties.   If the instance properties object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName name of caller
-     * @param properties properties object to add property to, may be null.
-     * @param propertyName name of property
-     * @param arrayValues contents of the array
-     * @param methodName calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addStringArrayPropertyToInstance(String             sourceName,
-                                                        InstanceProperties properties,
-                                                        String             propertyName,
-                                                        List<String>       arrayValues,
-                                                        String             methodName);
-
-
-    /**
-     * Add the supplied map property to an instance properties object.  The supplied map is stored as a single
-     * property in the instances properties.   If the instance properties object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName name of caller
-     * @param properties properties object to add property to, may be null.
-     * @param propertyName name of property
-     * @param mapValues contents of the map
-     * @param methodName calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addMapPropertyToInstance(String              sourceName,
-                                                InstanceProperties  properties,
-                                                String              propertyName,
-                                                Map<String, Object> mapValues,
-                                                String              methodName);
-
-
-    /**
-     * Add the supplied map property to an instance properties object.  The supplied map is stored as a single
-     * property in the instances properties.   If the instance properties object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName name of caller
-     * @param properties properties object to add property to, may be null.
-     * @param propertyName name of property
-     * @param mapValues contents of the map
-     * @param methodName calling method name
-     * @return instance properties object.
-     */
-    InstanceProperties addStringMapPropertyToInstance(String              sourceName,
-                                                      InstanceProperties  properties,
-                                                      String              propertyName,
-                                                      Map<String, String> mapValues,
-                                                      String              methodName);
-
-
-    /**
-     * Add the supplied property map to an instance properties object.  Each of the entries in the map is added
-     * as a separate property in instance properties.  If the instance properties object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName name of caller
-     * @param properties properties object to add property to, may be null.
-     * @param mapValues contents of the map
-     * @param methodName calling method name
-     * @return instance properties object.
-     * @throws InvalidParameterException invalid property value
-     */
-    InstanceProperties addPropertyMapToInstance(String              sourceName,
-                                                InstanceProperties  properties,
-                                                Map<String, Object> mapValues,
-                                                String              methodName) throws InvalidParameterException;
-
-
-
-    /**
-     * Add the supplied property map to an instance properties object.  Each of the entries in the map is added
-     * as a separate property in instance properties.  If the instance properties object
-     * supplied is null, a new instance properties object is created.
-     *
-     * @param sourceName name of caller
-     * @param properties properties object to add property to, may be null.
-     * @param propertyName name of property
-     * @param mapValues contents of the map
-     * @param methodName calling method name
-     * @return instance properties object.
-     * @throws InvalidParameterException invalid property value
-     */
-    InstanceProperties addStringPropertyMapToInstance(String              sourceName,
-                                                      InstanceProperties  properties,
-                                                      String              propertyName,
-                                                      Map<String, String> mapValues,
-                                                      String              methodName) throws InvalidParameterException;
-
-
-
-
-
     /**
      * Returns the type name from an instance (entity, relationship or classification).
      *
@@ -1102,6 +942,7 @@ public interface OMRSRepositoryHelper
                                                    int                pageSize) throws PagingErrorException,
                                                                                        PropertyErrorException;
 
+
     /**
      * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
      * without being interpreted as a regular expression (i.e. the returned string will be interpreted as a literal --
@@ -1111,12 +952,34 @@ public interface OMRSRepositoryHelper
      * Note that usage of the string by methods that cannot handle regular expressions should first un-escape the string
      * using the getUnqualifiedLiteralString helper method.
      *
-     * @param s - the string to escape to avoid being interpreted as a regular expression
+     * Finally, note that this enforces a case-sensitive search.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression
+     * @return string that is interpreted literally rather than as a regular expression
+     * @see #isExactMatchRegex(String)
+     * @see #getUnqualifiedLiteralString(String)
+     * @see #getExactMatchRegex(String, boolean)
+     */
+    String getExactMatchRegex(String searchString);
+
+
+    /**
+     * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
+     * without being interpreted as a regular expression (i.e. the returned string will be interpreted as a literal --
+     * used to find an exact match of the string, irrespective of whether it contains characters that may have special
+     * meanings to regular expressions).
+     *
+     * Note that usage of the string by methods that cannot handle regular expressions should first un-escape the string
+     * using the getUnqualifiedLiteralString helper method.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression
+     * @param insensitive set to true to have a case-insensitive exact match regular expression
      * @return string that is interpreted literally rather than as a regular expression
      * @see #isExactMatchRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    String getExactMatchRegex(String s);
+    String getExactMatchRegex(String searchString, boolean insensitive);
+
 
     /**
      * Indicates whether the provided string should be treated as an exact match (true) or any other regular expression
@@ -1130,12 +993,36 @@ public interface OMRSRepositoryHelper
      * Primarily a helper method for methods that do not directly handle regular expressions (for those it
      * should be possible to just directly use the string as-is and it will be correctly interpreted).
      *
-     * @param s - the string to check whether it should be interpreted literally or as as a regular expression
+     * @param searchString the string to check whether it should be interpreted literally or as as a regular expression
      * @return true if the provided string should be interpreted literally, false if it should be interpreted as a regex
      * @see #getExactMatchRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    boolean isExactMatchRegex(String s);
+    boolean isExactMatchRegex(String searchString);
+
+
+    /**
+     * Indicates whether the provided string should be treated as an exact match (true) or any other regular expression
+     * (false).
+     *
+     * Note that this method relies on the use of the getExactMatchRegex helper method having been used to
+     * qualify a string when it should be treated as a literal. That is, this method relies on the presence of the
+     * escape sequences used by Java's Pattern.quote() method. The method is not intended to work on all strings in
+     * general to arbitrarily detect whether they might be a regular expression or not.
+     *
+     * Primarily a helper method for methods that do not directly handle regular expressions (for those it
+     * should be possible to just directly use the string as-is and it will be correctly interpreted).
+     *
+     * @param searchString the string to check whether it should be interpreted literally or as as a regular expression
+     * @param insensitive when true, only return true if the string is a case-insensitive exact match regex; when
+     *                    false, only return true if the string is a case-sensitive exact match regex
+     * @return true if the provided string should be interpreted literally, false if it should be interpreted as a
+     *          regex
+     * @see #getExactMatchRegex(String, boolean)
+     * @see #getUnqualifiedLiteralString(String)
+     */
+    boolean isExactMatchRegex(String searchString, boolean insensitive);
+
 
     /**
      * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
@@ -1146,12 +1033,34 @@ public interface OMRSRepositoryHelper
      * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
      * the returned string using the getUnqualifiedLiteralString helper method.
      *
-     * @param s - the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "contains" semantic
+     * Finally, note that this enforces a case-sensitive search.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "contains" semantic
+     * @return string that is interpreted literally, wrapped for a "contains" semantic
+     * @see #isContainsRegex(String)
+     * @see #getUnqualifiedLiteralString(String)
+     * @see #getContainsRegex(String, boolean)
+     */
+    String getContainsRegex(String searchString);
+
+
+    /**
+     * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
+     * to search for the string with a "contains" semantic. The passed string will NOT be treated as a regular expression;
+     * if you intend to use both a "contains" semantic and a regular expression within the string, simply construct your
+     * own regular expression directly (not with this helper method).
+     *
+     * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
+     * the returned string using the getUnqualifiedLiteralString helper method.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "contains" semantic
+     * @param insensitive set to true to have a case-insensitive contains regular expression
      * @return string that is interpreted literally, wrapped for a "contains" semantic
      * @see #isContainsRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    String getContainsRegex(String s);
+    String getContainsRegex(String searchString, boolean insensitive);
+
 
     /**
      * Indicates whether the provided string should be treated as a simple "contains" regular expression (true) or any
@@ -1163,12 +1072,33 @@ public interface OMRSRepositoryHelper
      * Primarily a helper method for methods that do not directly handle regular expressions (for those it
      * should be possible to just directly use the string as-is and it will be correctly interpreted).
      *
-     * @param s - the string to check whether it should be interpreted as a simple "contains"
+     * @param searchString - the string to check whether it should be interpreted as a simple "contains"
      * @return true if the provided string should be interpreted as a simple "contains", false if it should be interpreted as a full regex
      * @see #getContainsRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    boolean isContainsRegex(String s);
+    boolean isContainsRegex(String searchString);
+
+
+    /**
+     * Indicates whether the provided string should be treated as a simple "contains" regular expression (true) or any
+     * other regular expression (false).
+     *
+     * Note that this method relies on the use of the getContainsRegex helper method having been used to
+     * qualify a string when it should be treated primarily as a literal with only very basic "contains" wrapping.
+     *
+     * Primarily a helper method for methods that do not directly handle regular expressions (for those it
+     * should be possible to just directly use the string as-is and it will be correctly interpreted).
+     *
+     * @param searchString the string to check whether it should be interpreted as a simple "contains"
+     * @param insensitive when true, only return true if the string is a case-insensitive "contains" regex; when
+     *                    false, only return true if the string is a case-sensitive "contains" regex
+     * @return true if the provided string should be interpreted as a simple "contains", false if it should be interpreted as a full regex
+     * @see #getContainsRegex(String, boolean)
+     * @see #getUnqualifiedLiteralString(String)
+     */
+    boolean isContainsRegex(String searchString, boolean insensitive);
+
 
     /**
      * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
@@ -1179,12 +1109,34 @@ public interface OMRSRepositoryHelper
      * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
      * the returned string using the getUnqualifiedLiteralString helper method.
      *
-     * @param s - the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "startswith" semantic
+     * Finally, note that this enforces a case-sensitive search.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "startswith" semantic
+     * @return string that is interpreted literally, wrapped for a "startswith" semantic
+     * @see #isStartsWithRegex(String)
+     * @see #getUnqualifiedLiteralString(String)
+     * @see #getStartsWithRegex(String, boolean)
+     */
+    String getStartsWithRegex(String searchString);
+
+
+    /**
+     * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
+     * to search for the string with a "startswith" semantic. The passed string will NOT be treated as a regular expression;
+     * if you intend to use both a "startswith" semantic and a regular expression within the string, simply construct your
+     * own regular expression directly (not with this helper method).
+     *
+     * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
+     * the returned string using the getUnqualifiedLiteralString helper method.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain a "startswith" semantic
+     * @param insensitive set to true to have a case-insensitive "startswith" regular expression
      * @return string that is interpreted literally, wrapped for a "startswith" semantic
      * @see #isStartsWithRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    String getStartsWithRegex(String s);
+    String getStartsWithRegex(String searchString, boolean insensitive);
+
 
     /**
      * Indicates whether the provided string should be treated as a simple "startswith" regular expression (true) or any
@@ -1196,12 +1148,33 @@ public interface OMRSRepositoryHelper
      * Primarily a helper method for methods that do not directly handle regular expressions (for those it
      * should be possible to just directly use the string as-is and it will be correctly interpreted).
      *
-     * @param s - the string to check whether it should be interpreted as a simple "startswith"
+     * @param searchString the string to check whether it should be interpreted as a simple "startswith"
      * @return true if the provided string should be interpreted as a simple "startswith", false if it should be interpreted as a full regex
      * @see #getStartsWithRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    boolean isStartsWithRegex(String s);
+    boolean isStartsWithRegex(String searchString);
+
+
+    /**
+     * Indicates whether the provided string should be treated as a simple "startswith" regular expression (true) or any
+     * other regular expression (false).
+     *
+     * Note that this method relies on the use of the getStartsWithRegex helper method having been used to
+     * qualify a string when it should be treated primarily as a literal with only very basic "startswith" wrapping.
+     *
+     * Primarily a helper method for methods that do not directly handle regular expressions (for those it
+     * should be possible to just directly use the string as-is and it will be correctly interpreted).
+     *
+     * @param searchString the string to check whether it should be interpreted as a simple "startswith"
+     * @param insensitive when true, only return true if the string is a case-insensitive "startswith" regex; when
+     *                    false, only return true if the string is a case-sensitive "startswith" regex
+     * @return true if the provided string should be interpreted as a simple "startswith", false if it should be interpreted as a full regex
+     * @see #getStartsWithRegex(String, boolean)
+     * @see #getUnqualifiedLiteralString(String)
+     */
+    boolean isStartsWithRegex(String searchString, boolean insensitive);
+
 
     /**
      * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
@@ -1212,12 +1185,34 @@ public interface OMRSRepositoryHelper
      * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
      * the returned string using the getUnqualifiedLiteralString helper method.
      *
-     * @param s - the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain an "endswith" semantic
+     * Finally, note that this enforces a case-sensitive search.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain an "endswith" semantic
+     * @return string that is interpreted literally, wrapped for an "endswith" semantic
+     * @see #isEndsWithRegex(String)
+     * @see #getUnqualifiedLiteralString(String)
+     * @see #getEndsWithRegex(String, boolean)
+     */
+    String getEndsWithRegex(String searchString);
+
+
+    /**
+     * Retrieve an escaped version of the provided string that can be passed to methods that expect regular expressions,
+     * to search for the string with an "endswith" semantic. The passed string will NOT be treated as a regular expression;
+     * if you intend to use both a "endswith" semantic and a regular expression within the string, simply construct your
+     * own regular expression directly (not with this helper method).
+     *
+     * Note that usage of the returned string by methods that cannot handle regular expressions should first un-escape
+     * the returned string using the getUnqualifiedLiteralString helper method.
+     *
+     * @param searchString the string to escape to avoid being interpreted as a regular expression, but also wrap to obtain an "endswith" semantic
+     * @param insensitive set to true to have a case-insensitive "endswith" regular expression
      * @return string that is interpreted literally, wrapped for an "endswith" semantic
      * @see #isEndsWithRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    String getEndsWithRegex(String s);
+    String getEndsWithRegex(String searchString, boolean insensitive);
+
 
     /**
      * Indicates whether the provided string should be treated as a simple "endswith" regular expression (true) or any
@@ -1229,12 +1224,33 @@ public interface OMRSRepositoryHelper
      * Primarily a helper method for methods that do not directly handle regular expressions (for those it
      * should be possible to just directly use the string as-is and it will be correctly interpreted).
      *
-     * @param s - the string to check whether it should be interpreted as a simple "endswith"
+     * @param searchString the string to check whether it should be interpreted as a simple "endswith"
      * @return true if the provided string should be interpreted as a simple "endswith", false if it should be interpreted as a full regex
      * @see #getEndsWithRegex(String)
      * @see #getUnqualifiedLiteralString(String)
      */
-    boolean isEndsWithRegex(String s);
+    boolean isEndsWithRegex(String searchString);
+
+
+    /**
+     * Indicates whether the provided string should be treated as a simple "endswith" regular expression (true) or any
+     * other regular expression (false).
+     *
+     * Note that this method relies on the use of the getEndsWithRegex helper method having been used to
+     * qualify a string when it should be treated primarily as a literal with only very basic "endswith" wrapping.
+     *
+     * Primarily a helper method for methods that do not directly handle regular expressions (for those it
+     * should be possible to just directly use the string as-is and it will be correctly interpreted).
+     *
+     * @param searchString the string to check whether it should be interpreted as a simple "endswith"
+     * @param insensitive when true, only return true if the string is a case-insensitive "endswith" regex; when
+     *                    false, only return true if the string is a case-sensitive "endswith" regex
+     * @return true if the provided string should be interpreted as a simple "endswith", false if it should be interpreted as a full regex
+     * @see #getEndsWithRegex(String, boolean)
+     * @see #getUnqualifiedLiteralString(String)
+     */
+    boolean isEndsWithRegex(String searchString, boolean insensitive);
+
 
     /**
      * Retrieve an unescaped version of the provided string that can be treated as a literal (not a regular expression).
@@ -1244,13 +1260,91 @@ public interface OMRSRepositoryHelper
      *
      * For example, this will translate the input of '.*\Qmy-search-string\E.*' into a return value of 'my-search-string'.
      *
-     * @param s - the (potentially) wrapped and escaped string to un-escape and un-wrap
+     * @param searchString - the (potentially) wrapped and escaped string to un-escape and un-wrap
      * @return the un-escaped, un-wrapped literal string
      * @see #getExactMatchRegex(String)
      * @see #getContainsRegex(String)
      * @see #getStartsWithRegex(String)
      * @see #getEndsWithRegex(String)
      */
-    String getUnqualifiedLiteralString(String s);
+    String getUnqualifiedLiteralString(String searchString);
+
+
+    /**
+     * Indicates whether the provided string should be treated as a case-insensitive regular expression (true) or as a
+     * case-sensitive regular expression (false).
+     *
+     * Note that this method relies on the use of the getXYZRegex helper methods having been used to qualify a string
+     * with case-insensitivity.
+     *
+     * Primarily this is a helper method for methods that do not directly handle regular expressions (for those it
+     * should be possible to just directly use the string as-is and it will be correctly interpreted).
+     *
+     * @param searchString the string to check whether it should be interpreted as case-insensitive
+     * @return true if provided string should be interpreted as case-insensitive, false if it should be case-sensitive
+     * @see #getExactMatchRegex(String, boolean)
+     * @see #getStartsWithRegex(String, boolean)
+     * @see #getEndsWithRegex(String, boolean)
+     * @see #getContainsRegex(String, boolean)
+     */
+    boolean isCaseInsensitiveRegex(String searchString);
+
+
+    /**
+     * Calculate the differences between the two provided Relationship objects.
+     *
+     * @param left one of the Relationship objects to compare
+     * @param right the other Relationship object to compare
+     * @param ignoreModificationStamps true if we should ignore modification details (Version, UpdateTime, UpdatedBy)
+     *                                 as differences, or false if we should include differences on these
+     * @return RelationshipDifferences
+     */
+    RelationshipDifferences getRelationshipDifferences(Relationship left, Relationship right, boolean ignoreModificationStamps);
+
+
+    /**
+     * Calculate the differences between the two provided EntityDetail objects.
+     *
+     * @param left one of the EntityDetail objects to compare
+     * @param right the other EntityDetail object to compare
+     * @param ignoreModificationStamps true if we should ignore modification details (Version, UpdateTime, UpdatedBy)
+     *                                 as differences, or false if we should include differences on these
+     * @return EntityDetailDifferences
+     */
+    EntityDetailDifferences getEntityDetailDifferences(EntityDetail left, EntityDetail right, boolean ignoreModificationStamps);
+
+
+    /**
+     * Calculate the differences between the two provided EntityProxy objects.
+     *
+     * @param left one of the EntityProxy objects to compare
+     * @param right the other EntityProxy object to compare
+     * @param ignoreModificationStamps true if we should ignore modification details (Version, UpdateTime, UpdatedBy)
+     *                                 as differences, or false if we should include differences on these
+     * @return EntityProxyDifferences
+     */
+    EntityProxyDifferences getEntityProxyDifferences(EntityProxy left, EntityProxy right, boolean ignoreModificationStamps);
+
+
+    /**
+     * Calculate the differences between the two provided EntitySummary objects.
+     *
+     * @param left one of the EntitySummary objects to compare
+     * @param right the other EntitySummary object to compare
+     * @param ignoreModificationStamps true if we should ignore modification details (Version, UpdateTime, UpdatedBy)
+     *                                 as differences, or false if we should include differences on these
+     * @return EntitySummaryDifferences
+     */
+    EntitySummaryDifferences getEntitySummaryDifferences(EntitySummary left, EntitySummary right, boolean ignoreModificationStamps);
+
+
+    /**
+     * Convert the provided list of classification names into an equivalent SearchClassifications object.
+     *
+     * @param classificationNames list of classification names
+     * @return SearchClassifications
+     */
+    SearchClassifications getSearchClassificationsFromList(List<String> classificationNames);
+
 
 }

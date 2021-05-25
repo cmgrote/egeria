@@ -3,14 +3,14 @@
 package org.odpi.openmetadata.accessservices.assetconsumer.outtopic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.odpi.openmetadata.accessservices.assetconsumer.events.AssetConsumerEventHeader;
+import org.odpi.openmetadata.accessservices.assetconsumer.events.AssetConsumerEvent;
 import org.odpi.openmetadata.accessservices.assetconsumer.events.NewAssetEvent;
 import org.odpi.openmetadata.accessservices.assetconsumer.events.UpdatedAssetEvent;
 import org.odpi.openmetadata.accessservices.assetconsumer.ffdc.AssetConsumerErrorCode;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.openmetadatatopic.OpenMetadataTopicConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +35,8 @@ public class AssetConsumerPublisher
      * @param auditLog log file for the connector.
      * @throws OMAGConfigurationErrorException problems creating the connector for the outTopic
      */
-    public AssetConsumerPublisher(Connection              assetConsumerOutTopic,
-                                  OMRSAuditLog            auditLog) throws OMAGConfigurationErrorException
+    public AssetConsumerPublisher(Connection assetConsumerOutTopic,
+                                  AuditLog   auditLog) throws OMAGConfigurationErrorException
     {
         if (assetConsumerOutTopic != null)
         {
@@ -59,7 +59,7 @@ public class AssetConsumerPublisher
                 connector.sendEvent(this.getJSONPayload(event));
             }
         }
-        catch (Throwable  error)
+        catch (Exception  error)
         {
             log.error("Unable to publish new asset event: " + event.toString() + "; error was " + error.toString());
         }
@@ -80,7 +80,7 @@ public class AssetConsumerPublisher
                 connector.sendEvent(this.getJSONPayload(event));
             }
         }
-        catch (Throwable  error)
+        catch (Exception  error)
         {
             log.error("Unable to publish undated asset event: " + event.toString() + "; error was " + error.toString());
         }
@@ -95,8 +95,8 @@ public class AssetConsumerPublisher
      * @return open metadata topic connector
      * @throws OMAGConfigurationErrorException problems creating the connector for the outTopic
      */
-    private OpenMetadataTopicConnector getTopicConnector(Connection   topicConnection,
-                                                         OMRSAuditLog auditLog) throws OMAGConfigurationErrorException
+    private OpenMetadataTopicConnector getTopicConnector(Connection  topicConnection,
+                                                         AuditLog    auditLog) throws OMAGConfigurationErrorException
     {
         try
         {
@@ -111,21 +111,17 @@ public class AssetConsumerPublisher
 
             return topicConnector;
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             String methodName = "getTopicConnector";
 
             log.error("Unable to create topic connector: " + error.toString());
 
-            AssetConsumerErrorCode errorCode = AssetConsumerErrorCode.BAD_OUT_TOPIC_CONNECTION;
-            String                 errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(topicConnection.toString(), error.getClass().getName(), error.getMessage());
-
-            throw new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMAGConfigurationErrorException(AssetConsumerErrorCode.BAD_OUT_TOPIC_CONNECTION.getMessageDefinition(topicConnection.toString(),
+                                                                                                                           error.getClass().getName(),
+                                                                                                                           error.getMessage()),
                                                       this.getClass().getName(),
                                                       methodName,
-                                                      errorMessage,
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction(),
                                                       error);
         }
     }
@@ -138,7 +134,7 @@ public class AssetConsumerPublisher
      * @param event event to serialize
      * @return JSON payload (as String)
      */
-    private String getJSONPayload(AssetConsumerEventHeader    event)
+    private String getJSONPayload(AssetConsumerEvent event)
     {
         ObjectMapper objectMapper = new ObjectMapper();
         String       jsonString   = null;
@@ -150,7 +146,7 @@ public class AssetConsumerPublisher
         {
             jsonString = objectMapper.writeValueAsString(event);
         }
-        catch (Throwable  error)
+        catch (Exception  error)
         {
             log.error("Unable to create event payload: " + error.toString());
         }

@@ -2,7 +2,9 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.metadatahighway;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.cohortregistrystore.properties.MemberRegistration;
+import org.odpi.openmetadata.repositoryservices.events.OpenMetadataEventsSecurity;
 import org.odpi.openmetadata.repositoryservices.properties.CohortConnectionStatus;
 import org.odpi.openmetadata.repositoryservices.properties.CohortDescription;
 import org.slf4j.Logger;
@@ -12,8 +14,7 @@ import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBroker;
 import org.odpi.openmetadata.adminservices.configuration.properties.CohortConfig;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 import org.odpi.openmetadata.repositoryservices.events.OMRSEventProtocolVersion;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorException;
@@ -43,7 +44,7 @@ public class OMRSMetadataHighwayManager
     private OMRSRepositoryContentManager localRepositoryContentManager;      /* set in constructor */
     private OMRSConnectionConsumer       enterpriseAccessConnectionConsumer; /* set in constructor */
     private OMRSTopicConnector           enterpriseAccessTopicConnector;     /* set in constructor */
-    private OMRSAuditLog                 auditLog;
+    private AuditLog                     auditLog;
 
     private static final Logger log = LoggerFactory.getLogger(OMRSMetadataHighwayManager.class);
 
@@ -68,7 +69,7 @@ public class OMRSMetadataHighwayManager
                                       OMRSRepositoryContentManager    localRepositoryContentManager,
                                       OMRSConnectionConsumer          enterpriseAccessConnectionConsumer,
                                       OMRSTopicConnector              enterpriseAccessTopicConnector,
-                                      OMRSAuditLog                    auditLog)
+                                      AuditLog                        auditLog)
     {
         this.localServerName = localServerName;
         this.localServerType = localServerType;
@@ -87,7 +88,7 @@ public class OMRSMetadataHighwayManager
      *
      * @param cohortConfigList list of cohorts to initialize
      */
-    public void initialize(List<CohortConfig>   cohortConfigList)
+    public void initialize(List<CohortConfig> cohortConfigList)
     {
         if (cohortConfigList != null)
         {
@@ -102,13 +103,42 @@ public class OMRSMetadataHighwayManager
     }
 
 
+
+    /**
+     * Set up a new security verifier (the cohort manager runs with a default verifier until this
+     * method is called).
+     *
+     * The security verifier provides authorization checks for access and maintenance
+     * changes to open metadata.  Authorization checks are enabled through the
+     * OpenMetadataServerSecurityConnector.
+     *
+     * @param securityVerifier new security verifier
+     */
+    public void setSecurityVerifier(OpenMetadataEventsSecurity securityVerifier)
+    {
+        if (securityVerifier != null)
+        {
+            /*
+             * Loop through the existing cohort managers to set up the security verifier
+             */
+            for (OMRSCohortManager existingCohortManager : cohortManagers)
+            {
+                if (existingCohortManager != null)
+                {
+                    existingCohortManager.setSecurityVerifier(securityVerifier);
+                }
+            }
+        }
+    }
+
+
     /**
      * Initialize the components to connect the local repository to a cohort.
      *
      * @param cohortConfig description of cohort.
      * @return the status of the cohort
      */
-    public CohortConnectionStatus connectToCohort(CohortConfig         cohortConfig)
+    public CohortConnectionStatus connectToCohort(CohortConfig cohortConfig)
     {
         OMRSCohortManager cohortManager  = new OMRSCohortManager(auditLog.createNewAuditLog(OMRSAuditingComponent.COHORT_MANAGER));
         String            localMetadataCollectionId = null;
@@ -120,16 +150,9 @@ public class OMRSMetadataHighwayManager
          */
         if (cohortConfig.getCohortName() == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_COHORT_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_COHORT_NAME.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              actionDescription,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              actionDescription);
         }
 
         /*
@@ -141,16 +164,9 @@ public class OMRSMetadataHighwayManager
             {
                 if (cohortConfig.getCohortName().equals(existingCohortManager.getCohortName()))
                 {
-                    OMRSErrorCode errorCode = OMRSErrorCode.DUPLICATE_COHORT_NAME;
-                    String        errorMessage = errorCode.getErrorMessageId()
-                                               + errorCode.getFormattedErrorMessage(cohortConfig.getCohortName());
-
-                    throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+                    throw new OMRSLogicErrorException(OMRSErrorCode.DUPLICATE_COHORT_NAME.getMessageDefinition(cohortConfig.getCohortName()),
                                                       this.getClass().getName(),
-                                                      actionDescription,
-                                                      errorMessage,
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      actionDescription);
                 }
             }
         }
@@ -204,18 +220,12 @@ public class OMRSMetadataHighwayManager
         }
         catch (OMRSConfigErrorException  error)
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.COHORT_CONFIG_ERROR;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(cohortConfig.getCohortName(), error.getErrorMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OMRSAuditCode.COHORT_CONFIG_ERROR.getMessageDefinition(cohortConfig.getCohortName(), error.getReportedErrorMessage()));
 
             throw error;
         }
-        catch (Throwable    error)
+        catch (Exception error)
         {
             throw error;
         }
@@ -224,13 +234,50 @@ public class OMRSMetadataHighwayManager
     }
 
 
+    /**
+     * Return the common values used by this server to register with a cohort.
+     *
+     * @return local registration
+     */
     public MemberRegistration getLocalRegistration()
     {
         for (OMRSCohortManager  existingCohortManager : cohortManagers)
         {
             if (existingCohortManager != null)
             {
-                return existingCohortManager.getLocalRegistration();
+                MemberRegistration localRegistration = existingCohortManager.getLocalRegistration();
+
+                if (localRegistration != null)
+                {
+                    localRegistration.setRegistrationTime(null);
+                    return localRegistration;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Return the common values used by this server to register with a cohort.
+     *
+     * @param cohortName name of the cohort to extract the registration time from.
+     * @return local registration
+     */
+    public MemberRegistration getLocalRegistration(String cohortName)
+    {
+        if (cohortName != null)
+        {
+            for (OMRSCohortManager existingCohortManager : cohortManagers)
+            {
+                if (existingCohortManager != null)
+                {
+                    if (cohortName.equals(existingCohortManager.getCohortName()))
+                    {
+                        return existingCohortManager.getLocalRegistration();
+                    }
+                }
             }
         }
 
@@ -250,16 +297,9 @@ public class OMRSMetadataHighwayManager
         {
             final String  actionDescription = "get remote members";
 
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_COHORT_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                                 + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_COHORT_NAME.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              actionDescription,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              actionDescription);
         }
 
         for (OMRSCohortManager  existingCohortManager : cohortManagers)
@@ -318,16 +358,9 @@ public class OMRSMetadataHighwayManager
 
         if (cohortName == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_COHORT_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_COHORT_NAME.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              actionDescription,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              actionDescription);
         }
 
         for (OMRSCohortManager  existingCohortManager : cohortManagers)
@@ -362,16 +395,9 @@ public class OMRSMetadataHighwayManager
 
         if (cohortName == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_COHORT_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_COHORT_NAME.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              actionDescription,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              actionDescription);
         }
 
         for (OMRSCohortManager  existingCohortManager : cohortManagers)
@@ -440,7 +466,7 @@ public class OMRSMetadataHighwayManager
 
             return (OMRSCohortRegistryStore)connector;
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             if (log.isDebugEnabled())
             {
@@ -450,16 +476,9 @@ public class OMRSMetadataHighwayManager
             /*
              * Throw runtime exception to indicate that the cohort registry is not available.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_REGISTRY_STORE;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(cohortName);
-
-            throw new OMRSConfigErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSConfigErrorException(OMRSErrorCode.NULL_REGISTRY_STORE.getMessageDefinition(cohortName),
                                                this.getClass().getName(),
                                                methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction(),
                                                error);
         }
     }
@@ -495,7 +514,7 @@ public class OMRSMetadataHighwayManager
 
             return topicConnector;
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             String methodName = "getTopicConnector()";
 
@@ -504,25 +523,12 @@ public class OMRSMetadataHighwayManager
                 log.debug("Unable to create topic connector: " + error.toString());
             }
 
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_TOPIC_CONNECTOR;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(cohortName);
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.BAD_TOPIC_CONNECTION.getMessageDefinition(cohortName, error.getClass().getName(), error.getMessage()));
 
-            OMRSAuditCode auditCode = OMRSAuditCode.BAD_TOPIC_CONNECTION;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(cohortName, error.getClass().getName(), error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
-
-            throw new OMRSConfigErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSConfigErrorException(OMRSErrorCode.NULL_TOPIC_CONNECTOR.getMessageDefinition(cohortName),
                                                this.getClass().getName(),
                                                methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction(),
                                                error);
         }
     }

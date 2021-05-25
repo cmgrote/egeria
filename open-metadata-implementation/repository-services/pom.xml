@@ -10,10 +10,16 @@
     <parent>
         <artifactId>open-metadata-implementation</artifactId>
         <groupId>org.odpi.egeria</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>2.10-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
+
+    <scm>
+        <connection>scm:git:git://github.com/odpi/egeria.git</connection>
+        <developerConnection>scm:git:ssh://github.com/odpi/egeria.git</developerConnection>
+        <url>http://github.com/odpi/egeria/tree/master</url>
+    </scm>
     <packaging>pom</packaging>
 
     <name>Repository Services (OMRS)</name>
@@ -24,6 +30,7 @@
     </description>
     <modules>
         <module>repository-services-apis</module>
+        <module>repository-services-archive-utilities</module>
         <module>repository-services-client</module>
         <module>repository-services-implementation</module>
         <module>repository-services-spring</module>

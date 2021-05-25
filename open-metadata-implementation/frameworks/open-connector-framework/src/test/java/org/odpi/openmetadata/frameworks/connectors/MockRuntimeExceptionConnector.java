@@ -2,12 +2,9 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.frameworks.connectors;
 
-import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.OCFRuntimeException;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.properties.AdditionalProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectedAssetProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperties;
@@ -70,15 +67,13 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      * @param connectorInstanceId   unique id for the connector instance   useful for messages etc
      * @param connectionProperties   POJO for the configuration used to create the connector.
      */
+    @Override
     public void initialize(String               connectorInstanceId,
                            ConnectionProperties connectionProperties)
     {
-        throw new OCFRuntimeException(400,
+        throw new OCFRuntimeException(OCFErrorCode.NO_MORE_ELEMENTS.getMessageDefinition("IteratorName", "entityGUID", "entityType"),
                                       this.getClass().getName(),
-                                      "initialize",
-                                      "Mock error message",
-                                      "System Action",
-                                      "User Action");
+                                      "getCachedList");
     }
 
 
@@ -88,6 +83,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @return guid for the connector instance
      */
+    @Override
     public String getConnectorInstanceId()
     {
         return connectorInstanceId;
@@ -101,6 +97,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @return connection properties object
      */
+    @Override
     public ConnectionProperties getConnection()
     {
         return connectionProperties;
@@ -113,6 +110,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @param connectedAssetProperties   properties of the connected asset
      */
+    @Override
     public void initializeConnectedAssetProperties(ConnectedAssetProperties connectedAssetProperties)
     {
         this.connectedAssetProperties = connectedAssetProperties;
@@ -148,6 +146,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public void start() throws ConnectorCheckedException
     {
         isActive = true;
@@ -159,6 +158,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
         isActive = false;
@@ -171,6 +171,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @return isActive flag
      */
+    @Override
     public boolean isActive()
     {
         return isActive;
@@ -184,6 +185,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      *
      * @return random UUID as hashcode
      */
+    @Override
     public int hashCode()
     {
         return hashCode;
@@ -246,6 +248,8 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
      */
     private class ProtectedConnection extends ConnectionProperties
     {
+        private static final long     serialVersionUID = 1L;
+
         private ProtectedConnection(ConnectionProperties templateConnection)
         {
             super(templateConnection);
@@ -258,9 +262,10 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
          *
          * @return secured properties   typically user credentials for the connection
          */
-        protected Map<String, Object> getSecuredProperties()
+        @Override
+        protected Map<String, String> getSecuredProperties()
         {
-            Map<String, Object>  securedProperties = super.getConnectionBean().getSecuredProperties();
+            Map<String, String>  securedProperties = super.getConnectionBean().getSecuredProperties();
             if (securedProperties == null)
             {
                 return null;
@@ -281,6 +286,7 @@ public abstract class MockRuntimeExceptionConnector extends ConnectorBase
          *
          * @return Connection bean
          */
+        @Override
         protected Connection getConnectionBean()
         {
             return super.getConnectionBean();

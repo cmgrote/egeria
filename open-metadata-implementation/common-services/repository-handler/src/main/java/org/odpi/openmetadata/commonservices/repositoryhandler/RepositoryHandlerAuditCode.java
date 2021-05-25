@@ -2,15 +2,13 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.commonservices.repositoryhandler;
 
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.AuditLogMessageDefinition;
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.AuditLogMessageSet;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLogRecordSeverity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.text.MessageFormat;
-import java.util.Arrays;
 
 /**
- * The OMAGCommonAuditCode is used to define the message content for the OMRS Audit Log.
+ * The RepositoryHandlerAuditCode is used to define the message content for the OMRS Audit Log.
  *
  * The 5 fields in the enum are:
  * <ul>
@@ -22,7 +20,7 @@ import java.util.Arrays;
  *     <li>UserAction - describes how a user should correct the situation</li>
  * </ul>
  */
-public enum RepositoryHandlerAuditCode
+public enum RepositoryHandlerAuditCode implements AuditLogMessageSet
 {
     ENTITY_PURGED("OMAG-REPOSITORY-HANDLER-0001",
              OMRSAuditLogRecordSeverity.INFO,
@@ -34,8 +32,28 @@ public enum RepositoryHandlerAuditCode
                   OMRSAuditLogRecordSeverity.INFO,
                   "The Open Metadata Service has purged relationship {0} of type {1} ({2}) during method {3} because its home repository {4} does not support soft-delete",
                   "Repository where this relationship is mastered does not support the soft-delete function and so a purge operation was performed. This means that the delete can not be undone.",
-                  "No specific action is required.  This message is to highlight that the relationship can no longer be restored.  If this behavior is unacceptable, then it is possible to re-home the relationship to a repository that supports soft-delete.")
+                  "No specific action is required.  This message is to highlight that the relationship can no longer be restored.  If this behavior" +
+                                " is unacceptable, then it is possible to re-home the relationship to a repository that supports soft-delete."),
 
+    PROPERTY_SERVER_ERROR("OMAG-REPOSITORY-HANDLER-0003",
+                          OMRSAuditLogRecordSeverity.EXCEPTION,
+                          "An unexpected error {4} was returned to {5} by the metadata server during {1} request for open metadata access service {2} on " +
+                                  "server {3}; message was {0}",
+                          "The system is unable to process the request because of an internal error.",
+                          "Verify the sanity of the server.  This is probably a logic error.  If you can not work out what happened, ask the Egeria community for help."),
+
+    UNABLE_TO_SET_ANCHORS("OMAG-REPOSITORY-HANDLER-0004",
+                          OMRSAuditLogRecordSeverity.EXCEPTION,
+                          "The Open Metadata Service {0} is not able to set the Anchors classification on a new entity of type {1} during method {2}." +
+                                  " The resulting exception was {3} with error message {4}",
+                          "The server was attempting to add Anchors classifications to a collection of metadata instances that are " +
+                                  "logically part of the same object.  This classification is used to optimize the retrieval and " +
+                                  "maintenance of complex objects.  It is optional function.  The server continues to " +
+                                  "process the original request which will complete successfully unless something else goes wrong.",
+                          "No specific action is required.  This message is to highlight that the retrieval and management of metadata is not optimal" +
+                                  "because none of the repositories in the cohort support the Anchors classification.  To enable the " +
+                                  "optimization provided through the Anchors classification, add an Egeria native metadata server to the cohort.  " +
+                                  "This will provide the support for the Anchors classification."),
     ;
 
     private String                     logMessageId;
@@ -44,14 +62,12 @@ public enum RepositoryHandlerAuditCode
     private String                     systemAction;
     private String                     userAction;
 
-    private static final Logger log = LoggerFactory.getLogger(RepositoryHandlerAuditCode.class);
-
 
     /**
-     * The constructor for AssetConsumerAuditCode expects to be passed one of the enumeration rows defined in
-     * AssetConsumerAuditCode above.   For example:
+     * The constructor for RepositoryHandlerAuditCode expects to be passed one of the enumeration rows defined in
+     * RepositoryHandlerAuditCode above.   For example:
      *
-     *     AssetConsumerAuditCode   auditCode = AssetConsumerAuditCode.SERVER_NOT_AVAILABLE;
+     *     RepositoryHandlerAuditCode   auditCode = RepositoryHandlerAuditCode.SERVER_NOT_AVAILABLE;
      *
      * This will expand out to the 4 parameters shown below.
      *
@@ -76,71 +92,54 @@ public enum RepositoryHandlerAuditCode
 
 
     /**
-     * Returns the unique identifier for the error message.
+     * Retrieve a message definition object for logging.  This method is used when there are no message inserts.
      *
-     * @return logMessageId
+     * @return message definition object.
      */
-    public String getLogMessageId()
+    @Override
+    public AuditLogMessageDefinition getMessageDefinition()
     {
-        return logMessageId;
+        return new AuditLogMessageDefinition(logMessageId,
+                                             severity,
+                                             logMessage,
+                                             systemAction,
+                                             userAction);
     }
 
 
     /**
-     * Return the severity of the audit log record.
+     * Retrieve a message definition object for logging.  This method is used when there are values to be inserted into the message.
      *
-     * @return OMRSAuditLogRecordSeverity enum
+     * @param params array of parameters (all strings).  They are inserted into the message according to the numbering in the message text.
+     * @return message definition object.
      */
-    public OMRSAuditLogRecordSeverity getSeverity()
+    @Override
+    public AuditLogMessageDefinition getMessageDefinition(String ...params)
     {
-        return severity;
-    }
-
-    /**
-     * Returns the log message with the placeholders filled out with the supplied parameters.
-     *
-     * @param params - strings that plug into the placeholders in the logMessage
-     * @return logMessage (formatted with supplied parameters)
-     */
-    public String getFormattedLogMessage(String... params)
-    {
-        if (log.isDebugEnabled())
-        {
-            log.debug(String.format("<== OMAGCommonAuditCode.getMessage(%s)", Arrays.toString(params)));
-        }
-
-        MessageFormat mf = new MessageFormat(logMessage);
-        String result = mf.format(params);
-
-        if (log.isDebugEnabled())
-        {
-            log.debug(String.format("==> OMAGCommonAuditCode.getMessage(%s): %s", Arrays.toString(params), result));
-        }
-
-        return result;
-    }
-
-
-
-    /**
-     * Returns a description of the action taken by the system when the condition that caused this exception was
-     * detected.
-     *
-     * @return systemAction String
-     */
-    public String getSystemAction()
-    {
-        return systemAction;
+        AuditLogMessageDefinition messageDefinition = new AuditLogMessageDefinition(logMessageId,
+                                                                                    severity,
+                                                                                    logMessage,
+                                                                                    systemAction,
+                                                                                    userAction);
+        messageDefinition.setMessageParameters(params);
+        return messageDefinition;
     }
 
 
     /**
-     * Returns instructions of how to resolve the issue reported in this exception.
+     * JSON-style toString
      *
-     * @return userAction String
+     * @return string of property names and values for this enum
      */
-    public String getUserAction()
+    @Override
+    public String toString()
     {
-        return userAction;
+        return "RepositoryHandlerAuditCode{" +
+                "logMessageId='" + logMessageId + '\'' +
+                ", severity=" + severity +
+                ", logMessage='" + logMessage + '\'' +
+                ", systemAction='" + systemAction + '\'' +
+                ", userAction='" + userAction + '\'' +
+                '}';
     }
 }

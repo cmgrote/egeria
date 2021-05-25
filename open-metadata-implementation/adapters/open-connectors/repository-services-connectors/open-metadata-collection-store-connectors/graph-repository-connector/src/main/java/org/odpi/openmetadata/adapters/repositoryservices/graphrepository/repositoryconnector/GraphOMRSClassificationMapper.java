@@ -3,6 +3,7 @@
 
 package org.odpi.openmetadata.adapters.repositoryservices.graphrepository.repositoryconnector;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
@@ -25,6 +26,7 @@ import org.odpi.openmetadata.repositoryservices.ffdc.exception.TypeErrorExceptio
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -109,16 +111,11 @@ public class GraphOMRSClassificationMapper {
                 vertex.property("classificationProperties", jsonString);
             } catch (Throwable exc) {
                 log.error("{} Caught exception from classification mapper", methodName);
-                GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classification.getName(), methodName,
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
                         this.getClass().getName(),
-                        repositoryName);
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction());
+                        methodName, exc);
             }
 
             // Secondly add primitive properties to support searches
@@ -127,7 +124,8 @@ public class GraphOMRSClassificationMapper {
             TypeDef typeDef = repositoryHelper.getTypeDefByName(repositoryName, typeName);
 
             // For the type of the entity, walk its type hierarchy and construct a map of short prop name -> qualified prop name.
-            Map<String, String> qualifiedPropertyNames = GraphOMRSMapperUtils.getQualifiedPropertyNamesForTypeDef(typeDef, repositoryName, repositoryHelper);
+            GraphOMRSMapperUtils mapperUtils = new GraphOMRSMapperUtils();
+            Map<String, String> qualifiedPropertyNames = mapperUtils.getQualifiedPropertyNamesForTypeDef(typeDef, repositoryName, repositoryHelper);
 
             // This is a full property update - any defined properties that are not in the instanceProperties are cleared.
 
@@ -193,16 +191,11 @@ public class GraphOMRSClassificationMapper {
 
         if (missingAttribute) {
             log.error("{} entity is missing a core attribute {}", methodName, missingAttributeName);
-            GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classification.getName(), methodName,
+            throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                       this.getClass().getName(),
+                                                                                                                       repositoryName),
                     this.getClass().getName(),
-                    repositoryName);
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                    this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction());
+                    methodName);
         }
 
         // Version always accepted as-is
@@ -252,17 +245,17 @@ public class GraphOMRSClassificationMapper {
         }
 
         if (classification.getInstanceProvenanceType() != null) {
-            vertex.property(PROPERTY_KEY_CLASSIFICATION_PROVENANCE_TYPE, classification.getInstanceProvenanceType().getOrdinal());     // ** ordinal mapping
+            vertex.property(PROPERTY_KEY_CLASSIFICATION_INSTANCE_PROVENANCE_TYPE, classification.getInstanceProvenanceType().getOrdinal());     // ** ordinal mapping
         } else {
-            VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_PROVENANCE_TYPE);
+            VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_INSTANCE_PROVENANCE_TYPE);
             if (vp != null)
                 vp.remove();
         }
 
         if (classification.getStatus() != null) {
-            vertex.property(PROPERTY_KEY_CLASSIFICATION_STATUS, classification.getStatus().getOrdinal());                              // ** ordinal mapping
+            vertex.property(PROPERTY_KEY_CLASSIFICATION_CURRENT_STATUS, classification.getStatus().getOrdinal());                              // ** ordinal mapping
         } else {
-            VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_STATUS);
+            VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_CURRENT_STATUS);
             if (vp != null)
                 vp.remove();
         }
@@ -313,18 +306,11 @@ public class GraphOMRSClassificationMapper {
                 vertex.property(PROPERTY_KEY_CLASSIFICATION_MAINTAINED_BY, jsonString);
 
             } catch (Throwable exc) {
-                GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
-
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
                         this.getClass().getName(),
-                        repositoryName);
-
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction());
+                        methodName, exc);
             }
 
         } else {
@@ -338,6 +324,29 @@ public class GraphOMRSClassificationMapper {
         }
         else {
             VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_REPLICATED_BY);
+            if (vp != null)
+                vp.remove();
+        }
+
+        Map<String, Serializable> mappingProperties = classification.getMappingProperties();
+        if (mappingProperties != null && !mappingProperties.isEmpty()) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonString;
+            try {
+                jsonString = objectMapper.writeValueAsString(mappingProperties);
+                vertex.property(PROPERTY_KEY_CLASSIFICATION_MAPPING_PROPERTIES, jsonString);
+
+            } catch (Throwable exc) {
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
+                        this.getClass().getName(),
+                        methodName,
+                        exc);
+            }
+
+        } else {
+            VertexProperty vp = vertex.property(PROPERTY_KEY_CLASSIFICATION_MAPPING_PROPERTIES);
             if (vp != null)
                 vp.remove();
         }
@@ -367,16 +376,11 @@ public class GraphOMRSClassificationMapper {
                 classification.setProperties(instanceProperties);
             } catch (Throwable exc) {
                 log.error("{} caught exception {}", methodName, exc.getMessage());
-                GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classification.getName(), methodName,
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
                         this.getClass().getName(),
-                        repositoryName);
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction());
+                        methodName, exc);
             }
         }
 
@@ -407,40 +411,35 @@ public class GraphOMRSClassificationMapper {
         try {
             String typeName = (String) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_TYPE_NAME);
             TypeDef typeDef = repositoryHelper.getTypeDefByName(repositoryName, typeName);
-            TypeDefSummary typeDefSummary = new TypeDefSummary(TypeDefCategory.CLASSIFICATION_DEF, typeDef.getGUID(), typeDef.getName(), typeDef.getVersion(), typeDef.getVersionName());
-            InstanceType instanceType = repositoryHelper.getNewInstanceType(repositoryName, typeDefSummary);
+            InstanceType instanceType = repositoryHelper.getNewInstanceType(repositoryName, typeDef);
             classification.setType(instanceType);
 
         } catch (TypeErrorException e) {
             log.error("{} caught exception {}", methodName, e.getMessage());
-            GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
 
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classification.getName(), methodName,
+            throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                       this.getClass().getName(),
+                                                                                                                       repositoryName),
                     this.getClass().getName(),
-                    repositoryName);
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                    this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction());
+                    methodName);
         }
 
-        Integer provenanceOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_PROVENANCE_TYPE);
-        InstanceProvenanceType instanceProvenanceType = GraphOMRSMapperUtils.mapProvenanceOrdinalToEnum(provenanceOrdinal);
+        GraphOMRSMapperUtils mapperUtils = new GraphOMRSMapperUtils();
+
+        Integer provenanceOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_INSTANCE_PROVENANCE_TYPE);
+        InstanceProvenanceType instanceProvenanceType = mapperUtils.mapProvenanceOrdinalToEnum(provenanceOrdinal);
         classification.setInstanceProvenanceType(instanceProvenanceType);
 
-        Integer statusOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_STATUS);
-        InstanceStatus instanceStatus = GraphOMRSMapperUtils.mapStatusOrdinalToEnum(statusOrdinal);
+        Integer statusOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_CURRENT_STATUS);
+        InstanceStatus instanceStatus = mapperUtils.mapStatusOrdinalToEnum(statusOrdinal);
         classification.setStatus(instanceStatus);
 
         Integer statusOnDeleteOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_STATUS_ON_DELETE);
-        InstanceStatus instanceStatusOnDelete = GraphOMRSMapperUtils.mapStatusOrdinalToEnum(statusOnDeleteOrdinal);
+        InstanceStatus instanceStatusOnDelete = mapperUtils.mapStatusOrdinalToEnum(statusOnDeleteOrdinal);
         classification.setStatusOnDelete(instanceStatusOnDelete);
 
         Integer originOrdinal = (Integer) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_CLASSIFICATION_ORIGIN);
-        ClassificationOrigin classificationOrigin = GraphOMRSMapperUtils.mapClassificationOriginOrdinalToEnum(originOrdinal);
+        ClassificationOrigin classificationOrigin = mapperUtils.mapClassificationOriginOrdinalToEnum(originOrdinal);
         classification.setClassificationOrigin(classificationOrigin);
 
         // maintainedBy
@@ -453,24 +452,38 @@ public class GraphOMRSClassificationMapper {
                 classification.setMaintainedBy(maintainedByList);
 
             } catch (Throwable exc) {
-                GraphOMRSErrorCode errorCode = GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR;
-
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classification.getName(), methodName,
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
                         this.getClass().getName(),
-                        repositoryName);
-
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction());
+                        methodName, exc);
             }
         }
 
         classification.setReplicatedBy((String) getVertexProperty( vertex,  PROPERTY_KEY_CLASSIFICATION_REPLICATED_BY));
 
+
+        // mappingProperties
+        String mappingPropertiesString = (String) getVertexProperty(vertex, PROPERTY_KEY_CLASSIFICATION_MAPPING_PROPERTIES);
+        if (mappingPropertiesString != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                TypeReference<Map<String, Serializable>> typeReference = new TypeReference<Map<String, Serializable>>() {};
+                Map<String, Serializable> mappingPropertiesMap = objectMapper.readValue(mappingPropertiesString, typeReference);
+                log.debug("{} vertex has deserialized mappingProperties {}", methodName, mappingPropertiesMap);
+                classification.setMappingProperties(mappingPropertiesMap);
+
+            } catch (Throwable exc) {
+                throw new RepositoryErrorException(GraphOMRSErrorCode.CLASSIFICATION_PROPERTIES_ERROR.getMessageDefinition(classification.getName(), methodName,
+                                                                                                                           this.getClass().getName(),
+                                                                                                                           repositoryName),
+                        this.getClass().getName(),
+                        methodName, exc);
+            }
         }
+
+
+    }
 
 
 }

@@ -10,7 +10,7 @@
     <parent>
         <artifactId>open-metadata-packages</artifactId>
         <groupId>org.odpi.egeria</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>2.10-SNAPSHOT</version>
     </parent>
 
     <name>Open Metadata Client Package</name>
@@ -20,6 +20,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
+    <scm>
+        <connection>scm:git:git://github.com/odpi/egeria.git</connection>
+        <developerConnection>scm:git:ssh://github.com/odpi/egeria.git</developerConnection>
+        <url>http://github.com/odpi/egeria/tree/master</url>
+    </scm>
+
     <packaging>pom</packaging>
 
     <artifactId>open-metadata-client-package</artifactId>
@@ -28,112 +34,142 @@
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>admin-services-client</artifactId>
-            <version>${open-metadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>analytics-modeling-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>asset-catalog-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>asset-consumer-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>asset-owner-client</artifactId>
-            <version>${open-metadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>asset-manager-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>community-profile-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>digital-architecture-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>it-infrastructure-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>data-engine-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
-            <artifactId>data-platform-client</artifactId>
-            <version>${open-metadata.version}</version>
+            <artifactId>data-manager-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>data-privacy-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
-            <artifactId>data-model-client</artifactId>
-            <version>${open-metadata.version}</version>
+            <artifactId>design-model-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>data-science-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>dev-ops-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>discovery-engine-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>governance-engine-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>governance-program-client</artifactId>
-            <version>${open-metadata.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.odpi.egeria</groupId>
-            <artifactId>information-view-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>project-management-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>security-officer-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>software-developer-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>stewardship-action-client</artifactId>
-            <version>${open-metadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>subject-area-client</artifactId>
-            <version>${open-metadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>catalog-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>database-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>files-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>lineage-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>organization-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>security-integrator-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>integration-daemon-services-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>asset-analysis-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>governance-action-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>engine-host-services-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>repository-services-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>platform-services-client</artifactId>
         </dependency>
     </dependencies>
 

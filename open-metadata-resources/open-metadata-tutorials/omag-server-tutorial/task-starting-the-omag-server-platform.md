@@ -6,14 +6,13 @@
 The [OMAG Server Platform's installation directory](../building-egeria-tutorial/task-installing-egeria.md)
 contains a Java Archive (Jar) file for the server platform itself along with a directory of resources.
 
-```text
-
+```bash
 $ ls
-resources				server-chassis-spring-1.1-SNAPSHOT.jar
-
+resources				server-chassis-spring-2.10-SNAPSHOT.jar
 ```
+
 The name of the Java Archive (Jar) file will
-depend on the release of ODPi Egeria that you have installed.  In this example, the release is **1.1-SNAPSHOT**.
+depend on the release of ODPi Egeria that you have installed.  In this example, the release is **2.10-SNAPSHOT**.
 
 The [OMAG Server Platform](../../../open-metadata-publication/website/omag-server) is started with the **java** command.
 Ensure you have a Java runtime at Version 8 (Update 151) or above installed on your machine.
@@ -22,17 +21,18 @@ Check the version of Java you have with the command **java -version**
 and the **HotSpot** version for your operating system.
 You only need the JRE but select the JDK if you expect to also write some Java code.)
 
-Start the OMAG server platform as follows:
+Start the OMAG server platform as follows - the `-Dserver.port` option is needed if you want multiple instances running
+on different ports, as required by the tutorials.
 
-```text
+You should be in the main distribution directory as setup when installing the server. 
 
-$ java -jar server*
-
+```bash
+$ java -Dserver.port=9443 -jar server/server-chassis-spring-2.10-SNAPSHOT.jar
 ```
+
 The OMAG server platform first displays this banner and then initializes itself.
 
 ```text
-
  ODPi Egeria
     ____   __  ___ ___    ______   _____                                 ____   _         _     ___
    / __ \ /  |/  //   |  / ____/  / ___/ ___   ____ _   __ ___   ____   / _  \ / / __    / /  / _ /__   ____ _  _
@@ -41,28 +41,29 @@ The OMAG server platform first displays this banner and then initializes itself.
  \____//_/  /_//_/  |_|\____/   /____/ \___//_/    |___/ \___//_/    /_/    /_/ \__/\//___//_/   \__//_/  /_/ /_/
 
  :: Powered by Spring Boot (v2.1.2.RELEASE) :: 
-
 ```
+
 When the initialization is complete, you will see this message:
 
 ```text
-
-Thu Jan 31 13:15:26 GMT 2019 OMAG server platform ready for configuration
-
+timestamp OMAG server platform ready for more configuration
 ```
 
-This means your OMAG server platform is running.  Try the following command:
+This means your OMAG server platform is running. 
 
-```text
-$ curl -X GET http://localhost:8080/open-metadata/platform-services/users/test/server-platform/origin
-ODPi Egeria OMAG Server Platform
-$
+If you get an error that the port is in use, check for any applications using the same port. 
+
+Try the following command (replace 9443 accordingly if using a non standard port):
+
+```bash
+$ curl --insecure -X GET https://localhost:9443/open-metadata/platform-services/users/test/server-platform/origin
+Egeria OMAG Server Platform
 ```
 
-This calls the OMAG server platform using a REST API call.  The response **ODPi Egeria OMAG Server Platform**
+This calls the OMAG server platform using a REST API call.  The response **Egeria OMAG Server Platform**
 means the curl command communicated with a running OMAG server platform instance.
 
-The OMAG server platform has many REST APIs.  Enter **localhost:8080/swagger-ui.html** into your browser to see the list of
+The OMAG server platform has many REST APIs.  Enter **https://localhost:9443/swagger-ui.html** into your browser to see the list of
 available REST APIs.
 
 Broadly speaking, the OMAG server platform supports

@@ -10,6 +10,7 @@ import org.odpi.openmetadata.metadatasecurity.properties.AssetAuditHeader;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -25,13 +26,31 @@ public class AssetConverter extends ReferenceableConverter
      * @param connectionToAssetRelationship properties to convert
      * @param repositoryHelper helper object to parse entity/relationship objects
      * @param serviceName name of this component
+     * @param serverName called server
+     */
+    public AssetConverter(EntityDetail         assetEntity,
+                          Relationship         connectionToAssetRelationship,
+                          OMRSRepositoryHelper repositoryHelper,
+                          String               serviceName,
+                          String               serverName)
+    {
+        super(assetEntity, connectionToAssetRelationship, repositoryHelper, serviceName, serverName);
+    }
+
+    /**
+     * Constructor captures the initial content with connectionToAssetRelationship
+     *
+     * @param assetEntity properties to convert
+     * @param connectionToAssetRelationship properties to convert
+     * @param repositoryHelper helper object to parse entity/relationship objects
+     * @param serviceName name of this component
      */
     public AssetConverter(EntityDetail         assetEntity,
                           Relationship         connectionToAssetRelationship,
                           OMRSRepositoryHelper repositoryHelper,
                           String               serviceName)
     {
-        super(assetEntity, connectionToAssetRelationship, repositoryHelper, serviceName);
+        super(assetEntity, connectionToAssetRelationship, repositoryHelper, serviceName, null);
     }
 
 
@@ -185,15 +204,62 @@ public class AssetConverter extends ReferenceableConverter
                                                                  methodName));
                 bean.setOwnerType(this.getOwnerTypeFromProperties(instanceProperties));
             }
+
+            instanceProperties = super.getClassificationProperties(AssetMapper.ASSET_ORIGIN_CLASSIFICATION_NAME);
+
+            if (instanceProperties != null)
+            {
+                Map<String, String>  origins = new HashMap<>();
+                String               propertyValue = repositoryHelper.getStringProperty(serviceName,
+                                                                                        AssetMapper.ORGANIZATION_GUID_PROPERTY_NAME,
+                                                                                        instanceProperties,
+                                                                                        methodName);
+
+                if (propertyValue != null)
+                {
+                    origins.put(AssetMapper.ORGANIZATION_GUID_PROPERTY_NAME, propertyValue);
+                }
+
+                propertyValue = repositoryHelper.getStringProperty(serviceName,
+                                                                   AssetMapper.BUSINESS_CAPABILITY_GUID_PROPERTY_NAME,
+                                                                   instanceProperties,
+                                                                   methodName);
+
+                if (propertyValue != null)
+                {
+                    origins.put(AssetMapper.BUSINESS_CAPABILITY_GUID_PROPERTY_NAME, propertyValue);
+                }
+
+                Map<String, String> propertyMap = repositoryHelper.getStringMapFromProperty(serviceName,
+                                                                                    AssetMapper.OTHER_ORIGIN_VALUES_PROPERTY_NAME,
+                                                                                    instanceProperties,
+                                                                                    methodName);
+
+                if (propertyMap != null)
+                {
+                    for (String propertyName : propertyMap.keySet())
+                    {
+                        if (propertyName != null)
+                        {
+                            origins.put(propertyName, propertyMap.get(propertyName));
+                        }
+                    }
+                }
+
+                if (! origins.isEmpty())
+                {
+                    bean.setOrigin(origins);
+                }
+            }
         }
     }
 
 
     /**
-     * Retrieve the ContactMethodType enum property from the instance properties of an entity
+     * Retrieve the OwnerType enum property from the instance properties of an entity
      *
      * @param properties  entity properties
-     * @return ContactMethodType  enum value
+     * @return OwnerType  enum value
      */
     private OwnerType getOwnerTypeFromProperties(InstanceProperties   properties)
     {
@@ -203,25 +269,28 @@ public class AssetConverter extends ReferenceableConverter
         {
             Map<String, InstancePropertyValue> instancePropertiesMap = properties.getInstanceProperties();
 
-            InstancePropertyValue instancePropertyValue = instancePropertiesMap.get(AssetMapper.OWNER_TYPE_PROPERTY_NAME);
-
-            if (instancePropertyValue instanceof EnumPropertyValue)
+            if (instancePropertiesMap != null)
             {
-                EnumPropertyValue enumPropertyValue = (EnumPropertyValue) instancePropertyValue;
+                InstancePropertyValue instancePropertyValue = instancePropertiesMap.get(AssetMapper.OWNER_TYPE_PROPERTY_NAME);
 
-                switch (enumPropertyValue.getOrdinal())
+                if (instancePropertyValue instanceof EnumPropertyValue)
                 {
-                    case 0:
-                        ownerType = OwnerType.USER_ID;
-                        break;
+                    EnumPropertyValue enumPropertyValue = (EnumPropertyValue) instancePropertyValue;
 
-                    case 1:
-                        ownerType = OwnerType.PROFILE_ID;
-                        break;
+                    switch (enumPropertyValue.getOrdinal())
+                    {
+                        case 0:
+                            ownerType = OwnerType.USER_ID;
+                            break;
 
-                    case 99:
-                        ownerType = OwnerType.OTHER;
-                        break;
+                        case 1:
+                            ownerType = OwnerType.PROFILE_ID;
+                            break;
+
+                        case 99:
+                            ownerType = OwnerType.OTHER;
+                            break;
+                    }
                 }
             }
         }
@@ -231,10 +300,10 @@ public class AssetConverter extends ReferenceableConverter
 
 
     /**
-     * Retrieve the ContactMethodType enum property from the instance properties of an entity
+     * Retrieve the OwnerType enum property from the instance properties of an entity
      *
      * @param properties  entity properties
-     * @return ContactMethodType  enum value
+     * @return OwnerType  enum value
      */
     private OwnerType removeOwnerTypeFromProperties(InstanceProperties   properties)
     {
@@ -244,7 +313,10 @@ public class AssetConverter extends ReferenceableConverter
         {
             Map<String, InstancePropertyValue> instancePropertiesMap = properties.getInstanceProperties();
 
-            instancePropertiesMap.remove(AssetMapper.OWNER_TYPE_PROPERTY_NAME);
+            if (instancePropertiesMap != null)
+            {
+                instancePropertiesMap.remove(AssetMapper.OWNER_TYPE_PROPERTY_NAME);
+            }
 
             properties.setInstanceProperties(instancePropertiesMap);
         }

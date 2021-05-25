@@ -4,6 +4,10 @@ package org.odpi.openmetadata.accessservices.assetcatalog.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,6 +22,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 public class Classification implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -33,106 +41,9 @@ public class Classification implements Serializable {
     private Date updateTime;
 
     private Long version;
-    private Status status;
+    private String status;
 
-    private String typeDefName;
-    private String typeDefDescription;
+    private Type type;
 
-    private Map<String, Object> properties;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(String origin) {
-        this.origin = origin;
-    }
-
-    public String getOriginGUID() {
-        return originGUID;
-    }
-
-    public void setOriginGUID(String originGUID) {
-        this.originGUID = originGUID;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(Date createTime) {
-        this.createTime = createTime;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Date getUpdateTime() {
-        return updateTime;
-    }
-
-    public void setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getTypeDefName() {
-        return typeDefName;
-    }
-
-    public void setTypeDefName(String typeDefName) {
-        this.typeDefName = typeDefName;
-    }
-
-    public String getTypeDefDescription() {
-        return typeDefDescription;
-    }
-
-    public void setTypeDefDescription(String typeDefDescription) {
-        this.typeDefDescription = typeDefDescription;
-    }
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
-    }
+    private Map<String, String> properties;
 }

@@ -1,10 +1,11 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Copyright Contributors to the ODPi Egeria project. */
-
 package org.odpi.openmetadata.accessservices.assetconsumer.rest;
 
 import com.fasterxml.jackson.annotation.*;
 import org.odpi.openmetadata.commonservices.ffdc.rest.FFDCResponseBase;
+
+import java.util.Arrays;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -16,21 +17,25 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
         property = "class")
-@JsonSubTypes
-        ({
-                @JsonSubTypes.Type(value = GlossaryTermListResponse.class,          name = "GlossaryTermListResponse"),
-                @JsonSubTypes.Type(value = GlossaryTermResponse.class,              name = "GlossaryTermResponse")
-        })
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = TagResponse.class, name = "TagResponse"),
+        @JsonSubTypes.Type(value = PagedResponse.class, name = "PagedResponse"),
+        @JsonSubTypes.Type(value = GlossaryTermResponse.class, name = "GlossaryTermResponse")
+              })
 public abstract class AssetConsumerOMASAPIResponse extends FFDCResponseBase
 {
+    private static final long    serialVersionUID = 1L;
+
     /**
      * Default constructor
      */
     public AssetConsumerOMASAPIResponse()
     {
+        super();
     }
 
 
@@ -50,14 +55,17 @@ public abstract class AssetConsumerOMASAPIResponse extends FFDCResponseBase
      *
      * @return string containing the property names and values
      */
-
     @Override
     public String toString()
     {
         return "AssetConsumerOMASAPIResponse{" +
-                "relatedHTTPCode=" + getRelatedHTTPCode() +
-                ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                "exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +

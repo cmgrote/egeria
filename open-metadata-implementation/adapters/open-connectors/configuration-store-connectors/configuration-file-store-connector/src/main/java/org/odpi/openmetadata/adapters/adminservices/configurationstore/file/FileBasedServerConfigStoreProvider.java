@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: Apache-2.0 */
+/* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.adapters.adminservices.configurationstore.file;
 
 import org.odpi.openmetadata.adminservices.store.OMAGServerConfigStoreProviderBase;
@@ -19,7 +20,7 @@ public class FileBasedServerConfigStoreProvider extends OMAGServerConfigStorePro
      */
     public FileBasedServerConfigStoreProvider()
     {
-        Class    connectorClass = FileBasedServerConfigStoreConnector.class;
+        Class<?>    connectorClass = FileBasedServerConfigStoreConnector.class;
 
         super.setConnectorClassName(connectorClass.getName());
 

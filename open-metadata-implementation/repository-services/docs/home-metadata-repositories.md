@@ -8,7 +8,7 @@ is called its **home repository**.
 
 Metadata in its home repository can be updated and deleted.
 
-The [Open Metadata Repository Services (OMRS)](../README.md) is responsible
+The [Open Metadata Repository Services (OMRS)](..) is responsible
 for sharing this metadata with other metadata repositories who are
 members of the same **[cohort](open-metadata-repository-cohort.md)**.
 
@@ -28,6 +28,9 @@ the metadata collection
 id in the metadata instance with the cohort registration information passed
 between members of the cohort when they connect.
 
+
+----
+* Return to [Repository Services Design](.)
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

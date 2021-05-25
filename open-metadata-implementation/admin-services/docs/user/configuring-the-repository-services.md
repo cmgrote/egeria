@@ -5,100 +5,36 @@
 # Configuring the Open Metadata Repository Services (OMRS)
 
 The [Open Metadata Repository Services](../../../repository-services) provide support for access and exchange
-of open metadata.
+of open metadata along with support for audit logging.
 
-A OMAG server always needs the repository services, even if it is just for the audit log.
+A OMAG server always needs the repository services because they all need to at least configure an audit log.
 
-## Setting up the local repository
+In addition the **Open Metadata Servers** and **Repository Proxies** need to set up the local repository and
+connect to a cohort if they are to share metadata.  You may also define a list of open metadata
+archives to load into the metadata repository on server start up.
+
+See [OMAG Server](../concepts/omag-server.md) for descriptions of these types of servers.
+
+## Configuring the audit log (all OMAG Servers)
+
+See [Configuring the audit log](configuring-the-audit-log.md).
+
+
+## Configuring the local repository (Metadata Server Only)
 
 A local repository is optional.
 The administration services can be used to enable one of the built-in
 local repositories.
 
-#### Enable the graph repository
+See [Configuring the Local Repository](configuring-the-local-repository.md).
 
-This command is a placeholder for an Egeria graph repository.
 
-```
+## Configuring the repository proxy connectors (Repository Proxy only)
 
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/mode/local-graph-repository
+See [Configuring the repository proxy connectors](configuring-the-repository-proxy-connector.md).
 
-```
 
-#### Enable the in-memory repository
-
-The in-memory repository is useful for demos and testing.
-No metadata is kept if the open metadata services are deactivated,
-or the server is shutdown.
-
-```
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/mode/in-memory-repository
-
-```
-
-#### Enable the IBM Information Governance Catalog repository proxy
-
-The OMAG Server can act as a [repository proxy](../concepts/repository-proxy.md)
-to an IBM Information Governance Catalog ("IGC") environment.
-This is done by POSTing the IGC environment details:
-
-- `igcBaseURL` specifies the https host and port on which to access the IGC REST API
-- `igcAuthorization` provides a basic-encoded username and password
-
-```
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/mode/ibm-igc/details
-{
-    "igcBaseURL": "https://infosvr.vagrant.ibm.com:9446",
-    "igcAuthorization": "aXNhZG1pbjppc2FkbWlu",
-}
-
-```
-
-The specific version of IBM Information Governance Catalog the environment is running will be detected as part of the initialization process.
-
-#### Enable OMAG Server as a repository proxy
-
-The OMAG Server can act as a proxy to a vendor's repository.
-This is done by adding the connection
-for the repository proxy as the local repository.
-
-```
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/proxy-details?connectorProvider={javaClassName}
-
-```
-
-#### Add the local repository's event mapper
-
-Any open metadata repository that supports its own API needs an
-event mapper to ensure the
-Open Metadata Repository Services (OMRS) is notified when
-metadata is added
-to the repository without going through the open metadata APIs.
-
-The event mapper is a connector that listens for proprietary events
-from the repository and converts them into calls to the OMRS.
-The OMRS then distributes this new metadata.
-
-```
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/event-mapper-details?connectorProvider={javaClassName}&eventSource={resourceName}
-
-```
-
-For example, to enable the IBM Information Governance Catalog event mapper,
-POST the following (where `igc.hostname.somewhere.com` is the hostname of the
-domain (services) tier of the environment, and `59092` is the port on which
-its Kafka bus can be accessed):
-
-```
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/event-mapper-details?connectorProvider=org.odpi.openmetadata.adapters.repositoryservices.igc.eventmapper.IGCOMRSRepositoryEventMapperProvider&eventSource=igc.hostname.somewhere.com:59092
-
-```
-
-#### Remove the local repository
+## Remove the local repository
 
 This command removes all configuration for the local repository.
 This includes the local metadata collection id.  If a new local repository is
@@ -106,9 +42,7 @@ added, it will have a new local metadata collection id and will
 not be able to automatically re-register with its cohort(s).
 
 ```
-
-DELETE http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository
-
+DELETE {serverURLroot}/open-metadata/admin-services/users/{adminUserId}/servers/{serverName}/local-repository
 ```
 
 ### Cohort registration
@@ -118,25 +52,33 @@ that are sharing metadata using the open metadata services.
 They use a peer-to-peer protocol coordinated through an event bus topic
 (typically this is an Apache Kafka topic).
 
-#### Enable access to a cohort
+See [Configuring registration to a cohort](configuring-registration-to-a-cohort.md)
+for information on connecting a server to a cohort.
 
-The following command registers the server with cohort called `cocoCohort`.
 
-```
+## Load one or more open metadata archives at server startup
 
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/cohorts/cocoCohort
+An open metadata archive is a store of read-only metadata types and instances.
+One or more open metadata archives can be configured to load at server start up.
 
-```
-
-#### Disconnect from a cohort
-
-This command unregisters a server from a cohort called `cocoCohort`.
-
-```
-
-DELETE http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/cohorts/cocoCohort
+Typically open metadata archives are stored as files.  To configure the load of a file
+use the following command.  The file should be specified either as a fully qualified path name
+or as a path name relative to the start up directory of the OMAG Server Platform.
 
 ```
+POST {platformURLRoot}/open-metadata/admin-services/users/{adminUserId}/servers/{serverName}/open-metadata-archives/file
+{ path name of file }
+```
+
+Alternatively it is possible to set up the list of open metadata archives as a list of
+[Connections](../../../frameworks/open-connector-framework/docs/concepts/connection.md).
+These connections refer to connectors that can read and retrieve the open metadata archive content.
+```
+POST {platformURLRoot}/open-metadata/admin-services/users/{adminUserId}/servers/{serverName}/open-metadata-archives
+{ list of connections }
+```
+This option can be used when the open metadata archives are not stored in a file, or a different
+file connector from the default one for the OMAG Server Platform is required.
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

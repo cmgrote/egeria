@@ -7,12 +7,15 @@ Register an external tool.
 
 ```
 
-POST {{url-omas}}/servers/{{server-id-omas}}/open-metadata/access-services/information-view/users/{{user-id}}/register
+POST {serverURLRoot}/servers/{serverName}/open-metadata/access-services/information-view/users/{userId}/register
+```
 
+```json
 {
   "class": "RegistrationRequestBody",
   "softwareServerCapability": {
     "class": "SoftwareServerCapabilitySource",
+    "qualifiedName":"internal id",
     "author": "owner-test",
     "userId": "cognosToolId",
     "lastModifiedTime": 1547838663347,
@@ -22,8 +25,8 @@ POST {{url-omas}}/servers/{{server-id-omas}}/open-metadata/access-services/infor
     "type": "reporting"
   }
 }
-
-VoidResponse response with success or error status
+```
+RegistrationResponse for success containing details of the software server capability entity create or error response otherwise
 
 ```
 ----

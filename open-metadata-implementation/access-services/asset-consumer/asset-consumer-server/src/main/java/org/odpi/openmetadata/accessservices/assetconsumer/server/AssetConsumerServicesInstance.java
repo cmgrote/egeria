@@ -2,13 +2,18 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.assetconsumer.server;
 
+import org.odpi.openmetadata.accessservices.assetconsumer.connectors.outtopic.AssetConsumerOutTopicClientProvider;
+import org.odpi.openmetadata.accessservices.assetconsumer.converters.*;
+import org.odpi.openmetadata.accessservices.assetconsumer.elements.*;
 import org.odpi.openmetadata.accessservices.assetconsumer.ffdc.AssetConsumerErrorCode;
-import org.odpi.openmetadata.accessservices.assetconsumer.handlers.GlossaryHandler;
 import org.odpi.openmetadata.accessservices.assetconsumer.handlers.LoggingHandler;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstance;
+import org.odpi.openmetadata.commonservices.ffdc.exceptions.PropertyServerException;
+import org.odpi.openmetadata.commonservices.generichandlers.*;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstance;
 import org.odpi.openmetadata.commonservices.multitenant.ffdc.exceptions.NewInstanceException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
 import java.util.List;
@@ -17,12 +22,20 @@ import java.util.List;
  * AssetConsumerServicesInstance caches references to objects for a specific server.
  * It is also responsible for registering itself in the instance map.
  */
-public class AssetConsumerServicesInstance extends OCFOMASServiceInstance
+public class AssetConsumerServicesInstance extends OMASServiceInstance
 {
     private static AccessServiceDescription myDescription = AccessServiceDescription.ASSET_CONSUMER_OMAS;
 
-    private GlossaryHandler glossaryHandler;
-    private LoggingHandler loggingHandler;
+    private AssetHandler<AssetElement>                     assetHandler;
+    private CommentHandler<CommentElement>                 commentHandler;
+    private ConnectionHandler<OpenMetadataAPIDummyBean>    connectionHandler;
+    private ConnectorTypeHandler<OpenMetadataAPIDummyBean> connectorTypeHandler;
+    private EndpointHandler<OpenMetadataAPIDummyBean>      endpointHandler;
+    private GlossaryTermHandler<MeaningElement>            glossaryTermHandler;
+    private InformalTagHandler<InformalTagElement>         informalTagHandler;
+    private LikeHandler<LikeElement>                       likeHandler;
+    private RatingHandler<RatingElement>                   ratingHandler;
+    private LoggingHandler                                 loggingHandler;
 
     /**
      * Set up the handlers for this server.
@@ -32,57 +45,172 @@ public class AssetConsumerServicesInstance extends OCFOMASServiceInstance
      * @param auditLog destination for audit log events.
      * @param localServerUserId userId used for server initiated actions
      * @param maxPageSize maximum number of results that can be returned on a single call
+     * @param outTopicEventBusConnection inner event bus connection to use to build topic connection to send to client if they which
+     *                                   to listen on the out topic.
      * @throws NewInstanceException a problem occurred during initialization
      */
     public AssetConsumerServicesInstance(OMRSRepositoryConnector repositoryConnector,
                                          List<String>            supportedZones,
-                                         OMRSAuditLog            auditLog,
+                                         AuditLog                auditLog,
                                          String                  localServerUserId,
-                                         int                     maxPageSize) throws NewInstanceException
+                                         int                     maxPageSize,
+                                         Connection              outTopicEventBusConnection) throws NewInstanceException
     {
-        super(myDescription.getAccessServiceName() + " OMAS",
+        super(myDescription.getAccessServiceFullName(),
               repositoryConnector,
               supportedZones,
               null,
+              null,
               auditLog,
               localServerUserId,
-              maxPageSize);
+              maxPageSize,
+              null,
+              null,
+              AssetConsumerOutTopicClientProvider.class.getName(),
+              outTopicEventBusConnection);
 
         final String methodName = "new ServiceInstance";
 
         if (repositoryHandler != null)
         {
-            glossaryHandler = new GlossaryHandler(serviceName,
-                                                  serverName,
-                                                  invalidParameterHandler,
-                                                  repositoryHelper,
-                                                  repositoryHandler);
             loggingHandler = new LoggingHandler(auditLog);
+
+            OpenMetadataAPIDummyBeanConverter<OpenMetadataAPIDummyBean> dummyConverter =
+                    new OpenMetadataAPIDummyBeanConverter<>(repositoryHelper, serviceName, serverName);
+
+            this.assetHandler = new AssetHandler<>(new AssetConverter<>(repositoryHelper, serviceName, serverName),
+                                                   AssetElement.class,
+                                                   serviceName,
+                                                   serverName,
+                                                   invalidParameterHandler,
+                                                   repositoryHandler,
+                                                   repositoryHelper,
+                                                   localServerUserId,
+                                                   securityVerifier,
+                                                   supportedZones,
+                                                   defaultZones,
+                                                   publishZones,
+                                                   auditLog);
+
+            this.commentHandler = new CommentHandler<>(new CommentConverter<>(repositoryHelper, serviceName, serverName),
+                                                       CommentElement.class,
+                                                       serviceName,
+                                                       serverName,
+                                                       invalidParameterHandler,
+                                                       repositoryHandler,
+                                                       repositoryHelper,
+                                                       localServerUserId,
+                                                       securityVerifier,
+                                                       supportedZones,
+                                                       defaultZones,
+                                                       publishZones,
+                                                       auditLog);
+
+            this.connectionHandler = new ConnectionHandler<>(dummyConverter,
+                                                             OpenMetadataAPIDummyBean.class,
+                                                             serviceName,
+                                                             serverName,
+                                                             invalidParameterHandler,
+                                                             repositoryHandler,
+                                                             repositoryHelper,
+                                                             localServerUserId,
+                                                             securityVerifier,
+                                                             supportedZones,
+                                                             defaultZones,
+                                                             publishZones,
+                                                             auditLog);
+
+            this.connectorTypeHandler = new ConnectorTypeHandler<>(dummyConverter,
+                                                                   OpenMetadataAPIDummyBean.class,
+                                                                   serviceName,
+                                                                   serverName,
+                                                                   invalidParameterHandler,
+                                                                   repositoryHandler,
+                                                                   repositoryHelper,
+                                                                   localServerUserId,
+                                                                   securityVerifier,
+                                                                   supportedZones,
+                                                                   defaultZones,
+                                                                   publishZones,
+                                                                   auditLog);
+
+            this.endpointHandler = new EndpointHandler<>(dummyConverter,
+                                                         OpenMetadataAPIDummyBean.class,
+                                                         serviceName,
+                                                         serverName,
+                                                         invalidParameterHandler,
+                                                         repositoryHandler,
+                                                         repositoryHelper,
+                                                         localServerUserId,
+                                                         securityVerifier,
+                                                         supportedZones,
+                                                         defaultZones,
+                                                         publishZones,
+                                                         auditLog);
+
+            this.glossaryTermHandler = new GlossaryTermHandler<>(new MeaningConverter<>(repositoryHelper, serviceName, serverName),
+                                                                 MeaningElement.class,
+                                                                 serviceName,
+                                                                 serverName,
+                                                                 invalidParameterHandler,
+                                                                 repositoryHandler,
+                                                                 repositoryHelper,
+                                                                 localServerUserId,
+                                                                 securityVerifier,
+                                                                 supportedZones,
+                                                                 defaultZones,
+                                                                 publishZones,
+                                                                 auditLog);
+
+            this.informalTagHandler = new InformalTagHandler<>(new InformalTagConverter<>(repositoryHelper, serviceName, serverName),
+                                                               InformalTagElement.class,
+                                                               serviceName,
+                                                               serverName,
+                                                               invalidParameterHandler,
+                                                               repositoryHandler,
+                                                               repositoryHelper,
+                                                               localServerUserId,
+                                                               securityVerifier,
+                                                               supportedZones,
+                                                               defaultZones,
+                                                               publishZones,
+                                                               auditLog);
+
+            this.likeHandler = new LikeHandler<>(new LikeConverter<>(repositoryHelper, serviceName, serverName),
+                                                 LikeElement.class,
+                                                 serviceName,
+                                                 serverName,
+                                                 invalidParameterHandler,
+                                                 repositoryHandler,
+                                                 repositoryHelper,
+                                                 localServerUserId,
+                                                 securityVerifier,
+                                                 supportedZones,
+                                                 defaultZones,
+                                                 publishZones,
+                                                 auditLog);
+
+            this.ratingHandler = new RatingHandler<>(new RatingConverter<>(repositoryHelper, serviceName, serverName),
+                                                     RatingElement.class,
+                                                     serviceName,
+                                                     serverName,
+                                                     invalidParameterHandler,
+                                                     repositoryHandler,
+                                                     repositoryHelper,
+                                                     localServerUserId,
+                                                     securityVerifier,
+                                                     supportedZones,
+                                                     defaultZones,
+                                                     publishZones,
+                                                     auditLog);
         }
         else
         {
-            AssetConsumerErrorCode errorCode    = AssetConsumerErrorCode.OMRS_NOT_INITIALIZED;
-            String                 errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new NewInstanceException(errorCode.getHTTPErrorCode(),
+            throw new NewInstanceException(AssetConsumerErrorCode.OMRS_NOT_INITIALIZED.getMessageDefinition(methodName),
                                            this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
 
         }
-    }
-
-
-    /**
-     * Return the specialized glossary handler for Asset Consumer OMAS.
-     *
-     * @return glossary handler
-     */
-    GlossaryHandler getGlossaryHandler()
-    {
-        return glossaryHandler;
     }
 
 
@@ -96,4 +224,147 @@ public class AssetConsumerServicesInstance extends OCFOMASServiceInstance
         return loggingHandler;
     }
 
+
+    /**
+     * Return the handler for managing comment objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    AssetHandler<AssetElement> getAssetHandler() throws PropertyServerException
+    {
+        final String methodName = "getAssetHandler";
+
+        validateActiveRepository(methodName);
+
+        return assetHandler;
+    }
+
+
+    /**
+     * Return the handler for managing comment objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    CommentHandler<CommentElement> getCommentHandler() throws PropertyServerException
+    {
+        final String methodName = "getCommentHandler";
+
+        validateActiveRepository(methodName);
+
+        return commentHandler;
+    }
+
+
+    /**
+     * Return the handler for managing connection objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    ConnectionHandler<OpenMetadataAPIDummyBean> getConnectionHandler() throws PropertyServerException
+    {
+        final String methodName = "getConnectionHandler";
+
+        validateActiveRepository(methodName);
+
+        return connectionHandler;
+    }
+
+
+    /**
+     * Return the handler for managing connector type objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    ConnectorTypeHandler<OpenMetadataAPIDummyBean> getConnectorTypeHandler() throws PropertyServerException
+    {
+        final String methodName = "getConnectorTypeHandler";
+
+        validateActiveRepository(methodName);
+
+        return connectorTypeHandler;
+    }
+
+
+    /**
+     * Return the handler for managing endpoint objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    EndpointHandler<OpenMetadataAPIDummyBean> getEndpointHandler() throws PropertyServerException
+    {
+        final String methodName = "getEndpointHandler";
+
+        validateActiveRepository(methodName);
+
+        return endpointHandler;
+    }
+
+
+    /**
+     * Return the handler for managing glossary objects.
+     *
+     * @return glossary handler
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    GlossaryTermHandler<MeaningElement> getGlossaryTermHandler() throws PropertyServerException
+    {
+        final String methodName = "getGlossaryTermHandler";
+
+        validateActiveRepository(methodName);
+
+        return glossaryTermHandler;
+    }
+
+
+    /**
+     * Return the handler for managing informal tag objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    InformalTagHandler<InformalTagElement> getInformalTagHandler() throws PropertyServerException
+    {
+        final String methodName = "getInformalTagHandler";
+
+        validateActiveRepository(methodName);
+
+        return informalTagHandler;
+    }
+
+
+    /**
+     * Return the handler for managing like objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    LikeHandler<LikeElement> getLikeHandler() throws PropertyServerException
+    {
+        final String methodName = "getLikeHandler";
+
+        validateActiveRepository(methodName);
+
+        return likeHandler;
+    }
+
+
+    /**
+     * Return the handler for managing rating objects.
+     *
+     * @return  handler object
+     * @throws PropertyServerException the instance has not been initialized successfully
+     */
+    RatingHandler<RatingElement> getRatingHandler() throws PropertyServerException
+    {
+        final String methodName = "getRatingHandler";
+
+        validateActiveRepository(methodName);
+
+        return ratingHandler;
+    }
 }

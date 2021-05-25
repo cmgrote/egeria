@@ -3,7 +3,7 @@
 package org.odpi.openmetadata.frameworks.connectors.properties;
 
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Classification;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementClassification;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementType;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.OwnerType;
 
@@ -20,21 +20,23 @@ import java.util.Map;
  *     <li>url - external link for the asset</li>
  *     <li>qualifiedName - The official (unique) name for the asset. This is often defined by the IT systems
  *     management organization and should be used (when available) on audit logs and error messages.
- *     (qualifiedName from Referenceable - model 0010)</li>
- *     <li>displayName - A consumable name for the endpoint.  Often a shortened form of the assetQualifiedName
- *     for use on user interfaces and messages.   The assetDisplayName should be only be used for audit logs and error
- *     messages if the assetQualifiedName is not set. (Sourced from attribute name within Asset - model 0010)</li>
+ *     (Sourced from qualifiedName from Referenceable - model 0010)</li>
+ *     <li>displayName - A consumable name for the asset.  Often a shortened form of the asset's qualifiedName
+ *     for use on user interfaces and messages.   The asset's displayName should be only be used for audit logs and error
+ *     messages if the qualifiedName is not set. (Sourced from displayName attribute name within Asset - model 0010)</li>
  *     <li>shortDescription - short description about the asset.
  *     (Sourced from assetSummary within ConnectionsToAsset - model 0205)</li>
  *     <li>description - full description of the asset.
  *     (Sourced from attribute description within Asset - model 0010)</li>
  *     <li>owner - name of the person or organization that owns the asset.
- *     (Sourced from attribute owner within Asset - model 0010)</li>
+ *     (Sourced from attribute owner within AssetOwnershipClassification - model 0445)</li>
+ *     <li>zoneMembership - list of governance zones assigned to the asset</li>
  *     <li>classifications - list of classifications assigned to the asset</li>
  * </ul>
  */
 public class AssetSummary extends AssetDescriptor
 {
+    private static final long     serialVersionUID = 1L;
 
     /**
      * Default constructor only for subclasses
@@ -198,7 +200,7 @@ public class AssetSummary extends AssetDescriptor
      */
     public List<AssetClassification> getAssetClassifications()
     {
-        List<Classification> classifications = assetBean.getClassifications();
+        List<ElementClassification> classifications = assetBean.getClassifications();
 
         if (classifications == null)
         {
@@ -208,7 +210,7 @@ public class AssetSummary extends AssetDescriptor
         {
             List<AssetClassification> assetClassifications = new ArrayList<>();
 
-            for (Classification classification : classifications)
+            for (ElementClassification classification : classifications)
             {
                 if (classification != null)
                 {
@@ -225,6 +227,17 @@ public class AssetSummary extends AssetDescriptor
                 return assetClassifications;
             }
         }
+    }
+
+
+    /**
+     * Return the properties that characterize where this asset is from.
+     *
+     * @return map of name value pairs, all strings
+     */
+    public Map<String, String> getOrigins()
+    {
+        return assetBean.getOrigin();
     }
 
 
@@ -280,40 +293,5 @@ public class AssetSummary extends AssetDescriptor
     public String toString()
     {
         return assetBean.toString();
-    }
-
-
-    /**
-     * Compare the values of the supplied object with those stored in the current object.
-     *
-     * @param objectToCompare supplied object
-     * @return boolean result of comparison
-     */
-    @Override
-    public boolean equals(Object objectToCompare)
-    {
-        if (this == objectToCompare)
-        {
-            return true;
-        }
-        if (!(objectToCompare instanceof AssetSummary))
-        {
-            return false;
-        }
-
-        AssetSummary that = (AssetSummary) objectToCompare;
-        return assetBean.equals(that.getAssetBean());
-    }
-
-
-    /**
-     * Create a hash code for this element type.
-     *
-     * @return int hash code
-     */
-    @Override
-    public int hashCode()
-    {
-        return assetBean.hashCode();
     }
 }

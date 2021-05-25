@@ -58,7 +58,7 @@ public class ConfidenceMapper extends ClassificationMapper{
             GovernanceClassificationStatus status = GovernanceClassificationStatus.valueOf(enumPropertyValue.getSymbolicName());
             confidence.setStatus(status);
         }
-        return Confidence.PROPERTY_NAMES_SET;
+        return Confidence.getPropertyNames();
     }
 
     @Override
@@ -67,12 +67,12 @@ public class ConfidenceMapper extends ClassificationMapper{
     }
 
     @Override
-    protected org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification createOmasClassification() {
+    protected Classification createOmasClassification() {
         return new Confidence();
     }
 
     @Override
-    protected InstanceProperties updateOMRSAttributes(org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification omasClassification) {
+    protected InstanceProperties updateOMRSAttributes(Classification omasClassification) {
         InstanceProperties instanceProperties = new InstanceProperties();
         Confidence confidence = (Confidence)omasClassification;
         if (confidence.getSteward()!=null) {

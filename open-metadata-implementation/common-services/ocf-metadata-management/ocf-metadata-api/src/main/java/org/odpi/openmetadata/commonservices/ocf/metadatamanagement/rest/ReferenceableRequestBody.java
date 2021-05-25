@@ -4,7 +4,7 @@
 package org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest;
 
 import com.fasterxml.jackson.annotation.*;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Classification;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementClassification;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Meaning;
 
 import java.util.*;
@@ -13,26 +13,21 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
 /**
- * CommentRequestBody provides a structure for passing a comment as a request body over a REST API.
+ * ReferenceableRequestBody provides a structure for passing a referenceables' properties as a request body over a REST API.
  */
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "class")
-@JsonSubTypes(
-        {
-                @JsonSubTypes.Type(value = AssetRequestBody.class, name = "AssetRequestBody")
-        })
 public class ReferenceableRequestBody extends OCFOMASAPIRequestBody
 {
-    protected String               typeName             = null;
-    protected List<Classification> classifications      = null;
-    protected String               qualifiedName        = null;
-    protected List<Meaning>        meanings             = null;
-    protected Map<String, String>  additionalProperties = null;
-    protected Map<String, Object>  extendedProperties   = null;
+    private static final long    serialVersionUID = 1L;
+
+    protected String                      typeName             = null;
+    protected List<ElementClassification> classifications      = null;
+    protected String                      qualifiedName        = null;
+    protected List<Meaning>               meanings             = null;
+    protected Map<String, String>         additionalProperties = null;
+    protected Map<String, Object>         extendedProperties   = null;
 
 
     /**
@@ -93,7 +88,7 @@ public class ReferenceableRequestBody extends OCFOMASAPIRequestBody
      *
      * @return list of classifications with their properties
      */
-    public List<Classification> getClassifications()
+    public List<ElementClassification> getClassifications()
     {
         return classifications;
     }
@@ -104,7 +99,7 @@ public class ReferenceableRequestBody extends OCFOMASAPIRequestBody
      *
      * @param classifications list of classifications with their properties
      */
-    public void setClassifications(List<Classification> classifications)
+    public void setClassifications(List<ElementClassification> classifications)
     {
         this.classifications = classifications;
     }

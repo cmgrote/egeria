@@ -17,21 +17,16 @@ Once these notebooks are complete and the servers are running, you can choose to
 page to learn more
 about the platform and the other types of governance servers that is supports.
 
-Alternatively you can jump straight to [building a data catalog](../asset-management).
+Alternatively you can jump straight to [building a data catalog](../asset-management-labs).
 
 ## Understanding more about the platform and metadata servers
 
 * [Understanding more about the OMAG Server Platform](understanding-platform-services.ipynb)
 * [Understanding the status of and open metadata cohort](understanding-cohorts.ipynb)
 
-## Understanding about Egeria's governance servers
-
-* [Configuring the discovery server](open-discovery-config.ipynb)
-
-
 ## What next?
 
-If you have not tried it yet, we recommend the [building a data catalog](../asset-management).
+If you have not tried it yet, we recommend the [building a data catalog](../asset-management-labs).
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

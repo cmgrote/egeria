@@ -7,12 +7,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLoggingComponent;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.EndpointProperties;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
-import org.odpi.openmetadata.repositoryservices.connectors.auditable.AuditableConnector;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.InternalOMRSEventProcessingContext;
 import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorException;
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class OpenMetadataTopicConnector extends ConnectorBase implements OpenMetadataTopic,
                                                                                   Runnable,
-                                                                                  AuditableConnector
+                                                                                  AuditLoggingComponent
 {
     private static final Logger       log      = LoggerFactory.getLogger(OpenMetadataTopicConnector.class);
 
@@ -51,7 +51,7 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
     private String                          topicName          = defaultTopicName;
     private int                             sleepTime          = 100;
 
-    protected OMRSAuditLog auditLog = null;
+    protected AuditLog auditLog = null;
 
     /**
      * Simple constructor
@@ -68,7 +68,7 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      *
      * @param auditLog audit log object
      */
-    public void setAuditLog(OMRSAuditLog   auditLog)
+    public void setAuditLog(AuditLog   auditLog)
     {
         this.auditLog = auditLog;
     }
@@ -78,14 +78,9 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      */
     public void run()
     {
-        OMRSAuditCode auditCode = OMRSAuditCode.OPEN_METADATA_TOPIC_LISTENER_START;
-        auditLog.logRecord(listenerThreadName,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(topicName),
-                           this.getConnection().toString(),
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(listenerThreadName,
+                            OMRSAuditCode.OPEN_METADATA_TOPIC_LISTENER_START.getMessageDefinition(topicName),
+                            this.getConnection().toString());
 
         while (keepRunning)
         {
@@ -119,14 +114,9 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
             }
         }
 
-        auditCode = OMRSAuditCode.OPEN_METADATA_TOPIC_LISTENER_SHUTDOWN;
-        auditLog.logRecord(listenerThreadName,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(topicName),
-                           this.getConnection().toString(),
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(listenerThreadName,
+                            OMRSAuditCode.OPEN_METADATA_TOPIC_LISTENER_SHUTDOWN.getMessageDefinition(topicName),
+                           this.getConnection().toString());
     }
 
 
@@ -140,27 +130,20 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
         //Initially clear the async event processing context to ensure that it will only
         //have results from processing this event
         InternalOMRSEventProcessingContext.clear();
-        
+        InternalOMRSEventProcessingContext.getInstance().setCurrentMessageId(event.getMessageId());
         for (OpenMetadataTopicListener  topicListener : topicListeners)
         {
             try
             {
                 topicListener.processEvent(event.getJson());
-                
             }
             catch (Throwable  error)
             {
                 final String   actionDescription = "distributeEvent";
 
-                OMRSAuditCode auditCode = OMRSAuditCode.EVENT_PROCESSING_ERROR;
-
                 auditLog.logException(actionDescription,
-                                      auditCode.getLogMessageId(),
-                                      auditCode.getSeverity(),
-                                      auditCode.getFormattedLogMessage(event.getJson(), error.toString()),
+                                      OMRSAuditCode.EVENT_PROCESSING_ERROR.getMessageDefinition(event.getJson(), error.toString()),
                                       event.getJson(),
-                                      auditCode.getSystemAction(),
-                                      auditCode.getUserAction(),
                                       error);
             }
         }
@@ -182,10 +165,12 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      *
      * @return a list of received events or null
      */
-    protected List<IncomingEvent> checkForIncomingEvents() {
+    protected List<IncomingEvent> checkForIncomingEvents()
+    {
         List<IncomingEvent> result = new ArrayList<>();
-        for(String event : checkForEvents()) {
-            result.add(new IncomingEvent(event));
+        for (String event : checkForEvents())
+        {
+            result.add(new IncomingEvent(event, String.valueOf(event.hashCode())));
         }
         return result;
     }
@@ -195,10 +180,11 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      * been overridden.
      * 
      * @deprecated Use checkForIncomingEvents() instead.
-     * @return
+     * @return list of events
      */
     @Deprecated
-    protected List<String> checkForEvents() {
+    protected List<String> checkForEvents()
+    {
         return Collections.emptyList();
     }
 
@@ -209,6 +195,7 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      * @param topicListener object implementing the OMRSTopicListener interface
      * @return topic name
      */
+    @Override
     public String registerListener(OpenMetadataTopicListener  topicListener)
     {
         if (topicListener != null)
@@ -228,18 +215,11 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
             return topicName;
         }
 
-        final String            methodName = "registerListener";
+        final String methodName = "registerListener";
 
-        OMRSErrorCode errorCode = OMRSErrorCode.NULL_OPEN_METADATA_TOPIC_LISTENER;
-        String        errorMessage = errorCode.getErrorMessageId()
-                                   + errorCode.getFormattedErrorMessage(listenerThreadName, topicName);
-
-        throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+        throw new OMRSLogicErrorException(OMRSErrorCode.NULL_OPEN_METADATA_TOPIC_LISTENER.getMessageDefinition(listenerThreadName, topicName),
                                           this.getClass().getName(),
-                                          methodName,
-                                          errorMessage,
-                                          errorCode.getSystemAction(),
-                                          errorCode.getUserAction());
+                                          methodName);
     }
 
 
@@ -248,6 +228,7 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public void start() throws ConnectorCheckedException
     {
         super.start();
@@ -287,6 +268,7 @@ public abstract class OpenMetadataTopicConnector extends ConnectorBase implement
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
         super.disconnect();

@@ -2,7 +2,7 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.enterprise.repositoryconnector.executors;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.MatchCriteria;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.SequencingOrder;
@@ -27,7 +27,7 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
     private InstanceProperties matchClassificationProperties;
     private MatchCriteria      matchCriteria;
 
-    private EntityAccumulator  accumulator;
+    private EntityAccumulator accumulator;
 
 
     /**
@@ -57,21 +57,21 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
      * @param repositoryValidator validator for resulting relationships
      * @param methodName calling method
      */
-    public FindEntitiesByClassificationExecutor(String                            userId,
-                                                String                            entityTypeGUID,
-                                                String                            classificationName,
-                                                InstanceProperties                matchClassificationProperties,
-                                                MatchCriteria                     matchCriteria,
-                                                int                               fromEntityElement,
-                                                List<InstanceStatus>              limitResultsByStatus,
-                                                Date                              asOfTime,
-                                                String                            sequencingProperty,
-                                                SequencingOrder                   sequencingOrder,
-                                                int                               pageSize,
-                                                String                            localMetadataCollectionId,
-                                                OMRSAuditLog                      auditLog,
-                                                OMRSRepositoryValidator           repositoryValidator,
-                                                String                            methodName)
+    public FindEntitiesByClassificationExecutor(String                  userId,
+                                                String                  entityTypeGUID,
+                                                String                  classificationName,
+                                                InstanceProperties      matchClassificationProperties,
+                                                MatchCriteria           matchCriteria,
+                                                int                     fromEntityElement,
+                                                List<InstanceStatus>    limitResultsByStatus,
+                                                Date                    asOfTime,
+                                                String                  sequencingProperty,
+                                                SequencingOrder         sequencingOrder,
+                                                int                     pageSize,
+                                                String                  localMetadataCollectionId,
+                                                AuditLog                auditLog,
+                                                OMRSRepositoryValidator repositoryValidator,
+                                                String                  methodName)
     {
         this(userId,
              entityTypeGUID,
@@ -117,15 +117,15 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
     private FindEntitiesByClassificationExecutor(String                    userId,
                                                  String                    entityTypeGUID,
                                                  String                    classificationName,
-                                                 InstanceProperties        matchClassificationProperties,
-                                                 MatchCriteria             matchCriteria,
+                                                 InstanceProperties matchClassificationProperties,
+                                                 MatchCriteria matchCriteria,
                                                  int                       fromEntityElement,
                                                  List<InstanceStatus>      limitResultsByStatus,
                                                  Date                      asOfTime,
                                                  String                    sequencingProperty,
-                                                 SequencingOrder           sequencingOrder,
+                                                 SequencingOrder sequencingOrder,
                                                  int                       pageSize,
-                                                 EntityAccumulator         accumulator,
+                                                 EntityAccumulator accumulator,
                                                  String                    methodName)
     {
         super(userId,
@@ -233,9 +233,9 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
         {
             accumulator.captureException(metadataCollectionId, error);
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            accumulator.captureGenericException(metadataCollectionId, error);
+            accumulator.captureGenericException(methodName, metadataCollectionId, error);
         }
 
         return true;
@@ -246,6 +246,8 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
      * Return the results or exception.
      *
      * @param repositoryConnector enterprise connector
+     * @param metadataCollection enterprise metadata collection
+     *
      * @return a list of entities matching the supplied criteria null means no matching entities in the metadata
      * collection.
      * @throws InvalidParameterException a parameter is invalid or null.
@@ -259,17 +261,18 @@ public class FindEntitiesByClassificationExecutor extends PageableRepositoryExec
      * @throws FunctionNotSupportedException the repository does not support the asOfTime parameter.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    public List<EntityDetail> getResults(EnterpriseOMRSRepositoryConnector repositoryConnector) throws InvalidParameterException,
-                                                                                                       TypeErrorException,
-                                                                                                       RepositoryErrorException,
-                                                                                                       PropertyErrorException,
-                                                                                                       PagingErrorException,
-                                                                                                       FunctionNotSupportedException,
-                                                                                                       UserNotAuthorizedException
+    public List<EntityDetail> getResults(EnterpriseOMRSRepositoryConnector repositoryConnector,
+                                         OMRSMetadataCollection            metadataCollection) throws InvalidParameterException,
+                                                                                                      TypeErrorException,
+                                                                                                      RepositoryErrorException,
+                                                                                                      PropertyErrorException,
+                                                                                                      PagingErrorException,
+                                                                                                      FunctionNotSupportedException,
+                                                                                                      UserNotAuthorizedException
     {
         if (accumulator.resultsReturned())
         {
-            return accumulator.getResults(repositoryConnector);
+            return accumulator.getResults(repositoryConnector, metadataCollection);
         }
 
         handleCommonPagingRequestExceptions();

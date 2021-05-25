@@ -23,6 +23,8 @@ import java.util.List;
  */
 public class ConnectedAssetLikes extends AssetLikes
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                 serviceName;
     private String                 serverName;
     private String                 userId;
@@ -98,6 +100,7 @@ public class ConnectedAssetLikes extends AssetLikes
      * @param parentAsset descriptor of parent asset
      * @return new cloned object.
      */
+    @Override
     protected  AssetLikes cloneIterator(AssetDescriptor parentAsset)
     {
         return new ConnectedAssetLikes(connectedAsset, this);
@@ -112,6 +115,7 @@ public class ConnectedAssetLikes extends AssetLikes
      * @param template object to clone
      * @return new cloned object.
      */
+    @Override
     protected  AssetPropertyBase cloneElement(AssetDescriptor  parentAsset, AssetPropertyBase template)
     {
         return new AssetLike(parentAsset, (AssetLike)template);
@@ -126,6 +130,7 @@ public class ConnectedAssetLikes extends AssetLikes
      * @return list of elements corresponding to the supplied cache pointers.
      * @throws PropertyServerException there is a problem retrieving elements from the property (metadata) server.
      */
+    @Override
     protected  List<AssetPropertyBase> getCachedList(int  cacheStartPointer,
                                                      int  maximumSize) throws PropertyServerException
     {
@@ -145,9 +150,9 @@ public class ConnectedAssetLikes extends AssetLikes
                                                                        cacheStartPointer,
                                                                        maximumSize);
 
-            restExceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-            restExceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-            restExceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+            restExceptionHandler.detectAndThrowInvalidParameterException(restResult);
+            restExceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+            restExceptionHandler.detectAndThrowPropertyServerException(restResult);
 
             List<Like>  beans = restResult.getList();
             if ((beans == null) || (beans.isEmpty()))

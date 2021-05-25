@@ -6,8 +6,6 @@ package org.odpi.openmetadata.adapters.repositoryservices.inmemory.repositorycon
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityProxy;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.AttributeTypeDef;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDef;
 
 import java.util.*;
 
@@ -200,6 +198,7 @@ class InMemoryOMRSMetadataStore
 
         Map<String, Relationship>  timeWarpedRelationshipStore = new HashMap<>();
 
+
         /*
          * First step through the current relationship store and extract all of the relationships that were
          * last updated before the asOfTime.
@@ -283,6 +282,7 @@ class InMemoryOMRSMetadataStore
 
         while (existingEntity != null)
         {
+            entityStore.put(entity.getGUID(), existingEntity);
             entity.setGUID(UUID.randomUUID().toString());
             existingEntity = entityStore.put(entity.getGUID(), entity);
         }
@@ -307,6 +307,7 @@ class InMemoryOMRSMetadataStore
 
         while (existingRelationship != null)
         {
+            relationshipStore.put(relationship.getGUID(), existingRelationship);
             relationship.setGUID(UUID.randomUUID().toString());
             existingRelationship = relationshipStore.put(relationship.getGUID(), relationship);
         }
@@ -332,9 +333,9 @@ class InMemoryOMRSMetadataStore
      *
      * @param entity - new version of the entity
      */
-    synchronized void updateEntityInStore(EntityDetail    entity)
+    synchronized void updateEntityInStore(EntityDetail entity)
     {
-        EntityDetail    oldEntity = entityStore.put(entity.getGUID(), entity);
+        EntityDetail oldEntity = entityStore.put(entity.getGUID(), entity);
 
         if (oldEntity != null)
         {
@@ -348,7 +349,7 @@ class InMemoryOMRSMetadataStore
      *
      * @param entityProxy - entity proxy object to add
      */
-    synchronized void updateEntityProxyInStore(EntityProxy    entityProxy)
+    synchronized void updateEntityProxyInStore(EntityProxy entityProxy)
     {
         entityProxyStore.put(entityProxy.getGUID(), entityProxy);
     }
@@ -362,6 +363,7 @@ class InMemoryOMRSMetadataStore
      */
     synchronized void updateRelationshipInStore(Relationship    relationship)
     {
+
         Relationship    oldRelationship = relationshipStore.put(relationship.getGUID(), relationship);
 
         if (oldRelationship != null)
@@ -415,7 +417,6 @@ class InMemoryOMRSMetadataStore
                 versionNumber = currentVersionOfRelationship.getVersion() + 1;
             }
 
-            int  elementPosition = 0;
 
             for (Relationship relationship : relationshipHistoryStore)
             {
@@ -427,14 +428,23 @@ class InMemoryOMRSMetadataStore
                         {
                             versionNumber = relationship.getVersion() + 1;
                         }
-                        relationship.setVersion(versionNumber);
-                        relationshipHistoryStore.remove(elementPosition);
-                        relationshipStore.put(guid, relationship);
-                        return relationship;
+                        /*
+                         * Clone the head (most recent) version in the history, set its version number to the next version
+                         * and insert the new clone into the current store (under key GUID). Also, take the 'current version'
+                         * (as was at start of method) and shunt that into the history. Do not remove anything from the history.
+                         * Remember also to set the updateTime to NOW - otherwise the historical copy will appear to have been
+                         * updated longer ago than was really the case.
+                         */
+                        Relationship newRelationship = new Relationship(relationship);
+                        newRelationship.setVersion(versionNumber);
+                        Date restoreTime = new Date();
+                        newRelationship.setUpdateTime(restoreTime);
+                        relationshipStore.put(guid, newRelationship);
+                        relationshipHistoryStore.add(0, currentVersionOfRelationship);
+                        return newRelationship;
+
                     }
                 }
-
-                elementPosition ++;
             }
         }
 
@@ -462,8 +472,6 @@ class InMemoryOMRSMetadataStore
                 versionNumber = currentVersionOfEntity.getVersion() + 1;
             }
 
-            int  elementPosition = 0;
-
             for (EntityDetail entity : entityHistoryStore)
             {
                 if (entity != null)
@@ -474,14 +482,25 @@ class InMemoryOMRSMetadataStore
                         {
                             versionNumber = entity.getVersion() + 1;
                         }
-                        entity.setVersion(versionNumber);
-                        entityHistoryStore.remove(elementPosition);
-                        entityStore.put(guid, entity);
-                        return entity;
+
+                        /*
+                         * Clone the head (most recent) version in the history, set its version number to the next version
+                         * and insert the new clone into the current store (under key GUID). Also, take the 'current version'
+                         * (as was at start of method) and shunt that into the history. Do not remove anything from the history.
+                         * Remember also to set the updateTime to NOW - otherwise the historical copy will appear to have been
+                         * updated longer ago than was really the case.
+                         *
+                         */
+                        EntityDetail newEntity = new EntityDetail(entity);
+                        newEntity.setVersion(versionNumber);
+                        Date restoreTime = new Date();
+                        newEntity.setUpdateTime(restoreTime);
+                        entityStore.put(guid, newEntity);
+                        entityHistoryStore.add(0, currentVersionOfEntity);
+                        return newEntity;
+
                     }
                 }
-
-                elementPosition ++;
             }
         }
 
@@ -496,8 +515,17 @@ class InMemoryOMRSMetadataStore
      */
     synchronized void removeEntityFromStore(EntityDetail     entity)
     {
-        entityStore.remove(entity.getGUID());
-        entityHistoryStore.add(0, entity);
+        String entityGUID = entity.getGUID();
+        entityStore.remove(entityGUID);
+        List<EntityDetail> purgedHistory = new ArrayList<>();
+        for (EntityDetail history : entityHistoryStore)
+        {
+            if (history != null && !entityGUID.equals(history.getGUID()))
+            {
+                purgedHistory.add(history);
+            }
+        }
+        entityHistoryStore = purgedHistory;
     }
 
 
@@ -512,7 +540,15 @@ class InMemoryOMRSMetadataStore
 
         if (entity != null)
         {
-            entityHistoryStore.add(0, entity);
+            List<EntityDetail> purgedHistory = new ArrayList<>();
+            for (EntityDetail history : entityHistoryStore)
+            {
+                if (history != null && !guid.equals(history.getGUID()))
+                {
+                    purgedHistory.add(history);
+                }
+            }
+            entityHistoryStore = purgedHistory;
         }
     }
 
@@ -535,8 +571,17 @@ class InMemoryOMRSMetadataStore
      */
     synchronized void removeRelationshipFromStore(Relationship     relationship)
     {
-        relationshipStore.remove(relationship.getGUID());
-        relationshipHistoryStore.add(0, relationship);
+        String relationshipGUID = relationship.getGUID();
+        relationshipStore.remove(relationshipGUID);
+        List<Relationship> purgedHistory = new ArrayList<>();
+        for (Relationship history : relationshipHistoryStore)
+        {
+            if (history != null && !relationshipGUID.equals(history.getGUID()))
+            {
+                purgedHistory.add(history);
+            }
+        }
+        relationshipHistoryStore = purgedHistory;
     }
 
 
@@ -551,7 +596,15 @@ class InMemoryOMRSMetadataStore
 
         if (relationship != null)
         {
-            relationshipHistoryStore.add(0, relationship);
+            List<Relationship> purgedHistory = new ArrayList<>();
+            for (Relationship history : relationshipHistoryStore)
+            {
+                if (history != null && !guid.equals(history.getGUID()))
+                {
+                    purgedHistory.add(history);
+                }
+            }
+            relationshipHistoryStore = purgedHistory;
         }
     }
 

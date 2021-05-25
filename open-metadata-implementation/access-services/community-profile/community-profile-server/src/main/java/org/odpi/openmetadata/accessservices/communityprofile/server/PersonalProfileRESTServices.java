@@ -9,10 +9,10 @@ import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfil
 import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfileValidatorRequestBody;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         GUIDResponse response = new GUIDResponse();
-        OMRSAuditLog auditLog = null;
+        AuditLog     auditLog = null;
 
         try
         {
@@ -97,21 +97,9 @@ public class PersonalProfileRESTServices
                                                            additionalProperties,
                                                            methodName));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -143,7 +131,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         VoidResponse response = new VoidResponse();
-        OMRSAuditLog auditLog      = null;
+        AuditLog     auditLog      = null;
 
         try
         {
@@ -180,21 +168,9 @@ public class PersonalProfileRESTServices
                                           additionalProperties,
                                           methodName);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -226,7 +202,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         VoidResponse response = new VoidResponse();
-        OMRSAuditLog auditLog = null;
+        AuditLog     auditLog = null;
 
         try
         {
@@ -245,21 +221,9 @@ public class PersonalProfileRESTServices
                                           employeeNumber,
                                           methodName);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -289,7 +253,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         PersonalProfileResponse response = new PersonalProfileResponse();
-        OMRSAuditLog            auditLog = null;
+        AuditLog                auditLog = null;
 
         try
         {
@@ -298,21 +262,9 @@ public class PersonalProfileRESTServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setPersonalProfile(handler.getPersonalProfile(userId, profileUserId, methodName));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -341,7 +293,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         PersonalProfileResponse response = new PersonalProfileResponse();
-        OMRSAuditLog            auditLog = null;
+        AuditLog                auditLog = null;
 
         try
         {
@@ -350,21 +302,9 @@ public class PersonalProfileRESTServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setPersonalProfile(handler.getPersonalProfileByGUID(userId, profileGUID, methodName));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -394,7 +334,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         PersonalProfileResponse response = new PersonalProfileResponse();
-        OMRSAuditLog            auditLog = null;
+        AuditLog                auditLog = null;
 
         try
         {
@@ -403,21 +343,9 @@ public class PersonalProfileRESTServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setPersonalProfile(handler.getPersonalProfileByQualifiedName(userId, employeeNumber, methodName));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());
@@ -452,7 +380,7 @@ public class PersonalProfileRESTServices
         log.debug("Calling method: " + methodName);
 
         PersonalProfileListResponse response = new PersonalProfileListResponse();
-        OMRSAuditLog                auditLog = null;
+        AuditLog                    auditLog = null;
 
         try
         {
@@ -461,21 +389,9 @@ public class PersonalProfileRESTServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setPersonalProfiles(handler.getPersonalProfilesByName(userId, name, startFrom, pageSize, methodName));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
         log.debug("Returning from method: " + methodName + " with response: " + response.toString());

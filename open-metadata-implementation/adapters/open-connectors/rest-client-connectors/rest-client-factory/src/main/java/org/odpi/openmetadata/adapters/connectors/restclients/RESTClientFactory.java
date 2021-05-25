@@ -112,7 +112,7 @@ public class RESTClientFactory
         {
             try
             {
-                Class      connectorProviderClass = Class.forName(connectorProviderClassName);
+                Class<?>      connectorProviderClass = Class.forName(connectorProviderClassName);
                 Object     potentialConnectorProvider = connectorProviderClass.newInstance();
 
                 ConnectorProvider connectorProvider = (ConnectorProvider)potentialConnectorProvider;
@@ -160,10 +160,10 @@ public class RESTClientFactory
      * Retrieve the REST client connector.
      *
      * @return client connector
-     * @throws Throwable an unexpected exception - internal logic error as the parameters should have all been checked
+     * @throws Exception an unexpected exception - internal logic error as the parameters should have all been checked
      * before this call.
      */
-    public RESTClientConnector getClientConnector() throws Throwable
+    public RESTClientConnector getClientConnector() throws Exception
     {
         ConnectorBroker     connectorBroker = new ConnectorBroker();
         Connector           connector       = connectorBroker.getConnector(clientConnection);

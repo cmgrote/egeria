@@ -4,38 +4,26 @@
 package org.odpi.openmetadata.repositoryservices.auditlog;
 
 
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
+import org.odpi.openmetadata.test.unittest.utilities.AuditLogMessageSetTest;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertTrue;
 
 /**
  * Validate the methods of OMRSAuditCode
  */
-public class TestOMRSAuditCode
+public class TestOMRSAuditCode extends AuditLogMessageSetTest
 {
-    private OMRSAuditCode  getTestObject()
-    {
-        return OMRSAuditCode.LOCAL_REPOSITORY_INITIALIZING;
-    }
-
-
-    @Test public void testAuditLogMethods()
-    {
-        OMRSAuditCode  testObject = this.getTestObject();
-
-        assertTrue("OMRS-AUDIT-0003".equals(testObject.getLogMessageId()));
-        assertTrue(OMRSAuditLogRecordSeverity.INFO == (testObject.getSeverity()));
-        assertTrue("The local repository is initializing with metadata collection named DummyName with an id of DummyId".equals(testObject.getFormattedLogMessage("DummyName", "DummyId")));
-        assertTrue("The local server has started to initialize the local repository.".equals(testObject.getSystemAction()));
-        assertTrue("No action is required.  This is part of the normal operation of the server.".equals(testObject.getUserAction()));
-    }
-
+    private final static String       messageIdPrefix    = "OMRS-AUDIT-";
 
     /**
-     * Test that toString is overridden.
+     * Validated the values of the enum.
      */
-    @Test public void testToString()
+    @Test public void testAllAuditCodeValues()
     {
-        assertTrue(OMRSAuditCode.NEW_TYPE_ADDED.toString().contains("OMRSAuditCode"));
+        for (OMRSAuditCode auditCode : OMRSAuditCode.values())
+        {
+            testSingleAuditCodeValue(auditCode, messageIdPrefix);
+        }
     }
 }

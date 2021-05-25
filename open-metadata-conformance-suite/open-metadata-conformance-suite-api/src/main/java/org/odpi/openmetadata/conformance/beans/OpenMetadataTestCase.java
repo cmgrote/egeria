@@ -34,7 +34,14 @@ public abstract class OpenMetadataTestCase
     protected ExceptionBean       exceptionBean          = null;
     protected String              successMessage         = null;
 
-
+    /*
+     * Enumerated type for control of multi-phase tests
+     */
+    public enum TestPhase {
+        SEED,
+        EXECUTE,
+        CLEAN
+    }
 
     /**
      * Default constructor
@@ -59,8 +66,6 @@ public abstract class OpenMetadataTestCase
                                 Integer                                 defaultProfileId,
                                 Integer                                 defaultRequirementId)
     {
-        final String methodName = "OpenMetadataTestCase";
-
         this.testCaseId = testCaseId;
         this.testCaseName = testCaseName;
         this.testCaseDescriptionURL = documentationRootURL + workPad.getWorkbenchId() + "/test-cases/" + testCaseId + "-test-case.md";
@@ -207,6 +212,7 @@ public abstract class OpenMetadataTestCase
             {
                 result.setSuccessMessage(successMessage);
             }
+
         }
 
         return result;
@@ -240,15 +246,39 @@ public abstract class OpenMetadataTestCase
                                    Integer   profileId,
                                    Integer   requirementId) throws AssertionFailureException
     {
+        assertCondition(condition, assertionId, assertionMessage, profileId, requirementId, null, null);
+    }
+
+
+    /**
+     * Throw an exception if the condition is not true; else return
+     *
+     * @param condition condition to test
+     * @param assertionId identifier for the assertion
+     * @param assertionMessage descriptive message of the assertion
+     * @param profileId identifier of profile for this assertion
+     * @param requirementId identifier of requirement for this assertion
+     * @param methodName method that this condition tests
+     * @param elapsedTime of the test executing (in milliseconds)
+     * @throws AssertionFailureException condition was false
+     */
+    protected void assertCondition(boolean   condition,
+                                   String    assertionId,
+                                   String    assertionMessage,
+                                   Integer   profileId,
+                                   Integer   requirementId,
+                                   String    methodName,
+                                   Long      elapsedTime) throws AssertionFailureException
+    {
         if (condition)
         {
             successfulAssertions.add(assertionId + ": " +assertionMessage);
-            workPad.addSuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage);
+            workPad.addSuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionId, methodName, elapsedTime);
             return;
         }
 
         unsuccessfulAssertions.add(assertionId + ": " + assertionMessage);
-        workPad.addUnsuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage);
+        workPad.addUnsuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionId, methodName, elapsedTime);
         throw new AssertionFailureException(assertionId, assertionMessage);
     }
 
@@ -268,15 +298,38 @@ public abstract class OpenMetadataTestCase
                                    Integer   profileId,
                                    Integer   requirementId)
     {
+        verifyCondition(condition, assertionId, assertionMessage, profileId, requirementId, null, null);
+    }
+
+
+    /**
+     * Log if the condition is not true; else return
+     *
+     * @param condition condition to test
+     * @param assertionId identifier for the assertion
+     * @param assertionMessage descriptive message of the assertion
+     * @param profileId identifier of profile for this assertion
+     * @param requirementId identifier of requirement for this assertion
+     * @param methodName method that this condition tests
+     * @param elapsedTime of the test executing (in milliseconds)
+     */
+    protected void verifyCondition(boolean   condition,
+                                   String    assertionId,
+                                   String    assertionMessage,
+                                   Integer   profileId,
+                                   Integer   requirementId,
+                                   String    methodName,
+                                   Long      elapsedTime)
+    {
         if (condition)
         {
-            successfulAssertions.add(assertionMessage);
-            workPad.addSuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage);
+            successfulAssertions.add(assertionId + ": " + assertionMessage);
+            workPad.addSuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionId, methodName, elapsedTime);
             return;
         }
 
         unsuccessfulAssertions.add(assertionId + ": " + assertionMessage);
-        workPad.addUnsuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage);
+        workPad.addUnsuccessfulCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionId, methodName, elapsedTime);
     }
 
 
@@ -294,7 +347,7 @@ public abstract class OpenMetadataTestCase
                                             Integer   requirementId)
     {
         notSupportedAssertions.add(assertionId + ": " + assertionMessage);
-        workPad.addNotSupportedCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage);
+        workPad.addNotSupportedCondition(profileId, requirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionId);
     }
 
 
@@ -351,7 +404,7 @@ public abstract class OpenMetadataTestCase
 
     /**
      * Request from the workbench to execute this test and generate a result object.  This method is used for
-     * synchronous test cases.
+     * synchronous test cases. This variant of the method calls the parameter-less run method of the testcase.
      */
     public void executeTest()
     {
@@ -371,7 +424,47 @@ public abstract class OpenMetadataTestCase
         }
         catch (Throwable   exception)
         {
-            String   assertionMessage = "test-case-base-01: Unexpected Exception " + exception.getClass().getSimpleName();
+            String   assertionMessage = "Unexpected Exception " + exception.getClass().getSimpleName() + " : " + exception.getMessage();
+
+            this.unsuccessfulAssertions.add(assertionMessage);
+
+            exceptionBean = new ExceptionBean();
+
+            exceptionBean.setErrorMessage(exception.getMessage());
+            exceptionBean.setExceptionClassName(exception.getClass().getName());
+
+            workPad.addUnexpectedException(defaultProfileId, defaultRequirementId, testCaseId, testCaseName, testCaseDescriptionURL, assertionMessage, exceptionBean);
+        }
+
+        this.logTestEnd(methodName);
+    }
+
+    /**
+     * Request from the workbench to execute this test and generate a result object.  This method is used for
+     * synchronous test cases. This variant of the method accepts a test phase parameter to allow explicit
+     * execution of create, execute and clean phases.
+     *
+     * @param phase test phase
+     */
+    public void executeTest(TestPhase phase)
+    {
+        final String methodName = "executeTest";
+
+        this.logTestStart(methodName);
+
+        try
+        {
+            /*
+             * Delegate to subclass including the test phase to run
+             */
+            this.run(phase);
+        }
+        catch (AssertionFailureException   exception)
+        {
+        }
+        catch (Throwable   exception)
+        {
+            String   assertionMessage = "Unexpected Exception " + exception.getClass().getSimpleName() + " : " + exception.getMessage();
 
             this.unsuccessfulAssertions.add(assertionMessage);
 
@@ -387,12 +480,43 @@ public abstract class OpenMetadataTestCase
     }
 
 
+    public void cleanTest() {
+        try {
+            this.cleanup();
+        }
+        catch (Throwable   exception) {
+            /* No action taken - the cleanup should be a belt and braces clearing of instances */
+        }
+    }
+
+    /**
+     * Default implementation - over-ridden by some test cases.
+     *
+     * @throws Exception something went wrong with the test.
+     */
+    protected void cleanup() throws Exception
+    {
+    }
+
     /**
      * Method implemented by the actual test case.
      *
      * @throws Exception something went wrong with the test.
      */
     protected abstract void run() throws Exception;
+
+    /**
+     * Method implemented by the actual test case.
+     *
+     * @param phase test phase
+     * @throws Exception something went wrong with the test.
+     */
+    protected void run(TestPhase phase) throws Exception
+    {
+        /*
+         * Method is overloaded by any multi-phase test case
+         */
+    }
 
 
     /**

@@ -5,9 +5,7 @@ package org.odpi.openmetadata.accessservices.assetowner.rest;
 import com.fasterxml.jackson.annotation.*;
 import org.odpi.openmetadata.commonservices.ffdc.rest.FFDCResponseBase;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Arrays;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -25,13 +23,13 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
         property = "class")
 @JsonSubTypes({
                       @JsonSubTypes.Type(value = FileSystemResponse.class, name = "FileSystemResponse"),
-                      @JsonSubTypes.Type(value = FolderResponse.class, name = "FolderResponse"),
-                      @JsonSubTypes.Type(value = ZoneListResponse.class, name = "ZoneListResponse"),
-                      @JsonSubTypes.Type(value = ZoneResponse.class, name = "ZoneResponse")
+                      @JsonSubTypes.Type(value = FolderResponse.class, name = "FolderResponse")
 
               })
 public abstract class AssetOwnerOMASAPIResponse extends FFDCResponseBase
 {
+    private static final long    serialVersionUID = 1L;
+
     /**
      * Default constructor
      */
@@ -51,6 +49,7 @@ public abstract class AssetOwnerOMASAPIResponse extends FFDCResponseBase
         super(template);
     }
 
+
     /**
      * JSON-like toString
      *
@@ -60,9 +59,13 @@ public abstract class AssetOwnerOMASAPIResponse extends FFDCResponseBase
     public String toString()
     {
         return "AssetOwnerOMASAPIResponse{" +
-                "relatedHTTPCode=" + getRelatedHTTPCode() +
-                ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                "exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +

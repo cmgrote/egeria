@@ -7,7 +7,6 @@ import org.odpi.openmetadata.frameworks.connectors.ffdc.*;
 import org.odpi.openmetadata.frameworks.connectors.properties.AssetUniverse;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.frameworks.discovery.DiscoveryAssetStore;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 
 
 /**
@@ -50,6 +49,7 @@ public class DiscoveryAssetStoreClient extends DiscoveryAssetStore
      * @throws UserNotAuthorizedException the user is not authorized to access the asset and/or connection
      * @throws PropertyServerException there was a problem in the store whether the asset/connection properties are kept.
      */
+    @Override
     protected  Connection  getConnectionForAsset() throws InvalidParameterException,
                                                           UserNotAuthorizedException,
                                                           PropertyServerException
@@ -70,6 +70,7 @@ public class DiscoveryAssetStoreClient extends DiscoveryAssetStore
      *                                      the creation of a connector.
      * @throws ConnectorCheckedException there are errors in the initialization of the connector.
      */
+    @Override
     public Connector getConnectorByConnection(Connection connection) throws InvalidParameterException,
                                                                             ConnectionCheckedException,
                                                                             ConnectorCheckedException
@@ -87,6 +88,7 @@ public class DiscoveryAssetStoreClient extends DiscoveryAssetStore
      * @throws PropertyServerException there is a problem retrieving the asset properties from the property servers).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public AssetUniverse getAssetProperties() throws InvalidParameterException,
                                                      PropertyServerException,
                                                      UserNotAuthorizedException
@@ -98,16 +100,19 @@ public class DiscoveryAssetStoreClient extends DiscoveryAssetStore
     /**
      * Log an audit message about this asset.
      *
+     * @param discoveryService name of discovery service
      * @param message message to log
      *
      * @throws InvalidParameterException one of the parameters is null or invalid.
      * @throws PropertyServerException there is a problem retrieving the asset properties from the property servers).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    public void logAssetAuditMessage(String    message) throws InvalidParameterException,
-                                                               PropertyServerException,
-                                                               UserNotAuthorizedException
+    @Override
+    public void logAssetAuditMessage(String   discoveryService,
+                                     String   message) throws InvalidParameterException,
+                                                              PropertyServerException,
+                                                              UserNotAuthorizedException
     {
-        discoveryEngineClient.logAssetAuditMessage(userId, assetGUID, message);
+        discoveryEngineClient.logAssetAuditMessage(userId, assetGUID, discoveryService, message);
     }
 }

@@ -6,9 +6,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -21,7 +19,9 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RegisteredDiscoveryService extends DiscoveryServiceProperties
 {
-    protected List<String> assetTypes = null;
+    private static final long   serialVersionUID = 1L;
+
+    private Map<String, Map<String, String>> discoveryRequestTypes = null; /* a map from request types to analysis parameters */
 
 
     /**
@@ -44,7 +44,7 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
 
         if (template != null)
         {
-            assetTypes = template.getAssetTypes();
+            discoveryRequestTypes = template.getDiscoveryRequestTypes();
         }
     }
 
@@ -61,23 +61,23 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
 
 
     /**
-     * Return the list of asset types that this discovery service supports.
+     * Return the list of asset discovery types that this discovery service supports.
      *
-     * @return list of asset type names
+     * @return Map of request types to analysis parameters
      */
-    public List<String> getAssetTypes()
+    public Map<String, Map<String, String>> getDiscoveryRequestTypes()
     {
-        if (assetTypes == null)
+        if (discoveryRequestTypes == null)
         {
             return null;
         }
-        else if (assetTypes.isEmpty())
+        else if (discoveryRequestTypes.isEmpty())
         {
             return null;
         }
         else
         {
-            return new ArrayList<>(assetTypes);
+            return new HashMap<>(discoveryRequestTypes);
         }
     }
 
@@ -85,11 +85,11 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
     /**
      * Set up the list of asset types that this discovery service supports.
      *
-     * @param assetTypes list of asset type names
+     * @param discoveryRequestTypes Map of request types to analysis parameters
      */
-    public void setAssetTypes(List<String> assetTypes)
+    public void setDiscoveryRequestTypes(Map<String, Map<String, String>> discoveryRequestTypes)
     {
-        this.assetTypes = assetTypes;
+        this.discoveryRequestTypes = discoveryRequestTypes;
     }
 
 
@@ -102,21 +102,22 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
     public String toString()
     {
         return "RegisteredDiscoveryService{" +
-                "assetTypes=" + assetTypes +
-                ", displayName='" + displayName + '\'' +
-                ", shortDescription='" + shortDescription + '\'' +
-                ", description='" + description + '\'' +
-                ", owner='" + owner + '\'' +
-                ", ownerType=" + ownerType +
-                ", zoneMembership=" + zoneMembership +
-                ", qualifiedName='" + qualifiedName + '\'' +
-                ", additionalProperties=" + additionalProperties +
-                ", extendedProperties=" + extendedProperties +
-                ", meanings=" + meanings +
-                ", type=" + type +
-                ", guid='" + guid + '\'' +
-                ", url='" + url + '\'' +
-                ", classifications=" + classifications +
+                "discoveryRequestTypes=" + discoveryRequestTypes +
+                ", qualifiedName='" + getQualifiedName() + '\'' +
+                ", displayName='" + getDisplayName() + '\'' +
+                ", description='" + getDescription() + '\'' +
+                ", owner='" + getOwner() + '\'' +
+                ", ownerType=" + getOwnerType() +
+                ", zoneMembership=" + getZoneMembership() +
+                ", originOrganizationGUID='" + getOriginOrganizationGUID() + '\'' +
+                ", originBusinessCapabilityGUID='" + getOriginBusinessCapabilityGUID() + '\'' +
+                ", otherOriginValues=" + getOtherOriginValues() +
+                ", additionalProperties=" + getAdditionalProperties() +
+                ", connection=" + getConnection() +
+                ", headerVersion=" + getHeaderVersion() +
+                ", elementHeader=" + getElementHeader() +
+                ", typeName='" + getTypeName() + '\'' +
+                ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
 
@@ -143,9 +144,8 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
             return false;
         }
         RegisteredDiscoveryService that = (RegisteredDiscoveryService) objectToCompare;
-        return Objects.equals(getAssetTypes(), that.getAssetTypes());
+        return Objects.equals(discoveryRequestTypes, that.discoveryRequestTypes);
     }
-
 
     /**
      * Create a hash code for this element type.
@@ -155,6 +155,6 @@ public class RegisteredDiscoveryService extends DiscoveryServiceProperties
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), getAssetTypes());
+        return Objects.hash(super.hashCode(), discoveryRequestTypes);
     }
 }

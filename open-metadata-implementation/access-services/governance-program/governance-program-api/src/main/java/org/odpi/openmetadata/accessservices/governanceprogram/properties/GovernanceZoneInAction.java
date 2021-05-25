@@ -16,8 +16,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class GovernanceZoneInAction extends GovernanceZone
+public class GovernanceZoneInAction extends GovernanceZoneDefinition
 {
+    private static final long    serialVersionUID = 1L;
+
     private int                         zoneMembershipCount = 0;
 
 
@@ -39,7 +41,7 @@ public class GovernanceZoneInAction extends GovernanceZone
     {
         super(template);
 
-        if (template == null)
+        if (template != null)
         {
             this.zoneMembershipCount = template.getZoneMembershipCount();
         }
@@ -74,13 +76,15 @@ public class GovernanceZoneInAction extends GovernanceZone
         return "GovernanceZoneInAction{" +
                 "zoneMembershipCount=" + zoneMembershipCount +
                 ", associatedGovernanceDefinitions=" + getAssociatedGovernanceDefinitions() +
-                ", GUID='" + getGUID() + '\'' +
-                ", classifications=" + getClassifications() +
-                ", qualifiedName='" + getQualifiedName() + '\'' +
                 ", displayName='" + getDisplayName() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", criteria='" + getCriteria() + '\'' +
+                ", scope='" + getScope() + '\'' +
+                ", domainIdentifier=" + getDomainIdentifier() +
+                ", typeName='" + getTypeName() + '\'' +
+                ", qualifiedName='" + getQualifiedName() + '\'' +
                 ", additionalProperties=" + getAdditionalProperties() +
+                ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
 }

@@ -2,13 +2,14 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.softwaredeveloper.admin;
 
-import org.odpi.openmetadata.accessservices.softwaredeveloper.auditlog.SoftwareDeveloperAuditCode;
+import org.odpi.openmetadata.accessservices.softwaredeveloper.ffdc.SoftwareDeveloperAuditCode;
 import org.odpi.openmetadata.accessservices.softwaredeveloper.listener.SoftwareDeveloperOMRSTopicListener;
 import org.odpi.openmetadata.accessservices.softwaredeveloper.server.SoftwareDeveloperServicesInstance;
 import org.odpi.openmetadata.adminservices.configuration.properties.AccessServiceConfig;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceAdmin;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
@@ -20,7 +21,7 @@ import java.util.List;
  */
 public class SoftwareDeveloperAdmin extends AccessServiceAdmin
 {
-    private OMRSAuditLog                      auditLog   = null;
+    private AuditLog                          auditLog   = null;
     private SoftwareDeveloperServicesInstance instance   = null;
     private String                            serverName = null;
 
@@ -42,28 +43,21 @@ public class SoftwareDeveloperAdmin extends AccessServiceAdmin
      * @param serverUserName  user id to use on OMRS calls where there is no end user.
      * @throws OMAGConfigurationErrorException invalid parameters in the configuration properties.
      */
+    @Override
     public void initialize(AccessServiceConfig     accessServiceConfig,
                            OMRSTopicConnector      omrsTopicConnector,
                            OMRSRepositoryConnector repositoryConnector,
-                           OMRSAuditLog            auditLog,
+                           AuditLog                auditLog,
                            String                  serverUserName) throws OMAGConfigurationErrorException
     {
         final String               actionDescription = "initialize";
-        SoftwareDeveloperAuditCode auditCode;
 
-        auditCode = SoftwareDeveloperAuditCode.SERVICE_INITIALIZING;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, SoftwareDeveloperAuditCode.SERVICE_INITIALIZING.getMessageDefinition());
+
+        this.auditLog = auditLog;
 
         try
         {
-            this.auditLog = auditLog;
-
             List<String>  supportedZones = this.extractSupportedZones(accessServiceConfig.getAccessServiceOptions(),
                                                                       accessServiceConfig.getAccessServiceName(),
                                                                       auditLog);
@@ -95,29 +89,24 @@ public class SoftwareDeveloperAdmin extends AccessServiceAdmin
                                                   auditLog);
             }
 
-            auditCode = SoftwareDeveloperAuditCode.SERVICE_INITIALIZED;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                SoftwareDeveloperAuditCode.SERVICE_INITIALIZED.getMessageDefinition(serverName),
+                                accessServiceConfig.toString());
         }
         catch (OMAGConfigurationErrorException error)
         {
             throw error;
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            auditCode = SoftwareDeveloperAuditCode.SERVICE_INSTANCE_FAILURE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logException(actionDescription,
+                                  SoftwareDeveloperAuditCode.SERVICE_INSTANCE_FAILURE.getMessageDefinition(error.getMessage()),
+                                  accessServiceConfig.toString(),
+                                  error);
+
+            super.throwUnexpectedInitializationException(actionDescription,
+                                                         AccessServiceDescription.SOFTWARE_DEVELOPER_OMAS.getAccessServiceFullName(),
+                                                         error);
         }
     }
 
@@ -125,23 +114,16 @@ public class SoftwareDeveloperAdmin extends AccessServiceAdmin
     /**
      * Shutdown the access service.
      */
+    @Override
     public void shutdown()
     {
-        final String               actionDescription = "shutdown";
-        SoftwareDeveloperAuditCode auditCode;
+        final String actionDescription = "shutdown";
 
         if (instance != null)
         {
             this.instance.shutdown();
         }
 
-        auditCode = SoftwareDeveloperAuditCode.SERVICE_SHUTDOWN;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(serverName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, SoftwareDeveloperAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(serverName));
     }
 }

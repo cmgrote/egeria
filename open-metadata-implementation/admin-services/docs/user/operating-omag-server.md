@@ -1,48 +1,33 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
-# Activating and deactivating the OMAG server
+# Operating an OMAG Server
 
-Once a [configuration document](../concepts/configuration-document.md) has been completed
-for an [OMAG Server](../concepts/omag-server.md), it can be started using the following
-REST call:
+Once an [OMAG Server](../concepts/omag-server.md) is [configured](configuring-an-omag-server.md)
+it can be started and stopped multiple times.
 
-```
+* [Starting and stopping an OMAG Server](starting-and-stopping-omag-server.md)
 
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/instance
+It is possible to load an [OpenMetadata Archive](../../../../open-metadata-resources/open-metadata-archives)
+into running OMAG Servers that are of type [Cohort Member](../concepts/cohort-member.md).
 
-```
+* [Adding an Open Metadata Archive to a running server](adding-archive-to-running-server.md)
 
-and stopped, as follows:
+In addition there are different platform services that
+can be used to find out more about the operation of the servers.
 
-```
+* [Querying the servers and services running in an OMAG Server Platform](../../../platform-services)
 
-DELETE http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/instance
+Egeria also has an interactive graph-based user interface (UI) that enables you to explore the
+open metadata ecosystem.  This includes the OMAG Server Platforms and Servers, the types of metadata
+supported by each metadata repository and the contents of the metadata repositories.
+It is also possible to maintain the configuration of the OMAG Servers through this UI.
 
-```
-
-The configuration document is not changed by these calls.
-It is possible to query the running server's configuration using the following REST API:
-
-```
-
-GET http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/instance/configuration
-
-```
-
-If you want to delete the server's configuration document then issue:
-
-```
-
-DELETE http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1
-
-```
-
-If the OMAG server is running, this command also unregisters the named server from the cohorts it
-is connected to.
-Only use this command if the server is being permanently removed.
+* [Using the ecosystem user interface](https://github.com/odpi/egeria-react-ui)
 
 
+----
+Return to the [Administration Services User Guide](.).
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

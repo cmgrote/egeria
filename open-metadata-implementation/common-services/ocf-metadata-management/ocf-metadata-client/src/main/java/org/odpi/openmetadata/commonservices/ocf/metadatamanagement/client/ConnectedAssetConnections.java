@@ -23,6 +23,8 @@ import java.util.List;
  */
 public class ConnectedAssetConnections extends AssetConnections
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                 serviceName;
     private String                 serverName;
     private String                 userId;
@@ -98,6 +100,7 @@ public class ConnectedAssetConnections extends AssetConnections
      * @param parentAsset descriptor of parent asset
      * @return new cloned object.
      */
+    @Override
     protected  AssetConnections cloneIterator(AssetDescriptor parentAsset)
     {
         return new ConnectedAssetConnections(connectedAsset, this);
@@ -112,6 +115,7 @@ public class ConnectedAssetConnections extends AssetConnections
      * @param template object to clone
      * @return new cloned object.
      */
+    @Override
     protected  AssetPropertyBase cloneElement(AssetDescriptor  parentAsset, AssetPropertyBase template)
     {
         return new ConnectionProperties(parentAsset, (ConnectionProperties) template);
@@ -126,6 +130,7 @@ public class ConnectedAssetConnections extends AssetConnections
      * @return list of elements corresponding to the supplied cache pointers.
      * @throws PropertyServerException there is a problem retrieving elements from the property (metadata) server.
      */
+    @Override
     protected  List<AssetPropertyBase> getCachedList(int  cacheStartPointer,
                                                      int  maximumSize) throws PropertyServerException
     {
@@ -145,9 +150,9 @@ public class ConnectedAssetConnections extends AssetConnections
                                                                                    cacheStartPointer,
                                                                                    maximumSize);
 
-            restExceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-            restExceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-            restExceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+            restExceptionHandler.detectAndThrowInvalidParameterException(restResult);
+            restExceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+            restExceptionHandler.detectAndThrowPropertyServerException(restResult);
 
             List<Connection>  beans = restResult.getList();
             if ((beans == null) || (beans.isEmpty()))

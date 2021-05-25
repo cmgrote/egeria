@@ -32,8 +32,6 @@ import java.util.UUID;
  */
 public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProviderBase
 {
-    private        final int hashCode = UUID.randomUUID().hashCode();
-
     private static final Logger log = LoggerFactory.getLogger(EnterpriseOMRSConnectorProvider.class);
 
     private  OMRSConnectorManager         connectorManager;
@@ -44,6 +42,8 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
     private  String                       owningOrganizationName;
     private  String                       enterpriseMetadataCollectionId;
     private  String                       enterpriseMetadataCollectionName;
+    private  String                       localMetadataCollectionId;
+
 
 
     /**
@@ -69,11 +69,14 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
                                            String                       owningOrganizationName,
                                            OMRSAuditLog                 auditLog,
                                            String                       enterpriseMetadataCollectionId,
-                                           String                       enterpriseMetadataCollectionName)
+                                           String                       enterpriseMetadataCollectionName,
+                                           String                       localMetadataCollectionId)
     {
         super();
+        super.setConnectorComponentDescription(OMRSAuditingComponent.ENTERPRISE_REPOSITORY_CONNECTOR);
 
-        Class    connectorClass = EnterpriseOMRSRepositoryConnector.class;
+
+        Class<?>    connectorClass = EnterpriseOMRSRepositoryConnector.class;
 
         super.setConnectorClassName(connectorClass.getName());
 
@@ -85,6 +88,7 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
         this.owningOrganizationName = owningOrganizationName;
         this.enterpriseMetadataCollectionId = enterpriseMetadataCollectionId;
         this.enterpriseMetadataCollectionName = enterpriseMetadataCollectionName;
+        this.localMetadataCollectionId = localMetadataCollectionId;
     }
 
 
@@ -108,15 +112,9 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
             /*
              * If the cohort is not connected then throw an exception to indicate that the repositories are offline.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.COHORT_NOT_CONNECTED;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new ConnectorCheckedException(errorCode.getHTTPErrorCode(),
+            throw new ConnectorCheckedException(OMRSErrorCode.COHORT_NOT_CONNECTED.getMessageDefinition(),
                                                 this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                methodName);
         }
 
         /*
@@ -132,6 +130,12 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
         connector.setOrganizationName(owningOrganizationName);
         connector.setRepositoryHelper(new OMRSRepositoryContentHelper(repositoryContentManager));
         connector.setRepositoryValidator(new OMRSRepositoryContentValidator(repositoryContentManager));
+
+        /*
+         * Set the localMetadataCollectionId in the connector so that it is available during creation of the EnterpriseMetadataCollection, during setMetaadataCollectionId().
+         */
+        connector.setLocalMetadataCollectionId(localMetadataCollectionId);
+
         connector.setMetadataCollectionId(enterpriseMetadataCollectionId);
         connector.setMetadataCollectionName(enterpriseMetadataCollectionName);
         connector.initializeConnectedAssetProperties(new EnterpriseOMRSConnectorProperties(connector,
@@ -142,16 +146,5 @@ public class EnterpriseOMRSConnectorProvider extends OMRSRepositoryConnectorProv
         log.debug(methodName + " returns: " + connector.getConnectorInstanceId() + ", " + connection.getConnectionName());
 
         return connector;
-    }
-
-
-    /**
-     * Simple hashCode implementation
-     *
-     * @return hashCode
-     */
-    public int hashCode()
-    {
-        return hashCode;
     }
 }

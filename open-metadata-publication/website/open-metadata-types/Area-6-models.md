@@ -26,10 +26,7 @@ When the discovery service is rerun, the new annotations
 can be matched to the annotations from the previous run.
 The steward's actions will impact how the new annotations are processed.
 
-* **[0601 Open Discovery Engines](0601-Open-Discovery-Engine.md)**
-* **[0602 Open Discovery Services](0602-Open-Discovery-Services.md)**
-* **[0603 Open Discovery Pipelines](0603-Open-Discovery-Pipelines.md)**
-* **[0604 Asset Discovery Services](0604-Asset-Discovery-Services.md)**
+* **[0601 Open Discovery Engines and Services](0601-Open-Discovery-Engine.md)**
 * **[0605 Discovery Analysis Report](0605-Open-Discovery-Analysis-Reports.md)**
 * **[0610 Annotation](0610-Annotations.md)**
 * **[0611 Annotation Reviews](0612-Annotation-Reviews.md)**
@@ -41,8 +38,11 @@ The steward's actions will impact how the new annotations are processed.
 * **[0635 Classification Discovery](0635-Classification-Discovery.md)**
 * **[0640 Quality Scores](0640-Quality-Scores.md)**
 * **[0650 Relationship Discovery](0650-Relationship-Discovery.md)**
+* **[0655 Asset Deduplication](0655-Asset-Deduplication.md)**
 * **[0660 Measurements](0660-Data-Source-Measurements.md)**
 * **[0690 Request for Action](0690-Request-for-Action.md)**
+
+![UML Packages](area-6-discovery-overview.png#pagewidth)
 
 Egeria's [Open Discovery Framework (ODF)](../../../open-metadata-implementation/frameworks/open-discovery-framework/README.md)
 that supports the development and execution of discovery services.

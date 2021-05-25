@@ -11,7 +11,6 @@ import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorExc
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Date;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -27,6 +26,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class PrimitivePropertyValue extends InstancePropertyValue
 {
+    private static final long    serialVersionUID = 1L;
+
     private  PrimitiveDefCategory   primitiveDefCategory = null;
     private  Object                 primitiveValue = null;
 
@@ -75,7 +76,7 @@ public class PrimitivePropertyValue extends InstancePropertyValue
      */
     public  String valueAsString()
     {
-        return primitiveValue.toString();
+        return primitiveValue == null ? "<null>" : primitiveValue.toString();
     }
 
 
@@ -218,25 +219,40 @@ public class PrimitivePropertyValue extends InstancePropertyValue
 
         try
         {
-            Class    testJavaClass = Class.forName(primitiveDefCategory.getJavaClassName());
+            Class<?>    testJavaClass = Class.forName(primitiveDefCategory.getJavaClassName());
 
             if (!testJavaClass.isInstance(primitiveValue))
             {
                 if (primitiveDefCategory == PrimitiveDefCategory.OM_PRIMITIVE_TYPE_DATE)
                 {
-                    if (primitiveValue instanceof Long)
-                    {
-                        Long    castValue = (Long)primitiveValue;
-                        return new Date(castValue);
-                    }
-                    else if (primitiveValue instanceof Integer)
+                    /*
+                     * Date values are stored as Longs. The RepositoryHelper helper methods
+                     * will accept and return Java Date objects, for convenience for callers,
+                     * but internally the OMRS stores a date as a Java Long.
+                     *
+                     * However, with the combination of Spring and Jackson it is possible
+                     * for a date that was serialized as a Long to be deserialized as an
+                     * Integer. The following conversion repatriates it to Long.
+                     */
+
+                    if (primitiveValue instanceof Integer)
                     {
                         Integer castValue = (Integer)primitiveValue;
-                        return new Date(castValue);
+                        return castValue.longValue();
                     }
                     else
                     {
-                        return null;
+                        /*
+                         * The type of the primitiveValue cannot be used as a date.
+                         * It is likely that this has been caused by an invalid deserialization or by
+                         * some other code trying to set the value as a type other than Long.
+                         * This is an internal error that needs to be debugged and fixed.
+                         */
+                        throw new OMRSLogicErrorException(OMRSErrorCode.INVALID_PRIMITIVE_TYPE.getMessageDefinition("OM_PRIMITIVE_TYPE_DATE",
+                                                                                                                    primitiveDefCategory.getJavaClassName(),
+                                                                                                                    primitiveValue.getClass().getName()),
+                                this.getClass().getName(),
+                                methodName);
                     }
                 }
                 else if (primitiveDefCategory == PrimitiveDefCategory.OM_PRIMITIVE_TYPE_BIGDECIMAL)
@@ -261,7 +277,7 @@ public class PrimitivePropertyValue extends InstancePropertyValue
                 {
                     String    castValue = (String)primitiveValue;
 
-                    return new Character(castValue.charAt(0));
+                    return castValue.charAt(0);
                 }
                 else if (primitiveDefCategory == PrimitiveDefCategory.OM_PRIMITIVE_TYPE_FLOAT)
                 {
@@ -286,18 +302,11 @@ public class PrimitivePropertyValue extends InstancePropertyValue
                     /*
                      * The primitive value supplied is the wrong type.  Throw an exception.
                      */
-                    OMRSErrorCode errorCode = OMRSErrorCode.INVALID_PRIMITIVE_VALUE;
-                    String errorMessage = errorCode.getErrorMessageId()
-                                        + errorCode.getFormattedErrorMessage(primitiveDefCategory.getJavaClassName(),
-                                                                             primitiveValue.getClass().getName(),
-                                                                             primitiveDefCategory.getName());
-
-                    throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+                    throw new OMRSLogicErrorException(OMRSErrorCode.INVALID_PRIMITIVE_VALUE.getMessageDefinition(primitiveDefCategory.getJavaClassName(),
+                                                                                                                 primitiveValue.getClass().getName(),
+                                                                                                                 primitiveDefCategory.getName()),
                                                       this.getClass().getName(),
-                                                      methodName,
-                                                      errorMessage,
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      methodName);
                 }
             }
         }
@@ -307,17 +316,10 @@ public class PrimitivePropertyValue extends InstancePropertyValue
              * The java class defined in the primitiveDefCategory is not known.  This is an internal error
              * that needs a code fix in PrimitiveDefCategory.
              */
-            OMRSErrorCode errorCode    = OMRSErrorCode.INVALID_PRIMITIVE_CLASS_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(primitiveDefCategory.getJavaClassName(),
-                                                                            primitiveDefCategory.getName());
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.INVALID_PRIMITIVE_CLASS_NAME.getMessageDefinition(primitiveDefCategory.getJavaClassName(),
+                                                                                                              primitiveDefCategory.getName()),
                                               this.getClass().getName(),
                                               methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction(),
                                               unknownPrimitiveClass);
         }
         catch (Error    invalidPrimitiveCategory)
@@ -325,16 +327,9 @@ public class PrimitivePropertyValue extends InstancePropertyValue
             /*
              * Some unexpected exception occurred when manipulating the Java Classes.  Probably a coding error.
              */
-            OMRSErrorCode errorCode    = OMRSErrorCode.INVALID_PRIMITIVE_CATEGORY;
-            String        errorMessage = errorCode.getErrorMessageId()
-                        + errorCode.getFormattedErrorMessage(primitiveDefCategory.getName());
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.INVALID_PRIMITIVE_CATEGORY.getMessageDefinition(primitiveDefCategory.getName()),
                                               this.getClass().getName(),
                                               methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction(),
                                               invalidPrimitiveCategory);
         }
 

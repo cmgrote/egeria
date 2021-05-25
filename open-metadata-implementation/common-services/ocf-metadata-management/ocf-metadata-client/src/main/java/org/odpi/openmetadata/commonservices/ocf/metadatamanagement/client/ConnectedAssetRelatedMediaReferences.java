@@ -23,6 +23,8 @@ import java.util.List;
  */
 public class ConnectedAssetRelatedMediaReferences extends AssetRelatedMediaReferences
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                 serviceName;
     private String                 serverName;
     private String                 userId;
@@ -99,6 +101,7 @@ public class ConnectedAssetRelatedMediaReferences extends AssetRelatedMediaRefer
      * @param parentAsset descriptor of parent asset
      * @return new cloned object.
      */
+    @Override
     protected  AssetRelatedMediaReferences cloneIterator(AssetDescriptor parentAsset)
     {
         return new ConnectedAssetRelatedMediaReferences(connectedAsset, this);
@@ -113,6 +116,7 @@ public class ConnectedAssetRelatedMediaReferences extends AssetRelatedMediaRefer
      * @param template object to clone
      * @return new cloned object.
      */
+    @Override
     protected  AssetPropertyBase cloneElement(AssetDescriptor  parentAsset, AssetPropertyBase template)
     {
         return new AssetRelatedMediaReference(parentAsset, (AssetRelatedMediaReference)template);
@@ -127,6 +131,7 @@ public class ConnectedAssetRelatedMediaReferences extends AssetRelatedMediaRefer
      * @return list of elements corresponding to the supplied cache pointers.
      * @throws PropertyServerException there is a problem retrieving elements from the property (metadata) server.
      */
+    @Override
     protected  List<AssetPropertyBase> getCachedList(int  cacheStartPointer,
                                                      int  maximumSize) throws PropertyServerException
     {
@@ -145,9 +150,9 @@ public class ConnectedAssetRelatedMediaReferences extends AssetRelatedMediaRefer
                                                                                                          cacheStartPointer,
                                                                                                          maximumSize);
 
-            restExceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-            restExceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-            restExceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+            restExceptionHandler.detectAndThrowInvalidParameterException(restResult);
+            restExceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+            restExceptionHandler.detectAndThrowPropertyServerException(restResult);
 
             List<RelatedMediaReference>  beans = restResult.getList();
             if ((beans == null) || (beans.isEmpty()))

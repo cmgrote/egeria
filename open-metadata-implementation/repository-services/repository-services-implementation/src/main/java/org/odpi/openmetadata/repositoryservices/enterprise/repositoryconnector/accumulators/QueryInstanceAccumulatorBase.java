@@ -3,7 +3,8 @@
 package org.odpi.openmetadata.repositoryservices.enterprise.repositoryconnector.accumulators;
 
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceAuditHeader;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceHeader;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryValidator;
 
@@ -26,27 +27,27 @@ public class QueryInstanceAccumulatorBase extends QueryAccumulatorBase
      * @param auditLog audit log provides destination for log messages
      * @param repositoryValidator validator provides common validation routines
      */
-    QueryInstanceAccumulatorBase(String                            localMetadataCollectionId,
-                                 OMRSAuditLog                      auditLog,
-                                 OMRSRepositoryValidator           repositoryValidator)
+    QueryInstanceAccumulatorBase(String                  localMetadataCollectionId,
+                                 AuditLog                auditLog,
+                                 OMRSRepositoryValidator repositoryValidator)
     {
         super(localMetadataCollectionId, auditLog, repositoryValidator);
     }
 
 
     /**
-     * Return a flag indicating whether the incoming entity should be preferred over the current saved entity.
+     * Return a flag indicating whether the incoming element should be preferred over the current saved element.
      *
-     * @param currentSavedEntity entity returned from previous request
-     * @param incomingEntity entity just returned
-     * @return boolean flag - true means the incoming entity should be discarded
+     * @param currentSavedElement element returned from previous request
+     * @param incomingElement element just returned
+     * @return boolean flag - true means the incoming element should be discarded
      */
-    boolean currentInstanceIsBest(InstanceHeader currentSavedEntity,
-                                  InstanceHeader incomingEntity)
+    boolean currentInstanceIsBest(InstanceAuditHeader currentSavedElement,
+                                  InstanceAuditHeader incomingElement)
     {
-        if (currentSavedEntity != null)
+        if (currentSavedElement != null)
         {
-            return (incomingEntity.getVersion() <= currentSavedEntity.getVersion());
+            return (incomingElement.getVersion() <= currentSavedElement.getVersion());
         }
 
         return false;

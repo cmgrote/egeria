@@ -5,23 +5,14 @@ package org.odpi.openmetadata.repositoryservices.eventmanagement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import org.odpi.openmetadata.repositoryservices.events.*;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.InternalOMRSEventProcessingContext;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceGraph;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceProvenanceType;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefCategory;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefSummary;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryeventmapper.OMRSRepositoryEventProcessor;
-import org.odpi.openmetadata.repositoryservices.events.OMRSInstanceEvent;
-import org.odpi.openmetadata.repositoryservices.events.OMRSInstanceEventProcessor;
-import org.odpi.openmetadata.repositoryservices.events.OMRSInstanceEventProcessorInterface;
-import org.odpi.openmetadata.repositoryservices.events.OMRSInstanceEventType;
-import org.odpi.openmetadata.repositoryservices.events.OMRSTypeDefEvent;
-import org.odpi.openmetadata.repositoryservices.events.OMRSTypeDefEventProcessor;
-import org.odpi.openmetadata.repositoryservices.events.OMRSTypeDefEventProcessorInterface;
 import org.odpi.openmetadata.repositoryservices.events.future.OMRSFuture;
 import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorException;
@@ -52,9 +43,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
      * The audit log provides a verifiable record of the open metadata archives that have been loaded into
      * the open metadata repository.  The Logger is for standard debug.
      */
-    private OMRSAuditLog auditLog;
+    private AuditLog auditLog;
 
-    private static final Logger       log      = LoggerFactory.getLogger(OMRSRepositoryEventManager.class);
+    private static final Logger log = LoggerFactory.getLogger(OMRSRepositoryEventManager.class);
 
 
     /**
@@ -68,7 +59,7 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     public OMRSRepositoryEventManager(String                          eventManagerName,
                                       OMRSRepositoryEventExchangeRule exchangeRule,
                                       OMRSRepositoryContentValidator  repositoryValidator,
-                                      OMRSAuditLog                    auditLog)
+                                      AuditLog                        auditLog)
     {
         super(eventManagerName);
 
@@ -77,30 +68,17 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
         final String actionDescription = "Initialize OMRS Event Manager";
         final String methodName        = "OMRSRepositoryEventManager";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.INITIALIZING_EVENT_MANAGER;
-
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(eventManagerName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription,
+                            OMRSAuditCode.INITIALIZING_EVENT_MANAGER.getMessageDefinition(eventManagerName));
 
         /*
          * If the exchangeRule is null, throw exception
          */
         if (exchangeRule == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_EXCHANGE_RULE;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_EXCHANGE_RULE.getMessageDefinition(methodName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         this.exchangeRule = exchangeRule;
@@ -110,15 +88,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
          */
         if (repositoryValidator == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_REPOSITORY_VALIDATOR;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_REPOSITORY_VALIDATOR.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         this.repositoryValidator = repositoryValidator;
@@ -137,16 +109,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     {
         final String actionDescription = "Register TypeDef Event Processor";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.REGISTERING_EVENT_PROCESSOR;
-
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(typeDefEventConsumer.getEventProcessorName(),
-                                                            super.getEventProcessorName()),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription,
+                            OMRSAuditCode.REGISTERING_EVENT_PROCESSOR.getMessageDefinition(typeDefEventConsumer.getEventProcessorName(),
+                                                                                           super.getEventProcessorName()));
 
         typeDefEventConsumers.add(typeDefEventConsumer);
     }
@@ -162,16 +127,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     {
         final String actionDescription = "Register Instance Event Processor";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.REGISTERING_EVENT_PROCESSOR;
-
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(instanceEventConsumer.getEventProcessorName(),
-                                                            super.getEventProcessorName()),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription,
+                            OMRSAuditCode.REGISTERING_EVENT_PROCESSOR.getMessageDefinition(instanceEventConsumer.getEventProcessorName(),
+                                                                                           super.getEventProcessorName()));
 
         instanceEventConsumers.add(instanceEventConsumer);
     }
@@ -187,16 +145,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     {
         final String actionDescription = "Register Instance Event Processor";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.REGISTERING_EVENT_PROCESSOR;
-
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(repositoryEventProcessor.getEventProcessorName(),
-                                                            super.getEventProcessorName()),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription,
+                            OMRSAuditCode.REGISTERING_EVENT_PROCESSOR.getMessageDefinition(repositoryEventProcessor.getEventProcessorName(),
+                                                                                           super.getEventProcessorName()));
 
         instanceEventConsumers.add(repositoryEventProcessor);
         typeDefEventConsumers.add(repositoryEventProcessor);
@@ -211,17 +162,10 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     {
         final String actionDescription = "Start OMRS Event Manager";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.STARTING_EVENT_MANAGER;
-
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(super.eventProcessorName,
-                                                            Integer.toString(typeDefEventConsumers.size()),
-                                                            Integer.toString(instanceEventConsumers.size())),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription,
+                            OMRSAuditCode.STARTING_EVENT_MANAGER.getMessageDefinition(super.eventProcessorName,
+                                                                                      Integer.toString(typeDefEventConsumers.size()),
+                                                                                      Integer.toString(instanceEventConsumers.size())));
 
 
         /*
@@ -256,16 +200,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
 
         if (!typeDefEventBuffer.isEmpty())
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.DRAINING_TYPEDEF_EVENT_BUFFER;
-
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(super.eventProcessorName,
-                                                                Integer.toString(typeDefEventBuffer.size())),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OMRSAuditCode.DRAINING_TYPEDEF_EVENT_BUFFER.getMessageDefinition(super.eventProcessorName,
+                                                                                                 Integer.toString(typeDefEventBuffer.size())));
 
             for (OMRSTypeDefEvent event : typeDefEventBuffer)
             {
@@ -280,16 +217,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
 
         if (!instanceEventBuffer.isEmpty())
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.DRAINING_INSTANCE_EVENT_BUFFER;
-
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(super.eventProcessorName,
-                                                                Integer.toString(instanceEventBuffer.size())),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OMRSAuditCode.DRAINING_INSTANCE_EVENT_BUFFER.getMessageDefinition(super.eventProcessorName,
+                                                                                                  Integer.toString(instanceEventBuffer.size())));
 
             for (BufferedInstanceEvent event : instanceEventBuffer)
             {
@@ -299,7 +229,7 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                     //results from processing this event
                     
                     InternalOMRSEventProcessingContext.clear();
-                    
+                    InternalOMRSEventProcessingContext.getInstance().setCurrentMessageId(event.getMessageId());
                     this.distributeInstanceEvent(event.getEvent());
                     //Now that the buffered event has been distributed, we need to update the Future
                     //that the OpenMetadataTopicConnector is monitoring the reflect the state of
@@ -363,7 +293,7 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
     		
     		for (EntityDetail entity: eventEntities)
     		{
-    			if(exchangeRule.processInstanceEvent(entity))
+    			if (exchangeRule.processInstanceEvent(entity))
     			{
     				validEntities.add(entity);
     			}
@@ -464,9 +394,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
             //OMRSAsyncEventProcessingContext so that the event will not be
             //treated as consumed quite yet.
             
-            BufferedInstanceEvent event = new BufferedInstanceEvent(instanceEvent);
+            BufferedInstanceEvent event = new BufferedInstanceEvent(instanceEvent,
+                                                                    InternalOMRSEventProcessingContext.getInstance().getCurrentMessageId());
             instanceEventBuffer.add(event);
-            
             InternalOMRSEventProcessingContext context = InternalOMRSEventProcessingContext.getInstance();
             context.addAsyncProcessingResult(event.getFuture());
         }
@@ -580,13 +510,15 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
      * @param originatorServerType           type of server that the event came from.
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the entity with the new classification added.
+     * @param classification                 new classification
      */
-    public void processClassifiedEntityEvent(String       sourceName,
-                                             String       originatorMetadataCollectionId,
-                                             String       originatorServerName,
-                                             String       originatorServerType,
-                                             String       originatorOrganizationName,
-                                             EntityDetail entity)
+    public void processClassifiedEntityEvent(String         sourceName,
+                                             String         originatorMetadataCollectionId,
+                                             String         originatorServerName,
+                                             String         originatorServerType,
+                                             String         originatorOrganizationName,
+                                             EntityDetail   entity,
+                                             Classification classification)
     {
         if (repositoryValidator.validEntity(sourceName, entity))
         {
@@ -595,7 +527,8 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                                                originatorServerName,
                                                originatorServerType,
                                                originatorOrganizationName,
-                                               entity);
+                                               entity,
+                                               classification);
         }
     }
 
@@ -611,13 +544,15 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
      * @param originatorServerType           type of server that the event came from.
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the entity after the classification has been removed.
+     * @param originalClassification         classification that was removed
      */
-    public void processDeclassifiedEntityEvent(String       sourceName,
-                                               String       originatorMetadataCollectionId,
-                                               String       originatorServerName,
-                                               String       originatorServerType,
-                                               String       originatorOrganizationName,
-                                               EntityDetail entity)
+    public void processDeclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification)
     {
         if (repositoryValidator.validEntity(sourceName, entity))
         {
@@ -626,7 +561,8 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                                                  originatorServerName,
                                                  originatorServerType,
                                                  originatorOrganizationName,
-                                                 entity);
+                                                 entity,
+                                                 originalClassification);
         }
     }
 
@@ -642,13 +578,17 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
      * @param originatorServerType           type of server that the event came from.
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the entity after the classification has been changed.
+     * @param originalClassification         classification that was changed
+     * @param classification                 new classification
      */
-    public void processReclassifiedEntityEvent(String       sourceName,
-                                               String       originatorMetadataCollectionId,
-                                               String       originatorServerName,
-                                               String       originatorServerType,
-                                               String       originatorOrganizationName,
-                                               EntityDetail entity)
+    public void processReclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification,
+                                               Classification classification)
     {
         if (repositoryValidator.validEntity(sourceName, entity))
         {
@@ -657,7 +597,9 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                                                  originatorServerName,
                                                  originatorServerType,
                                                  originatorOrganizationName,
-                                                 entity);
+                                                 entity,
+                                                 originalClassification,
+                                                 classification);
         }
     }
 
@@ -724,6 +666,37 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                                              originatorServerType,
                                              originatorOrganizationName,
                                              entity);
+        }
+    }
+
+
+    /**
+     * An entity has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the version of the entity that has been purged.
+     */
+    public void processPurgedEntityEvent(String       sourceName,
+                                         String       originatorMetadataCollectionId,
+                                         String       originatorServerName,
+                                         String       originatorServerType,
+                                         String       originatorOrganizationName,
+                                         EntityDetail entity)
+    {
+        if (repositoryValidator.validEntity(sourceName, entity))
+        {
+            super.processPurgedEntityEvent(sourceName,
+                                           originatorMetadataCollectionId,
+                                           originatorServerName,
+                                           originatorServerType,
+                                           originatorOrganizationName,
+                                           entity);
         }
     }
 
@@ -1146,6 +1119,37 @@ public class OMRSRepositoryEventManager extends OMRSRepositoryEventBuilder
                                                    originatorServerType,
                                                    originatorOrganizationName,
                                                    relationship);
+        }
+    }
+
+
+    /**
+     * A relationship has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param relationship  details of the  relationship that has been purged.
+     */
+    public void processPurgedRelationshipEvent(String       sourceName,
+                                               String       originatorMetadataCollectionId,
+                                               String       originatorServerName,
+                                               String       originatorServerType,
+                                               String       originatorOrganizationName,
+                                               Relationship relationship)
+    {
+        if (repositoryValidator.validRelationship(sourceName, relationship))
+        {
+            super.processPurgedRelationshipEvent(sourceName,
+                                                 originatorMetadataCollectionId,
+                                                 originatorServerName,
+                                                 originatorServerType,
+                                                 originatorOrganizationName,
+                                                 relationship);
         }
     }
 

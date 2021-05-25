@@ -3,8 +3,8 @@
 package org.odpi.openmetadata.accessservices.assetowner.server.spring;
 
 
-import org.odpi.openmetadata.accessservices.assetowner.properties.FileSystem;
-import org.odpi.openmetadata.accessservices.assetowner.properties.Folder;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.accessservices.assetowner.rest.*;
 import org.odpi.openmetadata.accessservices.assetowner.server.FileSystemRESTServices;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDListResponse;
@@ -14,10 +14,14 @@ import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * AssetOnboardingResource supports the server-side capture of REST calls to add new asset definitions.
+ * FileSystemOnboardingResource supports the server-side capture of REST calls to add new file-based asset definitions.
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/asset-owner/users/{userId}")
+
+@Tag(name="Asset Owner OMAS", description="The Asset Owner OMAS provides APIs and notifications for tools and applications supporting the work of Asset Owners in protecting and enhancing their assets.\n" +
+        "\n", externalDocs=@ExternalDocumentation(description="Asset Owner Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/asset-owner/"))
+
 public class FileSystemOnboardingResource
 {
     private FileSystemRESTServices restAPI = new FileSystemRESTServices();
@@ -49,7 +53,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/file-systems")
+    @PostMapping(path = "/file-systems")
 
     public GUIDResponse   createFileSystemInCatalog(@PathVariable String                   serverName,
                                                     @PathVariable String                   userId,
@@ -74,7 +78,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders/{anchorGUID}")
+    @PostMapping(path = "/folders/{anchorGUID}")
 
     public GUIDListResponse createFolderStructureInCatalog(@PathVariable String              serverName,
                                                            @PathVariable String              userId,
@@ -99,7 +103,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders")
+    @PostMapping(path = "/folders")
 
     public GUIDListResponse createFolderStructureInCatalog(@PathVariable String              serverName,
                                                            @PathVariable String              userId,
@@ -123,13 +127,13 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/file-systems/{fileSystemGUID}/folders/{fileSystemGUID}/attach")
+    @PostMapping(path = "/file-systems/{fileSystemGUID}/folders/{fileSystemGUID}/attach")
 
-    public VoidResponse attachFolderToFileSystem(@PathVariable String          serverName,
-                                                 @PathVariable String          userId,
-                                                 @PathVariable String          fileSystemGUID,
-                                                 @PathVariable String          folderGUID,
-                                                 @RequestBody  NullRequestBody requestBody)
+    public VoidResponse attachFolderToFileSystem(@PathVariable                  String          serverName,
+                                                 @PathVariable                  String          userId,
+                                                 @PathVariable                  String          fileSystemGUID,
+                                                 @PathVariable                  String          folderGUID,
+                                                 @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.attachFolderToFileSystem(serverName, userId, fileSystemGUID, folderGUID, requestBody);
     }
@@ -149,13 +153,13 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/file-systems/{fileSystemGUID}/folders/{fileSystemGUID}/detach")
+    @PostMapping(path = "/file-systems/{fileSystemGUID}/folders/{fileSystemGUID}/detach")
 
-    public VoidResponse detachFolderFromFileSystem(@PathVariable String          serverName,
-                                                   @PathVariable String          userId,
-                                                   @PathVariable String          fileSystemGUID,
-                                                   @PathVariable String          folderGUID,
-                                                   @RequestBody  NullRequestBody requestBody)
+    public VoidResponse detachFolderFromFileSystem(@PathVariable                  String          serverName,
+                                                   @PathVariable                  String          userId,
+                                                   @PathVariable                  String          fileSystemGUID,
+                                                   @PathVariable                  String          folderGUID,
+                                                   @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.detachFolderFromFileSystem(serverName, userId, fileSystemGUID, folderGUID, requestBody);
     }
@@ -177,7 +181,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/assets/data-files")
+    @PostMapping(path = "/assets/data-files")
 
     public GUIDListResponse addDataFileAssetToCatalog(@PathVariable String                  serverName,
                                                       @PathVariable String                  userId,
@@ -205,7 +209,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/assets/data-folders")
+    @PostMapping(path = "/assets/data-folders")
 
     public GUIDListResponse addDataFolderAssetToCatalog(@PathVariable String                  serverName,
                                                         @PathVariable String                  userId,
@@ -230,13 +234,13 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/attach")
+    @PostMapping(path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/attach")
 
-    public VoidResponse  attachDataFileAssetToFolder(@PathVariable String          serverName,
-                                                     @PathVariable String          userId,
-                                                     @PathVariable String          folderGUID,
-                                                     @PathVariable String          fileGUID,
-                                                     @RequestBody  NullRequestBody requestBody)
+    public VoidResponse  attachDataFileAssetToFolder(@PathVariable                  String          serverName,
+                                                     @PathVariable                  String          userId,
+                                                     @PathVariable                  String          folderGUID,
+                                                     @PathVariable                  String          fileGUID,
+                                                     @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.attachDataFileAssetToFolder(serverName, userId, folderGUID, fileGUID, requestBody);
     }
@@ -258,13 +262,13 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/detach")
+    @PostMapping(path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/detach")
 
-    public VoidResponse  detachDataFileAssetFromFolder(@PathVariable String          serverName,
-                                                       @PathVariable String          userId,
-                                                       @PathVariable String          folderGUID,
-                                                       @PathVariable String          fileGUID,
-                                                       @RequestBody  NullRequestBody requestBody)
+    public VoidResponse  detachDataFileAssetFromFolder(@PathVariable                  String          serverName,
+                                                       @PathVariable                  String          userId,
+                                                       @PathVariable                  String          folderGUID,
+                                                       @PathVariable                  String          fileGUID,
+                                                       @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.detachDataFileAssetFromFolder(serverName, userId, folderGUID, fileGUID, requestBody);
     }
@@ -278,19 +282,20 @@ public class FileSystemOnboardingResource
      * @param userId calling user
      * @param folderGUID new parent folder
      * @param fileGUID unique identifier of the file to move
+     * @param requestBody null request body to satisfy REST protocol
      *
      * @return void or
      * InvalidParameterException one of the parameters is null or invalid or
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/move-to")
+    @PostMapping(path = "/folders/{folderGUID}/assets/data-files/{fileGUID}/move-to")
 
-    public VoidResponse  moveDataFileInCatalog(@PathVariable String          serverName,
-                                               @PathVariable String          userId,
-                                               @PathVariable String          folderGUID,
-                                               @PathVariable String          fileGUID,
-                                               @RequestBody  NullRequestBody requestBody)
+    public VoidResponse  moveDataFileInCatalog(@PathVariable                  String          serverName,
+                                               @PathVariable                  String          userId,
+                                               @PathVariable                  String          folderGUID,
+                                               @PathVariable                  String          fileGUID,
+                                               @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.moveDataFileInCatalog(serverName, userId, folderGUID, fileGUID, requestBody);
     }
@@ -304,37 +309,38 @@ public class FileSystemOnboardingResource
      * @param userId calling user
      * @param folderGUID new parent folder
      * @param dataFolderGUID unique identifier of the data folder to move
+     * @param requestBody null request body to satisfy REST protocol
      *
      * @return void or
      * InvalidParameterException one of the parameters is null or invalid or
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/folders/{folderGUID}/assets/data-folders/{dataFolderGUID}/move-to")
+    @PostMapping(path = "/folders/{folderGUID}/assets/data-folders/{dataFolderGUID}/move-to")
 
-    public VoidResponse  moveDataFolderInCatalog(@PathVariable String          serverName,
-                                                 @PathVariable String          userId,
-                                                 @PathVariable String          folderGUID,
-                                                 @PathVariable String          dataFolderGUID,
-                                                 @RequestBody  NullRequestBody requestBody)
+    public VoidResponse  moveDataFolderInCatalog(@PathVariable                  String          serverName,
+                                                 @PathVariable                  String          userId,
+                                                 @PathVariable                  String          folderGUID,
+                                                 @PathVariable                  String          dataFolderGUID,
+                                                 @RequestBody(required = false) NullRequestBody requestBody)
     {
         return restAPI.moveDataFolderInCatalog(serverName, userId, folderGUID, dataFolderGUID, requestBody);
     }
 
 
     /**
-     * Retrieve a FileSystem asset by its unique identifier (GUID).
+     * Retrieve a FileSystemProperties asset by its unique identifier (GUID).
      *
      * @param serverName name of calling server
      * @param userId calling user
      * @param fileSystemGUID unique identifier used to locate the file system
      *
-     * @return FileSystem properties or
+     * @return FileSystemProperties properties or
      * InvalidParameterException one of the parameters is null or invalid or
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/file-systems/{fileSystemGUID}")
+    @GetMapping(path = "/file-systems/{fileSystemGUID}")
 
     public FileSystemResponse getFileSystemByGUID(@PathVariable String  serverName,
                                                   @PathVariable String  userId,
@@ -345,7 +351,7 @@ public class FileSystemOnboardingResource
 
 
     /**
-     * Retrieve a FileSystem asset by its unique name.
+     * Retrieve a FileSystemProperties asset by its unique name.
      *
      * @param serverName name of calling server
      * @param userId calling user
@@ -356,7 +362,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/file-systems/by-name/{uniqueName}")
+    @GetMapping(path = "/file-systems/by-name/{uniqueName}")
 
     public FileSystemResponse getFileSystemByUniqueName(@PathVariable String  serverName,
                                                         @PathVariable String  userId,
@@ -379,7 +385,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/file-systems")
+    @GetMapping(path = "/file-systems")
 
     public GUIDListResponse getFileSystems(@PathVariable String  serverName,
                                            @PathVariable String  userId,
@@ -392,18 +398,18 @@ public class FileSystemOnboardingResource
 
 
     /**
-     * Retrieve a Folder asset by its unique identifier (GUID).
+     * Retrieve a FolderProperties asset by its unique identifier (GUID).
      *
      * @param serverName name of calling server
      * @param userId calling user
      * @param folderGUID unique identifier used to locate the folder
      *
-     * @return Folder properties or
+     * @return FolderProperties properties or
      * InvalidParameterException one of the parameters is null or invalid or
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/folders/{folderGUID}")
+    @GetMapping(path = "/folders/{folderGUID}")
 
     public FolderResponse getFolderByGUID(@PathVariable String  serverName,
                                           @PathVariable String  userId,
@@ -420,12 +426,12 @@ public class FileSystemOnboardingResource
      * @param userId calling user
      * @param requestBody path name
      *
-     * @return Folder properties or
+     * @return FolderProperties properties or
      * InvalidParameterException one of the parameters is null or invalid or
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/folders/by-path-name")
+    @GetMapping(path = "/folders/by-path-name")
 
     public FolderResponse getFolderByPathName(@PathVariable String                serverName,
                                               @PathVariable String                userId,
@@ -449,7 +455,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/{anchorGUID}/folders")
+    @GetMapping(path = "/{anchorGUID}/folders")
 
     public GUIDListResponse  getNestedFolders(@PathVariable String  serverName,
                                               @PathVariable String  userId,
@@ -475,7 +481,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/folders/{folderGUID}/files")
+    @GetMapping(path = "/folders/{folderGUID}/files")
 
     public GUIDListResponse  getFolderFiles(@PathVariable String  serverName,
                                             @PathVariable String  userId,
@@ -505,7 +511,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server
      * UserNotAuthorizedException security access problem
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/assets/data-files/avro")
+    @PostMapping(path = "/assets/data-files/avro")
 
     public GUIDListResponse  addAvroFileToCatalog(@PathVariable String                  serverName,
                                                   @PathVariable String                  userId,
@@ -513,6 +519,7 @@ public class FileSystemOnboardingResource
     {
         return restAPI.addAvroFileToCatalog(serverName, userId, requestBody);
     }
+
 
     /*
      * ==============================================
@@ -533,7 +540,7 @@ public class FileSystemOnboardingResource
      * PropertyServerException problem accessing property server or
      * UserNotAuthorizedException security access problem
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/assets/data-files/csv")
+    @PostMapping(path = "/assets/data-files/csv")
 
     public GUIDListResponse addCSVFileToCatalog(@PathVariable String                     serverName,
                                                 @PathVariable String                     userId,

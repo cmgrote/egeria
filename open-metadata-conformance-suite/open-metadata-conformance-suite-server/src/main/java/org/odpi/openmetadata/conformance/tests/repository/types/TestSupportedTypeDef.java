@@ -3,7 +3,6 @@
 package org.odpi.openmetadata.conformance.tests.repository.types;
 
 import org.odpi.openmetadata.conformance.tests.repository.RepositoryConformanceTestCase;
-import org.odpi.openmetadata.conformance.workbenches.repository.RepositoryConformanceProfileRequirement;
 import org.odpi.openmetadata.conformance.workbenches.repository.RepositoryConformanceWorkPad;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.*;
@@ -216,24 +215,33 @@ public class TestSupportedTypeDef extends RepositoryConformanceTestCase
         /*
          * Verify that the repository confirms it supports this TypeDef
          */
-        assertCondition(metadataCollection.verifyTypeDef(workPad.getLocalServerUserId(), typeDef),
+        long start = System.currentTimeMillis();
+        boolean verified = metadataCollection.verifyTypeDef(workPad.getLocalServerUserId(), typeDef);
+        long elapsedTime = System.currentTimeMillis() - start;
+        assertCondition(verified,
                         assertion13,
                         testTypeName + assertionMsg13,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "verifyTypeDef",
+                        elapsedTime);
 
         /*
          * Retrieve the TypeDef by name and confirm the result is consistent.
          */
+        start = System.currentTimeMillis();
         TypeDef   resultObject = metadataCollection.getTypeDefByName(workPad.getLocalServerUserId(), typeDef.getName());
+        elapsedTime = System.currentTimeMillis() - start;
 
         verifyCondition((resultObject != null),
                         assertion14,
                         testTypeName + assertionMsg14,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "getTypeDefByName",
+                        elapsedTime);
 
-        verifyCondition(typeDef.equals(resultObject),
+        verifyCondition(( (typeDef.getVersion() != resultObject.getVersion()) || typeDef.equals(resultObject) ),
                         assertion15,
                         testTypeName + assertionMsg15,
                         super.defaultProfileId,
@@ -242,15 +250,19 @@ public class TestSupportedTypeDef extends RepositoryConformanceTestCase
         /*
          * Retrieve the TypeDef by GUID and confirm the result is consistent.
          */
+        start = System.currentTimeMillis();
         resultObject = metadataCollection.getTypeDefByGUID(workPad.getLocalServerUserId(), typeDef.getGUID());
+        elapsedTime = System.currentTimeMillis() - start;
 
         verifyCondition((resultObject != null),
                         assertion16,
                         testTypeName + assertionMsg16,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "getTypeDefByGUID",
+                        elapsedTime);
 
-        verifyCondition(typeDef.equals(resultObject),
+        verifyCondition(( (typeDef.getVersion() != resultObject.getVersion()) || typeDef.equals(resultObject) ),
                         assertion17,
                         testTypeName + assertionMsg17,
                         super.defaultProfileId,
@@ -259,16 +271,36 @@ public class TestSupportedTypeDef extends RepositoryConformanceTestCase
         /*
          * Find the TypeDef by name and confirm the result is consistent.
          */
+        start = System.currentTimeMillis();
         TypeDefGallery resultGallery = metadataCollection.findTypesByName(workPad.getLocalServerUserId(), typeDef.getName());
+        elapsedTime = System.currentTimeMillis() - start;
         List<TypeDef>  resultList    = resultGallery.getTypeDefs();
 
         verifyCondition((resultList != null),
                         assertion18,
                         testTypeName + assertionMsg18,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "findTypesByName",
+                        elapsedTime);
 
-        verifyCondition(((resultList != null) && (resultList.contains(typeDef))),
+        /*
+         * Look in the result list for a typedef with the same name, and verify that it matches if it claims to be at the same version.
+         */
+        TypeDef typeDefFromGallery = null;
+        if (resultList != null && !resultList.isEmpty())
+        {
+            String typeDefName = typeDef.getName();
+            for (TypeDef td : resultList)
+            {
+                if (td.getName().equals(typeDefName))
+                {
+                    typeDefFromGallery = td;
+                    break;
+                }
+            }
+        }
+        verifyCondition(((resultList != null) && (!resultList.isEmpty()) && (typeDefFromGallery!= null) && ( (typeDef.getVersion() != resultObject.getVersion()) || typeDef.equals(resultObject) )),
                         assertion19,
                         testTypeName + assertionMsg19,
                         super.defaultProfileId,

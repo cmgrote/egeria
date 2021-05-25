@@ -3,7 +3,7 @@
 package org.odpi.openmetadata.accessservices.stewardshipaction.server;
 
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHandler;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstanceHandler;
 
 
 /**
@@ -11,14 +11,14 @@ import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHa
  * access service instances.  The instance map is thread-safe.  Instances are added
  * and removed by the StewardshipActionAdmin class.
  */
-class StewardshipActionInstanceHandler extends OCFOMASServiceInstanceHandler
+class StewardshipActionInstanceHandler extends OMASServiceInstanceHandler
 {
     /**
      * Default constructor registers the access service
      */
     StewardshipActionInstanceHandler()
     {
-        super(AccessServiceDescription.STEWARDSHIP_ACTION_OMAS.getAccessServiceName() + " OMAS");
+        super(AccessServiceDescription.STEWARDSHIP_ACTION_OMAS.getAccessServiceFullName());
 
         StewardshipActionRegistration.registerAccessService();
     }

@@ -12,13 +12,15 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
 /**
- * CommentRequestBody provides a structure for passing a comment as a request body over a REST API.
+ * LogRecordRequestBody provides a structure for passing a log record as a request body over a REST API.
  */
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class LogRecordRequestBody extends AssetConsumerOMASAPIRequestBody
 {
+    private static final long    serialVersionUID = 1L;
+
     private String connectorInstanceId = null;
     private String connectionName      = null;
     private String connectorType       = null;

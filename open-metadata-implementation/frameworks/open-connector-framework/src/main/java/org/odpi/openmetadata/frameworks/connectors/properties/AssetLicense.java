@@ -20,6 +20,8 @@ import java.util.Objects;
  */
 public class AssetLicense extends AssetReferenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     protected License   licenseBean;
 
 
@@ -234,6 +236,7 @@ public class AssetLicense extends AssetReferenceable
     }
 
 
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -247,7 +250,7 @@ public class AssetLicense extends AssetReferenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetLicense))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -256,6 +259,18 @@ public class AssetLicense extends AssetReferenceable
             return false;
         }
         AssetLicense that = (AssetLicense) objectToCompare;
-        return Objects.equals(getLicenseBean(), that.getLicenseBean());
+        return Objects.equals(licenseBean, that.licenseBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), licenseBean);
     }
 }

@@ -3,7 +3,7 @@
 package org.odpi.openmetadata.accessservices.devops.server;
 
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHandler;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstanceHandler;
 
 
 /**
@@ -11,14 +11,14 @@ import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHa
  * access service instances.  The instance map is thread-safe.  Instances are added
  * and removed by the DevOpsAdmin class.
  */
-class DevOpsInstanceHandler extends OCFOMASServiceInstanceHandler
+class DevOpsInstanceHandler extends OMASServiceInstanceHandler
 {
     /**
      * Default constructor registers the access service
      */
     DevOpsInstanceHandler()
     {
-        super(AccessServiceDescription.DEVOPS_OMAS.getAccessServiceName() + " OMAS");
+        super(AccessServiceDescription.DEVOPS_OMAS.getAccessServiceFullName());
 
         DevOpsRegistration.registerAccessService();
     }

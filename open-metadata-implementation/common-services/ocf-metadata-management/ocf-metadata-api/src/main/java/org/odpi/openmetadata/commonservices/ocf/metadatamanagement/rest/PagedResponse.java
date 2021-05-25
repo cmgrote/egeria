@@ -4,6 +4,7 @@ package org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest;
 
 import com.fasterxml.jackson.annotation.*;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -36,10 +37,14 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
                 @JsonSubTypes.Type(value = RelatedAssetsResponse.class, name = "RelatedAssetsResponse"),
                 @JsonSubTypes.Type(value = RelatedMediaReferencesResponse.class, name = "RelatedMediaReferencesResponse"),
                 @JsonSubTypes.Type(value = SchemaAttributesResponse.class, name = "SchemaAttributesResponse"),
-                @JsonSubTypes.Type(value = TagsResponse.class, name = "TagsResponse")
+                @JsonSubTypes.Type(value = TagsResponse.class, name = "TagsResponse"),
+                @JsonSubTypes.Type(value = ValidValuesResponse.class, name = "ValidValuesResponse"),
+                @JsonSubTypes.Type(value = ReferenceablesResponse.class, name = "ReferenceablesResponse")
         })
 public class PagedResponse extends OCFOMASAPIResponse
 {
+    private static final long    serialVersionUID = 1L;
+
     private int        startingFromElement = 0;
 
     /**
@@ -99,9 +104,13 @@ public class PagedResponse extends OCFOMASAPIResponse
     {
         return "PagedResponse{" +
                 "startingFromElement=" + startingFromElement +
-                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +

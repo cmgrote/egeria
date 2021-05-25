@@ -8,13 +8,12 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Test the overridden methods of OMRSRESTAPIResponse
+ * Test the overridden methods of OMRSAPIResponse
  */
 public class TestOMRSAPIResponse
 {
     @Test public void TestToString()
     {
-        assertTrue(new MockAPIResponse().toString().contains("OMRSRESTAPIResponse"));
-
+        assertTrue(new MockAPIResponse().toString().contains("OMRSAPIResponse"));
     }
 }

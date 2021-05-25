@@ -3,20 +3,17 @@
 
 package org.odpi.openmetadata.accessservices.assetowner.client;
 
-
 import org.odpi.openmetadata.accessservices.assetowner.api.*;
-import org.odpi.openmetadata.accessservices.assetowner.properties.GovernanceZone;
-import org.odpi.openmetadata.accessservices.assetowner.rest.ZoneListResponse;
-import org.odpi.openmetadata.accessservices.assetowner.rest.ZoneRequestBody;
-import org.odpi.openmetadata.accessservices.assetowner.rest.ZoneResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.NullRequestBody;
-import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
+import org.odpi.openmetadata.accessservices.assetowner.client.rest.AssetOwnerRESTClient;
+import org.odpi.openmetadata.accessservices.assetowner.metadataelements.AssetElement;
+import org.odpi.openmetadata.accessservices.assetowner.properties.AssetProperties;
+import org.odpi.openmetadata.accessservices.assetowner.properties.SchemaAttributeProperties;
+import org.odpi.openmetadata.accessservices.assetowner.properties.SchemaTypeProperties;
+import org.odpi.openmetadata.accessservices.assetowner.properties.TemplateProperties;
+import org.odpi.openmetadata.accessservices.assetowner.rest.*;
+import org.odpi.openmetadata.commonservices.ffdc.rest.*;
 import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.client.ConnectedAssetClientBase;
-import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest.*;
-import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.AnnotationListResponse;
-import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.DiscoveryAnalysisReportListResponse;
-import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.StatusRequestBody;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.*;
 import org.odpi.openmetadata.frameworks.connectors.properties.AssetUniverse;
@@ -35,16 +32,37 @@ import java.util.Map;
  * This client is initialized with the URL and name of the server that is running the Asset Owner OMAS.
  * This server is responsible for locating and managing the asset owner's definitions exchanged with this client.
  */
-public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboardingInterface,
+public class AssetOwner extends ConnectedAssetClientBase implements AssetKnowledgeInterface,
+                                                                    AssetOnboardingInterface,
                                                                     AssetClassificationInterface,
-                                                                    AssetVisibilityInterface,
                                                                     AssetReviewInterface,
-                                                                    AssetDecommissioningInterface
+                                                                    AssetDecommissioningInterface,
+                                                                    AssetDuplicateManagementInterface
 
 {
-    private AssetOwnerRESTClient restClient;               /* Initialized in constructor */
+    protected AssetOwnerRESTClient restClient;               /* Initialized in constructor */
 
     private static final String  serviceURLName = "asset-owner";
+    private static final String  defaultAssetType = "Asset";
+
+
+    /**
+     * Create a new client with no authentication embedded in the HTTP request.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param auditLog logging destination
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public AssetOwner(String   serverName,
+                      String   serverPlatformRootURL,
+                      AuditLog auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        this.restClient = new AssetOwnerRESTClient(serverName, serverPlatformRootURL, auditLog);
+    }
 
 
     /**
@@ -72,6 +90,31 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
      * @param userId caller's userId embedded in all HTTP requests
      * @param password caller's userId embedded in all HTTP requests
+     * @param auditLog logging destination
+     *
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public AssetOwner(String   serverName,
+                      String   serverPlatformRootURL,
+                      String   userId,
+                      String   password,
+                      AuditLog auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        this.restClient = new AssetOwnerRESTClient(serverName, serverPlatformRootURL, userId, password, auditLog);
+    }
+
+
+    /**
+     * Create a new client that passes userId and password in each HTTP request.  This is the
+     * userId/password of the calling server.  The end user's userId is sent on each request.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param userId caller's userId embedded in all HTTP requests
+     * @param password caller's userId embedded in all HTTP requests
      * @throws InvalidParameterException there is a problem creating the client-side components to issue any
      * REST API calls.
      */
@@ -83,6 +126,87 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         super(serverName, serverPlatformRootURL);
 
         this.restClient = new AssetOwnerRESTClient(serverName, serverPlatformRootURL, userId, password);
+    }
+
+
+    /**
+     * Create a new client that is going to be used in an OMAG Server (view service or integration service typically).
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param restClient client that issues the REST API calls
+     * @param maxPageSize maximum number of results supported by this server
+     * @param auditLog logging destination
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public AssetOwner(String               serverName,
+                      String               serverPlatformRootURL,
+                      AssetOwnerRESTClient restClient,
+                      int                  maxPageSize,
+                      AuditLog             auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        invalidParameterHandler.setMaxPagingSize(maxPageSize);
+
+        this.restClient = restClient;
+    }
+
+
+    /**
+     * Return the asset subtype names.
+     *
+     * @param userId calling user
+     * @return list of type names that are subtypes of asset
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public List<String>  getTypesOfAsset(String userId) throws InvalidParameterException,
+                                                               UserNotAuthorizedException,
+                                                               PropertyServerException
+    {
+        final String   methodName = "getTypesOfAsset";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/sub-types";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+
+        NameListResponse restResult = restClient.callNameListGetRESTCall(methodName,
+                                                                         serverPlatformRootURL + urlTemplate,
+                                                                         serverName,
+                                                                         userId);
+
+        return restResult.getNames();
+    }
+
+
+    /**
+     * Return the asset subtype names.
+     *
+     * @param userId calling user
+     * @return list of type names that are subtypes of asset
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public Map<String, String>  getTypesOfAssetWithDescriptions(String userId) throws InvalidParameterException,
+                                                                                      UserNotAuthorizedException,
+                                                                                      PropertyServerException
+    {
+        final String   methodName = "getTypesOfAssetWithDescriptions";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/sub-types/descriptions";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+
+        StringMapResponse restResult = restClient.callStringMapGetRESTCall(methodName,
+                                                                           serverPlatformRootURL + urlTemplate,
+                                                                           serverName,
+                                                                           userId);
+
+        return restResult.getStringMap();
     }
 
 
@@ -108,6 +232,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public String  addAssetToCatalog(String               userId,
                                      String               typeName,
                                      String               qualifiedName,
@@ -118,72 +243,145 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
                                                                                      UserNotAuthorizedException,
                                                                                      PropertyServerException
     {
-        final String   methodName = "addAssetToCatalog";
-        final String   typeNameParameter = "typeName";
-        final String   qualifiedNameParameter = "qualifiedName";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}";
+        final String methodName             = "addAssetToCatalog";
+        final String qualifiedNameParameter = "qualifiedName";
 
         invalidParameterHandler.validateUserId(userId, methodName);
-        invalidParameterHandler.validateName(typeName, typeNameParameter, methodName);
         invalidParameterHandler.validateName(qualifiedName, qualifiedNameParameter, methodName);
 
-        AssetRequestBody  requestBody = new AssetRequestBody();
+        AssetProperties assetProperties = new AssetProperties();
 
-        requestBody.setQualifiedName(qualifiedName);
-        requestBody.setDisplayName(displayName);
-        requestBody.setDescription(description);
-        requestBody.setAdditionalProperties(additionalProperties);
-        requestBody.setExtendedProperties(extendedProperties);
+        assetProperties.setTypeName(typeName);
+        assetProperties.setQualifiedName(qualifiedName);
+        assetProperties.setDisplayName(displayName);
+        assetProperties.setDescription(description);
+        assetProperties.setAdditionalProperties(additionalProperties);
+        assetProperties.setExtendedProperties(extendedProperties);
 
-        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  typeName);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
-        return restResult.getGUID();
+        return this.addAssetToCatalog(userId, assetProperties);
     }
 
 
     /**
-     * Links the supplied schema to the asset.  If the schema has the GUID set, it is assumed to refer to
-     * an existing schema defined in the metadata repository.  If this schema is either not found, or
-     * already attached to an asset, then an error occurs.  If the GUID is null then a new schemaType
-     * is added to the metadata repository and attached to the asset.  If another schema is currently
-     * attached to the asset, it is unlinked and deleted.
+     * Add a comprehensive asset description to the catalog.
      *
      * @param userId calling user
-     * @param assetGUID unique identifier of the asset that the schema is to be attached to
-     * @param schemaType schema to attach
-     * @param schemaAttributes list of schema attribute objects.
+     * @param assetProperties properties for the asset
      *
-     * @return unique identifier (guid) of the schema
+     * @return unique identifier (guid) of the asset
      *
      * @throws InvalidParameterException full path or userId is null
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public String   addSchemaToAsset(String                userId,
-                                     String                assetGUID,
-                                     SchemaType            schemaType,
-                                     List<SchemaAttribute> schemaAttributes) throws InvalidParameterException,
-                                                                                    UserNotAuthorizedException,
-                                                                                    PropertyServerException
+    @Override
+    public String  addAssetToCatalog(String          userId,
+                                     AssetProperties assetProperties) throws InvalidParameterException,
+                                                                             UserNotAuthorizedException,
+                                                                             PropertyServerException
     {
-        final String   methodName = "addSchemaToAsset";
+        final String methodName                   = "addAssetToCatalog";
+        final String assetPropertiesParameterName = "assetProperties";
+        final String qualifiedNameParameter       = "assetProperties.getQualifiedName()";
+        final String urlTemplate                  = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}";
 
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateObject(assetProperties, assetPropertiesParameterName, methodName);
+        invalidParameterHandler.validateName(assetProperties.getQualifiedName(), qualifiedNameParameter, methodName);
+
+        if (assetProperties.getTypeName() == null)
+        {
+            assetProperties.setTypeName(defaultAssetType);
+        }
+
+        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
+                                                                  serverPlatformRootURL + urlTemplate,
+                                                                  assetProperties,
+                                                                  serverName,
+                                                                  userId,
+                                                                  assetProperties.getTypeName());
+
+        return restResult.getGUID();
+    }
+
+
+
+    /**
+     * Create a new metadata element to represent an asset using an existing asset as a template.
+     *
+     * @param userId calling user
+     * @param templateGUID unique identifier of the metadata element to copy
+     * @param templateProperties properties that override the template
+     *
+     * @return unique identifier of the new metadata element
+     *
+     * @throws InvalidParameterException  one of the parameters is invalid
+     * @throws UserNotAuthorizedException the user is not authorized to issue this request
+     * @throws PropertyServerException    there is a problem reported in the open metadata server(s)
+     */
+    public String addAssetToCatalogUsingTemplate(String             userId,
+                                                 String             templateGUID,
+                                                 TemplateProperties templateProperties) throws InvalidParameterException,
+                                                                                               UserNotAuthorizedException,
+                                                                                               PropertyServerException
+    {
+        final String methodName                  = "createDatabaseFromTemplate";
+        final String templateGUIDParameterName   = "templateGUID";
+        final String propertiesParameterName     = "templateProperties";
+        final String qualifiedNameParameterName  = "qualifiedName";
+        final String urlTemplate                 = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/from-template/{2}";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(templateGUID, templateGUIDParameterName, methodName);
+        invalidParameterHandler.validateObject(templateProperties, propertiesParameterName, methodName);
+        invalidParameterHandler.validateName(templateProperties.getQualifiedName(), qualifiedNameParameterName, methodName);
+
+        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
+                                                                  serverPlatformRootURL + urlTemplate,
+                                                                  templateProperties,
+                                                                  serverName,
+                                                                  userId,
+                                                                  templateGUID);
+
+        return restResult.getGUID();
+    }
+
+
+
+    /**
+     * Stores the supplied schema details in the catalog and attaches it to the asset.  If another schema is currently
+     * attached to the asset, it is unlinked and deleted.  If more attributes need to be added in addition to the
+     * ones supplied then this can be done with addSchemaAttributesToSchemaType().
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @param schemaType schema type to create and attach directly to the asset.
+     * @param schemaAttributes optional schema attributes.
+     *
+     * @return guid of the schema type or
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public String   addCombinedSchemaToAsset(String                          userId,
+                                             String                          assetGUID,
+                                             SchemaTypeProperties            schemaType,
+                                             List<SchemaAttributeProperties> schemaAttributes) throws InvalidParameterException,
+                                                                                                      UserNotAuthorizedException,
+                                                                                                      PropertyServerException
+    {
+        final String   methodName = "addCombinedSchemaToAsset";
         final String   assetGUIDParameter = "assetGUID";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schema-type";
+        final String   schemaTypeParameter = "schemaType";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/with-attributes";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateObject(schemaType, schemaTypeParameter, methodName);
 
-        SchemaRequestBody  requestBody = new SchemaRequestBody();
+        CombinedSchemaRequestBody requestBody = new CombinedSchemaRequestBody();
 
         requestBody.setSchemaType(schemaType);
         requestBody.setSchemaAttributes(schemaAttributes);
@@ -195,53 +393,257 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
                                                                   userId,
                                                                   assetGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        return restResult.getGUID();
+    }
+
+
+
+    /**
+     * Stores the supplied schema type in the catalog and attaches it to the asset.  If another schema is currently
+     * attached to the asset, it is unlinked and deleted.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @param schemaType schema type to create and attach directly to the asset.
+     *
+     * @return guid of the new schema type or
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public String   addSchemaTypeToAsset(String               userId,
+                                         String               assetGUID,
+                                         SchemaTypeProperties schemaType) throws InvalidParameterException,
+                                                                                 UserNotAuthorizedException,
+                                                                                 PropertyServerException
+    {
+        final String   methodName = "addSchemaTypeToAsset";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   schemaTypeParameter = "schemaType";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateObject(schemaType, schemaTypeParameter, methodName);
+
+        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
+                                                                  serverPlatformRootURL + urlTemplate,
+                                                                  schemaType,
+                                                                  serverName,
+                                                                  userId,
+                                                                  assetGUID);
 
         return restResult.getGUID();
-
     }
 
 
     /**
-     * Adds attributes to a complex schema type like a relational table or a structured document.
-     * This method can be called repeatedly to add many attributes to a schema.
+     * Links the supplied schema type directly to the asset.  If this schema is either not found, or
+     * already attached to an asset, then an error occurs.  If another schema is currently
+     * attached to the asset, it is unlinked and deleted.
      *
      * @param userId calling user
-     * @param schemaTypeGUID unique identifier if the schema to anchor these attributes to.
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @param schemaTypeGUID unique identifier of the schema type to attach
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void   attachSchemaTypeToAsset(String            userId,
+                                          String            assetGUID,
+                                          String            schemaTypeGUID) throws InvalidParameterException,
+                                                                                   UserNotAuthorizedException,
+                                                                                   PropertyServerException
+    {
+        final String   methodName = "attachSchemaTypeToAsset";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   schemaTypeParameter = "schemaTypeGUID";
+        final String   urlTemplate
+                = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/{3}/attach";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(schemaTypeGUID, schemaTypeParameter, methodName);
+
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        schemaTypeGUID);
+    }
+
+
+    /**
+     * Unlinks the schema from the asset but does not delete it.  This means it can be be reattached to a different asset.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @return guid of detached schema type
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public String detachSchemaTypeFromAsset(String          userId,
+                                            String          assetGUID) throws InvalidParameterException,
+                                                                              UserNotAuthorizedException,
+                                                                              PropertyServerException
+    {
+        final String   methodName = "detachSchemaTypeFromAsset";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   urlTemplate
+                = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/detach";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
+                                                                  serverPlatformRootURL + urlTemplate,
+                                                                  nullRequestBody,
+                                                                  serverName,
+                                                                  userId,
+                                                                  assetGUID);
+
+        return restResult.getGUID();
+    }
+
+
+    /**
+     * Detaches and deletes an asset's schema.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void  deleteAssetSchemaType(String          userId,
+                                       String          assetGUID) throws InvalidParameterException,
+                                                                         UserNotAuthorizedException,
+                                                                         PropertyServerException
+    {
+        final String   methodName = "deleteAssetSchemaType";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   urlTemplate
+                = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/delete";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        restClient.callGUIDPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
+    }
+
+
+    /**
+     * Adds attributes to a complex schema type like a relational table, avro schema or a structured document.
+     * This method can be called repeatedly to add many attributes to a schema.
+     *
+     * @param serverName name of the server instance to connect to
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @param parentGUID unique identifier of the schema element to anchor these attributes to.
      * @param schemaAttributes list of schema attribute objects.
      *
      * @throws InvalidParameterException full path or userId is null
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public void   addSchemaAttributesToSchema(String                 userId,
-                                              String                 schemaTypeGUID,
-                                              List<SchemaAttribute>  schemaAttributes) throws InvalidParameterException,
-                                                                                              UserNotAuthorizedException,
-                                                                                              PropertyServerException
+    @Override
+    public void addSchemaAttributes(String                          serverName,
+                                    String                          userId,
+                                    String                          assetGUID,
+                                    String                          parentGUID,
+                                    List<SchemaAttributeProperties> schemaAttributes) throws InvalidParameterException,
+                                                                                             UserNotAuthorizedException,
+                                                                                             PropertyServerException
     {
-        final String   methodName = "addSchemaAttributesToSchema";
-
-        final String   schemaTypeGUIDParameter = "schemaTypeGUID";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/schemas/{2}/schema-attributes";
+        final String   methodName = "addSchemaAttributesToSchemaType";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   parentGUIDParameter = "parentGUID";
+        final String   schemaAttributesParameter = "schemaAttributes";
+        final String   urlTemplate
+                = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/{3}/schema-attributes/list";
 
         invalidParameterHandler.validateUserId(userId, methodName);
-        invalidParameterHandler.validateGUID(schemaTypeGUID, schemaTypeGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(parentGUID, parentGUIDParameter, methodName);
+        invalidParameterHandler.validateObject(schemaAttributes, schemaAttributesParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  schemaAttributes,
-                                                                  serverName,
-                                                                  userId,
-                                                                  schemaTypeGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        schemaAttributes,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        parentGUID);
     }
 
+
+    /**
+     * Adds a schema attribute to a complex schema type like a relational table, avro schema or a structured document.
+     * This method can be called repeatedly to add many attributes to a schema.  The GUID returned can be used to add
+     * nested attributes.
+     *
+     * @param serverName name of the server instance to connect to
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset that the schema is to be attached to
+     * @param parentGUID unique identifier of the schema element to anchor these attributes to.
+     * @param schemaAttribute schema attribute object to add.
+     *
+     * @return unique identifier for the new schema attribute or
+     *
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public String addSchemaAttribute(String                    serverName,
+                                     String                    userId,
+                                     String                    assetGUID,
+                                     String                    parentGUID,
+                                     SchemaAttributeProperties schemaAttribute) throws InvalidParameterException,
+                                                                                       UserNotAuthorizedException,
+                                                                                       PropertyServerException
+    {
+        final String   methodName = "addSchemaAttributes";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   parentGUIDParameter = "parentGUID";
+        final String   schemaAttributeParameter = "schemaAttribute";
+        final String   qualifiedNameParameter = "schemaAttribute.getQualifiedName()";
+        final String   urlTemplate
+                = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/schemas/{3}/schema-attributes";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(parentGUID, parentGUIDParameter, methodName);
+        invalidParameterHandler.validateObject(schemaAttribute, schemaAttributeParameter, methodName);
+        invalidParameterHandler.validateName(schemaAttribute.getQualifiedName(), qualifiedNameParameter, methodName);
+
+        GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
+                                                                  serverPlatformRootURL + urlTemplate,
+                                                                  schemaAttribute,
+                                                                  serverName,
+                                                                  userId,
+                                                                  assetGUID,
+                                                                  parentGUID);
+
+        return restResult.getGUID();
+    }
 
 
     /**
@@ -256,6 +658,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void addConnectionToAsset(String     userId,
                                      String     assetGUID,
                                      String     assetSummary,
@@ -276,16 +679,12 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         requestBody.setShortDescription(assetSummary);
         requestBody.setConnection(connection);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
@@ -304,11 +703,13 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @param assetGUID unique identifier of asset
      * @param glossaryTermGUID unique identifier of the glossary term
      * @param assetElementGUID element to link it to - its type must inherit from Referenceable.
+     *                         If null then the assetGUID is used.
      *
      * @throws InvalidParameterException one of the parameters is null or invalid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void  addSemanticAssignment(String    userId,
                                        String    assetGUID,
                                        String    glossaryTermGUID,
@@ -319,26 +720,64 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         final String   methodName = "addSemanticAssignment";
         final String   assetGUIDParameter = "assetGUID";
         final String   glossaryTermParameter = "glossaryTermGUID";
-        final String   assetElementParameter = "assetElementGUID";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/meanings/{3}/elements/{4}";
+        final String   assetURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/meanings/{3}";
+        final String   elementURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/attachments/{3}/meanings/{4}";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(glossaryTermGUID, glossaryTermParameter, methodName);
-        invalidParameterHandler.validateGUID(assetElementGUID, assetElementParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  nullRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID,
-                                                                  glossaryTermGUID,
-                                                                  assetElementGUID);
+        if (assetElementGUID == null)
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + assetURLTemplate, nullRequestBody, serverName, userId, assetGUID, glossaryTermGUID);
+        }
+        else
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + elementURLTemplate, nullRequestBody, serverName, userId, assetGUID, assetElementGUID, glossaryTermGUID);
+        }
+    }
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+
+    /**
+     * Remove the relationship between a glossary term and an element in an Asset description (typically
+     * a field in the schema).
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of asset
+     * @param glossaryTermGUID unique identifier of the glossary term
+     * @param assetElementGUID element to link it to - its type must inherit from Referenceable.
+     *                         If null then the assetGUID is used.
+     *
+     * @throws InvalidParameterException one of the parameters is null or invalid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void  removeSemanticAssignment(String    userId,
+                                          String    assetGUID,
+                                          String    glossaryTermGUID,
+                                          String    assetElementGUID) throws InvalidParameterException,
+                                                                             UserNotAuthorizedException,
+                                                                             PropertyServerException
+    {
+        final String   methodName = "addSemanticAssignment";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   glossaryTermParameter = "glossaryTermGUID";
+        final String   assetURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/meanings/delete";
+        final String   elementURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/attachments/{3}/meanings/{4}/delete";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(glossaryTermGUID, glossaryTermParameter, methodName);
+
+        if (assetElementGUID == null)
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + assetURLTemplate, nullRequestBody, serverName, userId, assetGUID, glossaryTermGUID);
+        }
+        else
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + elementURLTemplate, nullRequestBody, serverName, userId, assetGUID, assetElementGUID, glossaryTermGUID);
+        }
     }
 
 
@@ -354,6 +793,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void  addAssetOrigin(String                userId,
                                 String                assetGUID,
                                 String                organizationGUID,
@@ -373,154 +813,105 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         requestBody.setBusinessCapabilityGUID(businessCapabilityGUID);
         requestBody.setOrganizationGUID(organizationGUID);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
-    /*
-     * ==============================================
-     * AssetVisibilityInterface
-     * ==============================================
-     */
-
-
     /**
-     * Create a definition of a governance zone.  The qualified name of these governance zones can be added
-     * to the supportedZones and defaultZones properties of an OMAS to control which assets are processed
-     * and how they are set up.  In addition the qualified names of zones can be added to Asset definitions
-     * to indicate which zone(s) they belong to.
+     * Remove the asset origin classification to an asset.
      *
      * @param userId calling user
-     * @param qualifiedName unique name for the zone - used in other configuration
-     * @param displayName short display name for the zone
-     * @param description description of the governance zone
-     * @param criteria the criteria for inclusion in a governance zone
-     * @param additionalProperties additional properties for a governance zone
-     *
-     * @throws InvalidParameterException qualifiedName or userId is null
+     * @param assetGUID unique identifier of asset
+     * @throws InvalidParameterException entity not known, null userId or guid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public void  createGovernanceZone(String              userId,
-                                      String              qualifiedName,
-                                      String              displayName,
-                                      String              description,
-                                      String              criteria,
-                                      Map<String, String> additionalProperties) throws InvalidParameterException,
-                                                                                       UserNotAuthorizedException,
-                                                                                       PropertyServerException
-    {
-        final String   methodName = "createGovernanceZone";
-
-        final String   qualifiedNameParameter = "qualifiedName";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/governance-zones";
-
-        invalidParameterHandler.validateUserId(userId, methodName);
-        invalidParameterHandler.validateName(qualifiedName, qualifiedNameParameter, methodName);
-
-        ZoneRequestBody requestBody = new ZoneRequestBody();
-
-        requestBody.setQualifiedName(qualifiedName);
-        requestBody.setDisplayName(displayName);
-        requestBody.setDescription(description);
-        requestBody.setAdditionalProperties(additionalProperties);
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-    }
-
-
-
-    /**
-     * Return information about a specific governance zone.
-     *
-     * @param userId calling user
-     * @param qualifiedName unique name for the zone
-     *
-     * @return properties of the governance zone
-     * @throws InvalidParameterException qualifiedName or userId is null
-     * @throws PropertyServerException problem accessing property server
-     * @throws UserNotAuthorizedException security access problem
-     */
-    public GovernanceZone getGovernanceZone(String   userId,
-                                            String   qualifiedName) throws InvalidParameterException,
+    @Override
+    public void  removeAssetOrigin(String                userId,
+                                   String                assetGUID) throws InvalidParameterException,
                                                                            UserNotAuthorizedException,
                                                                            PropertyServerException
     {
-        final String   methodName = "getGovernanceZone";
-
-        final String   qualifiedNameParameter = "qualifiedName";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/governance-zones/name/{2}";
+        final String   methodName = "removeAssetOrigin";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/origin/delete";
 
         invalidParameterHandler.validateUserId(userId, methodName);
-        invalidParameterHandler.validateName(qualifiedName, qualifiedNameParameter, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
 
-        ZoneResponse restResult = restClient.callZoneGetRESTCall(methodName,
-                                                                 serverPlatformRootURL + urlTemplate,
-                                                                 serverName,
-                                                                 userId,
-                                                                 qualifiedName);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
-        return restResult.getGovernanceZone();
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
     /**
-     * Return information about the defined governance zones.
+     * Update the zones for a specific asset to the zone list specified in the publishZones.
      *
      * @param userId calling user
-     * @param startingFrom position in the list (used when there are so many reports that paging is needed
-     * @param maximumResults maximum number of elements to return an this call
-     *
-     * @return properties of the governance zone
-     *
-     * @throws InvalidParameterException qualifiedName or userId is null
+     * @param assetGUID unique identifier for the asset to update
+     * @throws InvalidParameterException entity not known, null userId or guid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public List<GovernanceZone>  getGovernanceZones(String   userId,
-                                                    int      startingFrom,
-                                                    int      maximumResults) throws InvalidParameterException,
-                                                                                    UserNotAuthorizedException,
-                                                                                    PropertyServerException
+    @Override
+    public void publishAsset(String                userId,
+                             String                assetGUID) throws InvalidParameterException,
+                                                                     UserNotAuthorizedException,
+                                                                     PropertyServerException
     {
-        final String   methodName = "getGovernanceZones";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/governance-zones?startingFrom={4}&maximumResults={5}";
+        final String   methodName = "publishAsset";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/publish";
 
         invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
 
-        ZoneListResponse restResult = restClient.callZoneListGetRESTCall(methodName,
-                                                                         serverPlatformRootURL + urlTemplate,
-                                                                         serverName,
-                                                                         userId,
-                                                                         Integer.toString(startingFrom),
-                                                                         Integer.toString(maximumResults));
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
+    }
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
-        return restResult.getGovernanceZones();
+    /**
+     * Update the zones for a specific asset to the zone list specified in the defaultZones.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier for the asset to update
+     * @throws InvalidParameterException entity not known, null userId or guid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void withdrawAsset(String                userId,
+                              String                assetGUID) throws InvalidParameterException,
+                                                                      UserNotAuthorizedException,
+                                                                      PropertyServerException
+    {
+        final String   methodName = "withdrawAsset";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/withdraw";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
@@ -535,6 +926,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void updateAssetZones(String        userId,
                                  String        assetGUID,
                                  List<String>  assetZones) throws InvalidParameterException,
@@ -549,18 +941,13 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  assetZones,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        assetZones,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
-
 
 
     /**
@@ -574,6 +961,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void updateAssetOwner(String    userId,
                                  String    assetGUID,
                                  String    ownerId,
@@ -593,18 +981,172 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         requestBody.setOwnerId(ownerId);
         requestBody.setOwnerType(ownerType);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
+
+    /**
+     * Add or replace the security tags for an asset or one of its elements.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of asset
+     * @param assetElementGUID element to link it to - its type must inherit from Referenceable.
+     *                         If null then the assetGUID is used.
+     * @param securityLabels list of security labels defining the security characteristics of the element
+     * @param securityProperties Descriptive labels describing origin of the asset
+     * @throws InvalidParameterException entity not known, null userId or guid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void  addSecurityTags(String                userId,
+                                 String                assetGUID,
+                                 String                assetElementGUID,
+                                 List<String>          securityLabels,
+                                 Map<String, Object>   securityProperties) throws InvalidParameterException,
+                                                                                  UserNotAuthorizedException,
+                                                                                  PropertyServerException
+    {
+        final String   methodName = "addSecurityTags";
+        final String   assetGUIDParameter = "assetGUID";
+        final String   assetURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/security-tags";
+        final String   elementURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/attachments/{3}/security-tags";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        SecurityTagsRequestBody requestBody = new SecurityTagsRequestBody();
+        requestBody.setSecurityLabels(securityLabels);
+        requestBody.setSecurityProperties(securityProperties);
+
+        if (assetElementGUID == null)
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + assetURLTemplate, requestBody, serverName, userId, assetGUID);
+        }
+        else
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + elementURLTemplate, requestBody, serverName, userId, assetGUID, assetElementGUID);
+        }
+    }
+
+
+    /**
+     * Remove the security tags classification to an asset or one of its elements.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of asset
+     * @param assetElementGUID element where the security tags need to be removed.
+     *                         If null then the assetGUID is used.
+     * @throws InvalidParameterException entity not known, null userId or guid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public void  removeSecurityTags(String                userId,
+                                    String                assetGUID,
+                                    String                assetElementGUID) throws InvalidParameterException,
+                                                                                   UserNotAuthorizedException,
+                                                                                   PropertyServerException
+    {
+        final String   methodName = "removeSecurityTags";
+        final String   assetGUIDParameter = "assetGUID";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        final String   assetURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/security-tags/delete";
+        final String   elementURLTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/attachments/{3}/security-tags/delete";
+
+        if (assetElementGUID == null)
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + assetURLTemplate, nullRequestBody, serverName, userId, assetGUID);
+        }
+        else
+        {
+            restClient.callVoidPostRESTCall(methodName, serverPlatformRootURL + elementURLTemplate, nullRequestBody, serverName, userId, assetGUID, assetElementGUID);
+        }
+    }
+
+
+    /**
+     * Classify an asset as suitable to be used as a template for cataloguing assets of a similar types.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset to classify
+     * @param name name of the template
+     * @param description description of when, where and how to use the template
+     * @param additionalProperties any additional properties
+     *
+     * @throws InvalidParameterException asset or element not known, null userId or guid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    public void addTemplateClassification(String              userId,
+                                          String              assetGUID,
+                                          String              name,
+                                          String              description,
+                                          Map<String, String> additionalProperties) throws InvalidParameterException,
+                                                                                           UserNotAuthorizedException,
+                                                                                           PropertyServerException
+    {
+        final String   methodName = "addTemplateClassification";
+        final String   assetGUIDParameter = "assetGUID";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/template-classification";
+
+        TemplateClassificationRequestBody requestBody = new TemplateClassificationRequestBody();
+
+        requestBody.setName(name);
+        requestBody.setDescription(description);
+        requestBody.setAdditionalProperties(additionalProperties);
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
+    }
+
+
+    /**
+     * Remove the classification that indicates that this asset can be used as a template.
+     *
+     * @param userId calling user
+     * @param assetGUID unique identifier of the asset to declassify
+     *
+     * @throws InvalidParameterException asset or element not known, null userId or guid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    public void removeTemplateClassification(String userId,
+                                             String assetGUID) throws InvalidParameterException,
+                                                                      UserNotAuthorizedException,
+                                                                      PropertyServerException
+    {
+        final String   methodName = "removeTemplateClassification";
+        final String   assetGUIDParameter = "assetGUID";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
+
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/template-classification/delete";
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
+    }
 
 
     /*
@@ -628,10 +1170,11 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException there is a problem access in the property server
      * @throws UserNotAuthorizedException the user does not have access to the properties
      */
-    public List<Asset> getAssetsByName(String   userId,
-                                       String   name,
-                                       int      startFrom,
-                                       int      pageSize) throws InvalidParameterException,
+    @Override
+    public List<AssetElement> getAssetsByName(String   userId,
+                                              String   name,
+                                              int      startFrom,
+                                              int      pageSize) throws InvalidParameterException,
                                                                  PropertyServerException,
                                                                  UserNotAuthorizedException
     {
@@ -641,17 +1184,14 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateName(name, nameParameter, methodName);
-        AssetsResponse restResult = restClient.callAssetsPostRESTCall(methodName,
-                                                                      serverPlatformRootURL + urlTemplate,
-                                                                      name,
-                                                                      serverName,
-                                                                      userId,
-                                                                      startFrom,
-                                                                      pageSize);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        AssetElementsResponse restResult = restClient.callAssetElementsPostRESTCall(methodName,
+                                                                                    serverPlatformRootURL + urlTemplate,
+                                                                                    name,
+                                                                                    serverName,
+                                                                                    userId,
+                                                                                    startFrom,
+                                                                                    pageSize);
 
         return restResult.getAssets();
     }
@@ -672,12 +1212,13 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException there is a problem access in the property server
      * @throws UserNotAuthorizedException the user does not have access to the properties
      */
-    public List<Asset>  findAssets(String   userId,
-                                   String   searchString,
-                                   int      startFrom,
-                                   int      pageSize) throws InvalidParameterException,
-                                                             PropertyServerException,
-                                                             UserNotAuthorizedException
+    @Override
+    public List<AssetElement>  findAssets(String   userId,
+                                          String   searchString,
+                                          int      startFrom,
+                                          int      pageSize) throws InvalidParameterException,
+                                                                    PropertyServerException,
+                                                                    UserNotAuthorizedException
     {
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/by-search-string?startFrom={2}&pageSize={3}";
         final String   methodName = "findAssets";
@@ -685,17 +1226,14 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateSearchString(searchString, searchParameter, methodName);
-        AssetsResponse restResult = restClient.callAssetsPostRESTCall(methodName,
-                                                                      serverPlatformRootURL + urlTemplate,
-                                                                      searchString,
-                                                                      serverName,
-                                                                      userId,
-                                                                      startFrom,
-                                                                      pageSize);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        AssetElementsResponse restResult = restClient.callAssetElementsPostRESTCall(methodName,
+                                                                                    serverPlatformRootURL + urlTemplate,
+                                                                                    searchString,
+                                                                                    serverName,
+                                                                                    userId,
+                                                                                    startFrom,
+                                                                                    pageSize);
 
         return restResult.getAssets();
     }
@@ -711,19 +1249,27 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException there was a problem that occurred within the property server.
      */
-    public Asset getAssetSummary(String  userId,
-                                 String  assetGUID) throws InvalidParameterException,
-                                                           UserNotAuthorizedException,
-                                                           PropertyServerException
+    @Override
+    public AssetElement getAssetSummary(String  userId,
+                                        String  assetGUID) throws InvalidParameterException,
+                                                                  UserNotAuthorizedException,
+                                                                  PropertyServerException
     {
         final String methodName = "getAssetSummary";
-
         final String assetGUIDParameter = "assetGUID";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
 
-        return super.getAssetSummary(restClient, serviceURLName, userId, assetGUID, methodName);
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}";
+
+        AssetElementResponse restResult = restClient.callAssetElementGetRESTCall(methodName,
+                                                                   serverPlatformRootURL + urlTemplate,
+                                                                   serverName,
+                                                                   userId,
+                                                                   assetGUID);
+
+        return restResult.getAsset();
     }
 
 
@@ -739,6 +1285,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException there is a problem retrieving the asset properties from the property servers).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public AssetUniverse getAssetProperties(String userId,
                                             String assetGUID) throws InvalidParameterException,
                                                                      PropertyServerException,
@@ -758,6 +1305,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException there was a problem that occurred within the property server.
      */
+    @Override
     public Connector getConnectorToAsset(String  userId,
                                          String  assetGUID) throws InvalidParameterException,
                                                                    UserNotAuthorizedException,
@@ -780,7 +1328,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         }
         catch (ConnectionCheckedException error)
         {
-            throw new InvalidParameterException(error, "connection to asset " + assetGUID);
+            throw new InvalidParameterException(error.getReportedErrorMessage(), error, "connection to asset " + assetGUID);
         }
         catch (ConnectorCheckedException  error)
         {
@@ -802,6 +1350,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException there was a problem that occurred within the property server.
      */
+    @Override
     public List<DiscoveryAnalysisReport>   getDiscoveryAnalysisReports(String  userId,
                                                                        String  assetGUID,
                                                                        int     startingFrom,
@@ -826,13 +1375,64 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
                                                                                                                Integer.toString(startingFrom),
                                                                                                                Integer.toString(maximumResults));
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getDiscoveryAnalysisReports();
     }
 
+
+    /**
+     * Return the annotation subtype names.
+     *
+     * @param userId calling user
+     * @return list of type names that are subtypes of annotation
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public List<String>  getTypesOfAnnotation(String userId) throws InvalidParameterException,
+                                                                    UserNotAuthorizedException,
+                                                                    PropertyServerException
+    {
+        final String   methodName = "getTypesOfAnnotation";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/annotations/sub-types";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+
+        NameListResponse restResult = restClient.callNameListGetRESTCall(methodName,
+                                                                         serverPlatformRootURL + urlTemplate,
+                                                                         serverName,
+                                                                         userId);
+
+        return restResult.getNames();
+    }
+
+
+    /**
+     * Return the annotation subtype names mapped to their descriptions.
+     *
+     * @param userId calling user
+     * @return map of type names that are subtypes of annotation to their descriptions
+     * @throws InvalidParameterException full path or userId is null
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    @Override
+    public Map<String, String>  getTypesOfAnnotationWithDescriptions(String userId) throws InvalidParameterException,
+                                                                                           UserNotAuthorizedException,
+                                                                                           PropertyServerException
+    {
+        final String   methodName = "getTypesOfAnnotationWithDescriptions";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/annotations/sub-types/descriptions";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+
+        StringMapResponse restResult = restClient.callStringMapGetRESTCall(methodName,
+                                                                           serverPlatformRootURL + urlTemplate,
+                                                                           serverName,
+                                                                           userId);
+
+        return restResult.getStringMap();
+    }
 
 
     /**
@@ -850,6 +1450,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException there was a problem that occurred within the property server.
      */
+    @Override
     public List<Annotation> getDiscoveryReportAnnotations(String           userId,
                                                           String           discoveryReportGUID,
                                                           AnnotationStatus annotationStatus,
@@ -867,7 +1468,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         invalidParameterHandler.validateGUID(discoveryReportGUID, discoveryReportGUIDParameter, methodName);
         invalidParameterHandler.validatePaging(startingFrom, maximumResults, methodName);
 
-        StatusRequestBody  requestBody = new StatusRequestBody();
+        StatusRequestBody requestBody = new StatusRequestBody();
 
         requestBody.setAnnotationStatus(annotationStatus);
 
@@ -880,13 +1481,8 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
                                                                                       Integer.toString(startingFrom),
                                                                                       Integer.toString(maximumResults));
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getAnnotations();
     }
-
 
 
     /**
@@ -904,6 +1500,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException there was a problem that occurred within the property server.
      */
+    @Override
     public List<Annotation>  getExtendedAnnotations(String           userId,
                                                     String           annotationGUID,
                                                     AnnotationStatus annotationStatus,
@@ -921,7 +1518,7 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
         invalidParameterHandler.validateGUID(annotationGUID, annotationGUIDParameter, methodName);
         invalidParameterHandler.validatePaging(startingFrom, maximumResults, methodName);
 
-        StatusRequestBody  requestBody = new StatusRequestBody();
+        StatusRequestBody requestBody = new StatusRequestBody();
 
         requestBody.setAnnotationStatus(annotationStatus);
 
@@ -934,13 +1531,8 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
                                                                                       Integer.toString(startingFrom),
                                                                                       Integer.toString(maximumResults));
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
-        return restResult.getAnnotations();
+         return restResult.getAnnotations();
     }
-
 
 
     /*
@@ -961,30 +1553,106 @@ public class AssetOwner extends ConnectedAssetClientBase implements AssetOnboard
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void deleteAsset(String        userId,
                             String        assetGUID) throws InvalidParameterException,
                                                             UserNotAuthorizedException,
                                                             PropertyServerException
     {
-        final String   methodName = "deleteAsset";
+        final String methodName = "deleteAsset";
 
-        final String   assetGUIDParameter = "assetGUID";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/delete";
+        final String assetGUIDParameter = "assetGUID";
+        final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/assets/{2}/delete";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
+    }
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+    /*
+     * ==============================================
+     * AssetDuplicateManagementInterface
+     * ==============================================
+     */
+
+    /**
+     * Create a simple relationship between two elements in an Asset description (typically the asset itself or
+     * attributes in their schema).
+     *
+     * @param userId calling user
+     * @param element1GUID unique identifier of first element
+     * @param element2GUID unique identifier of second element
+
+     * @throws InvalidParameterException one of the parameters is null or invalid
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    public void  linkElementsAsDuplicates(String userId,
+                                          String element1GUID,
+                                          String element2GUID) throws InvalidParameterException,
+                                                                      UserNotAuthorizedException,
+                                                                      PropertyServerException
+    {
+        final String methodName = "linkElementsAsDuplicates";
+
+        final String element1GUIDParameter = "element1GUID";
+        final String element2GUIDParameter = "element2GUID";
+        final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/elements/{2}/duplicate-of/{3}";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(element1GUID, element1GUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(element2GUID, element2GUIDParameter, methodName);
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        element1GUID,
+                                        element2GUID);
+    }
+
+
+    /**
+     * Remove the relationship between two elements that marks them as duplicates.
+     *
+     * @param userId calling user
+     * @param element1GUID unique identifier of first element
+     * @param element2GUID unique identifier of second element
+     *
+     * @throws InvalidParameterException one of the parameters is null or invalid or the elements are not linked as duplicates
+     * @throws PropertyServerException problem accessing property server
+     * @throws UserNotAuthorizedException security access problem
+     */
+    public void  unlinkElementsAsDuplicates(String userId,
+                                            String element1GUID,
+                                            String element2GUID) throws InvalidParameterException,
+                                                                        UserNotAuthorizedException,
+                                                                        PropertyServerException
+    {
+        final String methodName = "unlinkElementsAsDuplicates";
+
+        final String element1GUIDParameter = "element1GUID";
+        final String element2GUIDParameter = "element2GUID";
+        final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/elements/{2}/duplicate-of/{3}/delete";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(element1GUID, element1GUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(element2GUID, element2GUIDParameter, methodName);
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        element1GUID,
+                                        element2GUID);
     }
 }

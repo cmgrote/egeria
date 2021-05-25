@@ -27,6 +27,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Rating extends ElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of a Rating
      */
@@ -132,7 +134,7 @@ public class Rating extends ElementHeader
      *
      * @return boolean
      */
-    public boolean isPublic()
+    public boolean getIsPublic()
     {
         return isPublic;
     }
@@ -143,7 +145,7 @@ public class Rating extends ElementHeader
      *
      * @param aPublic boolean
      */
-    public void setPublic(boolean aPublic)
+    public void setIsPublic(boolean aPublic)
     {
         isPublic = aPublic;
     }
@@ -192,10 +194,21 @@ public class Rating extends ElementHeader
             return false;
         }
         Rating rating = (Rating) objectToCompare;
-        return isPublic() == rating.isPublic() &&
-                getStarRating() == rating.getStarRating() &&
-                Objects.equals(getReview(), rating.getReview()) &&
-                Objects.equals(getUser(), rating.getUser());
+        return isPublic == rating.isPublic &&
+                       getStarRating() == rating.getStarRating() &&
+                       Objects.equals(getReview(), rating.getReview()) &&
+                       Objects.equals(getUser(), rating.getUser());
     }
 
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getStarRating(), getReview(), getUser(), isPublic);
+    }
 }

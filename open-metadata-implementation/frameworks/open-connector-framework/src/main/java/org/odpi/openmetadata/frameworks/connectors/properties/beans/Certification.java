@@ -21,6 +21,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Certification extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Properties of a certification
      */
@@ -34,6 +36,7 @@ public class Certification extends Referenceable
     protected String            certificationConditions = null;
     protected String            createdBy               = null;
     protected String            custodian               = null;
+    protected String            recipient               = null;
     protected String            notes                   = null;
 
 
@@ -83,6 +86,7 @@ public class Certification extends Referenceable
             certificationConditions = templateCertification.getCertificationConditions();
             createdBy = templateCertification.getCreatedBy();
             custodian = templateCertification.getCustodian();
+            recipient = templateCertification.getRecipient();
             notes = templateCertification.getNotes();
         }
     }
@@ -312,6 +316,27 @@ public class Certification extends Referenceable
 
 
     /**
+     * Return the identifier of the person or organization that received the certification.
+     *
+     * @return string identifier
+     */
+    public String getRecipient()
+    {
+        return recipient;
+    }
+
+
+    /**
+     * Set up the identifier of the person or organization that received the certification.
+     *
+     * @param recipient string identifier
+     */
+    public void setRecipient(String recipient)
+    {
+        this.recipient = recipient;
+    }
+
+    /**
      * Return the notes from the custodian.
      *
      * @return String notes
@@ -349,6 +374,7 @@ public class Certification extends Referenceable
                 ", certificationConditions='" + certificationConditions + '\'' +
                 ", createdBy='" + createdBy + '\'' +
                 ", custodian='" + custodian + '\'' +
+                ", recipient='" + recipient + '\'' +
                 ", notes='" + notes + '\'' +
                 ", qualifiedName='" + qualifiedName + '\'' +
                 ", additionalProperties=" + additionalProperties +
@@ -373,7 +399,7 @@ public class Certification extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof Certification))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -383,15 +409,30 @@ public class Certification extends Referenceable
         }
         Certification that = (Certification) objectToCompare;
         return Objects.equals(getCertificateGUID(), that.getCertificateGUID()) &&
-                Objects.equals(getCertificationTypeName(), that.getCertificationTypeName()) &&
-                Objects.equals(getExaminer(), that.getExaminer()) &&
-                Objects.equals(getSummary(), that.getSummary()) &&
-                Objects.equals(getLink(), that.getLink()) &&
-                Objects.equals(getStartDate(), that.getStartDate()) &&
-                Objects.equals(getEndDate(), that.getEndDate()) &&
-                Objects.equals(getCertificationConditions(), that.getCertificationConditions()) &&
-                Objects.equals(getCreatedBy(), that.getCreatedBy()) &&
-                Objects.equals(getCustodian(), that.getCustodian()) &&
-                Objects.equals(getNotes(), that.getNotes());
+                       Objects.equals(getCertificationTypeName(), that.getCertificationTypeName()) &&
+                       Objects.equals(getExaminer(), that.getExaminer()) &&
+                       Objects.equals(getSummary(), that.getSummary()) &&
+                       Objects.equals(getLink(), that.getLink()) &&
+                       Objects.equals(getStartDate(), that.getStartDate()) &&
+                       Objects.equals(getEndDate(), that.getEndDate()) &&
+                       Objects.equals(getCertificationConditions(), that.getCertificationConditions()) &&
+                       Objects.equals(getCreatedBy(), that.getCreatedBy()) &&
+                       Objects.equals(getCustodian(), that.getCustodian()) &&
+                       Objects.equals(getRecipient(), that.getRecipient()) &&
+                       Objects.equals(getNotes(), that.getNotes());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getCertificateGUID(), getCertificationTypeName(), getExaminer(), getSummary(), getLink(),
+                            getStartDate(),
+                            getEndDate(), getCertificationConditions(), getCreatedBy(), getCustodian(), getRecipient(), getNotes());
     }
 }

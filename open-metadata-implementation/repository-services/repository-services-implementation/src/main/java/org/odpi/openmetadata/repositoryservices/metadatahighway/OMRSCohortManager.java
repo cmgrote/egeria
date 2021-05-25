@@ -2,15 +2,16 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.metadatahighway;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.cohortregistrystore.properties.MemberRegistration;
+import org.odpi.openmetadata.repositoryservices.events.OpenMetadataEventsSecurity;
 import org.odpi.openmetadata.repositoryservices.properties.CohortConnectionStatus;
 import org.odpi.openmetadata.repositoryservices.properties.CohortDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSConnectorErrorException;
@@ -37,12 +38,12 @@ public class OMRSCohortManager
     private Connection                 cohortTopicConnection        = null;
     private OMRSRepositoryEventManager cohortRepositoryEventManager = null;
     private OMRSCohortRegistry         cohortRegistry               = null;
-    private OMRSEventListener          cohortEventListener          = null;
     private CohortConnectionStatus     cohortConnectionStatus       = CohortConnectionStatus.NOT_INITIALIZED;
 
-    private OMRSRepositoryEventManager localRepositoryEventManager  = null;
+    private String                       localMetadataCollectionId        = null;
+    private OMRSRepositoryEventPublisher outboundRepositoryEventPublisher = null;
 
-    private OMRSAuditLog               auditLog;
+    private AuditLog                     auditLog;
 
     private static final Logger log = LoggerFactory.getLogger(OMRSCohortManager.class);
 
@@ -52,7 +53,7 @@ public class OMRSCohortManager
      *
      * @param auditLog audit log for this component.
      */
-    public OMRSCohortManager(OMRSAuditLog     auditLog)
+    OMRSCohortManager(AuditLog     auditLog)
     {
         this.auditLog = auditLog;
     }
@@ -104,14 +105,8 @@ public class OMRSCohortManager
         {
             this.cohortName = cohortName;
 
-            OMRSAuditCode auditCode = OMRSAuditCode.COHORT_INITIALIZING;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(cohortName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OMRSAuditCode.COHORT_INITIALIZING.getMessageDefinition(cohortName));
 
             /*
              * Set up the config status.  It is updated multiple times during this method to help detect whether
@@ -121,6 +116,8 @@ public class OMRSCohortManager
             this.cohortConnectionStatus = CohortConnectionStatus.INITIALIZING;
 
             this.cohortTopicConnection = cohortTopicConnection;
+            this.cohortTopicConnector  = cohortTopicConnector;
+            this.localMetadataCollectionId = localMetadataCollectionId;
 
             /*
              * Create the event manager for processing incoming events from the cohort's OMRS Topic.
@@ -161,7 +158,7 @@ public class OMRSCohortManager
                                                cohortRegistryStore,
                                                connectionConsumer);
 
-                localRepositoryEventManager = localRepository.getOutboundRepositoryEventManager();
+                OMRSRepositoryEventManager localRepositoryEventManager = localRepository.getOutboundRepositoryEventManager();
 
                 if (localRepositoryEventManager != null)
                 {
@@ -169,11 +166,11 @@ public class OMRSCohortManager
                      * Register an event publisher with the local repository for this cohort.  This will mean
                      * other members of the cohort can receive events from the local server's repository.
                      */
-                    OMRSRepositoryEventPublisher repositoryEventPublisher = new OMRSRepositoryEventPublisher(cohortName,
-                                                                                                             cohortTopicConnector,
-                                                                                                             auditLog.createNewAuditLog(OMRSAuditingComponent.EVENT_PUBLISHER));
+                    outboundRepositoryEventPublisher = new OMRSRepositoryEventPublisher(cohortName,
+                                                                                        cohortTopicConnector,
+                                                                                        auditLog.createNewAuditLog(OMRSAuditingComponent.EVENT_PUBLISHER));
 
-                    localRepositoryEventManager.registerRepositoryEventProcessor(repositoryEventPublisher);
+                    localRepositoryEventManager.registerRepositoryEventProcessor(outboundRepositoryEventPublisher);
                 }
 
                 /*
@@ -221,61 +218,92 @@ public class OMRSCohortManager
             }
 
             this.cohortConnectionStatus = CohortConnectionStatus.NEW;
+        }
+        catch (Exception error)
+        {
+            log.error("Unable to initialize cohort manager", error);
+            this.cohortConnectionStatus = CohortConnectionStatus.CONFIGURATION_ERROR;
+
+            auditLog.logException(actionDescription,
+                                  OMRSAuditCode.COHORT_CONFIG_ERROR.getMessageDefinition(cohortName,
+                                                                                         error.getClass().getName(),
+                                                                                         error.getMessage()),
+                                  error);
+        }
+
+        log.debug(actionDescription + " COMPLETE");
+    }
 
 
-            /*
-             * Start the cohort's event manager so it is able to pass events.
-             */
-            if (this.cohortRepositoryEventManager != null)
-            {
-                this.cohortRepositoryEventManager.start();
-            }
+    /**
+     * Set up a new security verifier (the metadata collection runs with a default verifier until this
+     * method is called).
+     *
+     * The security verifier provides authorization checks for access and maintenance
+     * changes to open metadata.  Authorization checks are enabled through the
+     * OpenMetadataServerSecurityConnector.
+     *
+     * @param securityVerifier new security verifier
+     */
+    public void setSecurityVerifier(OpenMetadataEventsSecurity securityVerifier)
+    {
+        final String actionDescription = "Initialize Security and Listener";
 
-            /*
-             * The cohort topic connector is used by the local cohort components to communicate with the other
-             * members of the cohort.
-             */
-            if (cohortTopicConnector != null)
+        if (outboundRepositoryEventPublisher != null)
+        {
+            outboundRepositoryEventPublisher.setSecurityVerifier(securityVerifier);
+        }
+
+        /*
+         * Start the cohort's event manager so it is able to pass events.
+         */
+        if (this.cohortRepositoryEventManager != null)
+        {
+            this.cohortRepositoryEventManager.start();
+        }
+
+        /*
+         * The cohort topic connector is used by the local cohort components to communicate with the other
+         * members of the cohort.
+         */
+        if (cohortTopicConnector != null)
+        {
+            try
             {
                 /*
-                 * Finally create the event listener and register it with the cohort OMRS Topic.
+                 * Create the event listener and register it with the cohort OMRS Topic.
                  */
                 OMRSEventListener cohortEventListener = new OMRSEventListener(cohortName,
                                                                               localMetadataCollectionId,
                                                                               this.cohortRegistry,
                                                                               this.cohortRepositoryEventManager,
+                                                                              securityVerifier,
                                                                               auditLog.createNewAuditLog(OMRSAuditingComponent.EVENT_LISTENER));
-                cohortTopicConnector.registerListener(cohortEventListener);
+                cohortTopicConnector.registerListener(cohortEventListener, cohortName);
                 cohortTopicConnector.start();
-                this.cohortTopicConnector = cohortTopicConnector;
-                this.cohortEventListener = cohortEventListener;
-
-                /*
-                 * Once the event infrastructure is set up it is ok to send out registration requests to the
-                 * rest of the cohort.
-                 */
-                this.cohortRegistry.connectToCohort();
-
-                this.cohortConnectionStatus = CohortConnectionStatus.CONNECTED;
             }
-        }
-        catch (Throwable   error)
-        {
-            log.error("Unable to initialize cohort manager", error);
-            this.cohortConnectionStatus = CohortConnectionStatus.CONFIGURATION_ERROR;
+            catch (Exception error)
+            {
+                log.error("Unable to initialize event listener", error);
+                this.cohortConnectionStatus = CohortConnectionStatus.CONFIGURATION_ERROR;
 
-            OMRSAuditCode auditCode = OMRSAuditCode.COHORT_CONFIG_ERROR;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(cohortName, error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
-        }
+                auditLog.logException(actionDescription,
+                                      OMRSAuditCode.COHORT_CONFIG_ERROR.getMessageDefinition(cohortName,
+                                                                                             error.getClass().getName(),
+                                                                                             error.getMessage()),
+                                      error);
+            }
 
-        log.debug(actionDescription + " COMPLETE");
+            /*
+             * Once the event infrastructure is set up it is ok to send out registration requests to the
+             * rest of the cohort.
+             */
+            this.cohortRegistry.connectToCohort();
+
+            this.cohortConnectionStatus = CohortConnectionStatus.CONNECTED;
+        }
     }
+
 
 
     /**
@@ -343,7 +371,7 @@ public class OMRSCohortManager
      *
      * @return CohortConnectionStatus
      */
-    public CohortConnectionStatus getCohortConnectionStatus()
+    CohortConnectionStatus getCohortConnectionStatus()
     {
         return cohortConnectionStatus;
     }
@@ -384,20 +412,13 @@ public class OMRSCohortManager
             /*
              * Throw runtime exception to indicate that the cohort registry is not available.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.COHORT_DISCONNECT_FAILED;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(cohortName);
-
-            throw new OMRSConnectorErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSConnectorErrorException(OMRSErrorCode.COHORT_DISCONNECT_FAILED.getMessageDefinition(cohortName),
                                                   this.getClass().getName(),
                                                   actionDescription,
-                                                  errorMessage,
-                                                  errorCode.getSystemAction(),
-                                                  errorCode.getUserAction(),
                                                   error);
 
         }
-        catch (Throwable  error)
+        catch (Exception  error)
         {
             log.debug(actionDescription + " FAILED with exception");
 
@@ -418,12 +439,7 @@ public class OMRSCohortManager
     {
         return "OMRSCohortManager{" +
                 "cohortName='" + cohortName + '\'' +
-                ", cohortTopicConnector=" + cohortTopicConnector +
-                ", cohortRepositoryEventManager=" + cohortRepositoryEventManager +
-                ", cohortRegistry=" + cohortRegistry +
-                ", cohortEventListener=" + cohortEventListener +
                 ", cohortConnectionStatus=" + cohortConnectionStatus +
-                ", localRepositoryEventManager=" + localRepositoryEventManager +
                 '}';
     }
 }

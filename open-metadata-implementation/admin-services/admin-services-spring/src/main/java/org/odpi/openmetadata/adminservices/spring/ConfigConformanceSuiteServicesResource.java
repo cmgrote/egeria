@@ -2,7 +2,11 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.adminservices.spring;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.adminservices.OMAGConformanceSuiteConfigServices;
+import org.odpi.openmetadata.adminservices.configuration.properties.RepositoryConformanceWorkbenchConfig;
+import org.odpi.openmetadata.adminservices.configuration.properties.RepositoryPerformanceWorkbenchConfig;
 import org.odpi.openmetadata.adminservices.rest.URLRequestBody;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +17,13 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/open-metadata/admin-services/users/{userId}/servers/{serverName}")
+
+@Tag(name="Administration Services - Server Configuration", description="The server configuration administration services support the configuration" +
+        " of the open metadata and governance services within an OMAG Server. This configuration determines which of the Open Metadata and " +
+        "Governance (OMAG) services are active.",
+        externalDocs=@ExternalDocumentation(description="Further information",
+                url="https://egeria.odpi.org/open-metadata-implementation/admin-services/docs/user/configuring-an-omag-server.html"))
+
 public class ConfigConformanceSuiteServicesResource
 {
     private OMAGConformanceSuiteConfigServices adminAPI = new OMAGConformanceSuiteConfigServices();
@@ -23,19 +34,41 @@ public class ConfigConformanceSuiteServicesResource
      *
      * @param userId  user that is issuing the request.
      * @param serverName  local server name.
-     * @param tutRepositoryServerName name of the server that the repository workbench should test.
+     * @param repositoryConformanceWorkbenchConfig configuration for the repository conformance workbench.
      * @return void response or
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
-     * OMAGInvalidParameterException invalid serverName parameter.
+     * OMAGInvalidParameterException invalid serverName parameter or
      * OMAGConfigurationErrorException unexpected exception.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/conformance-suite-workbenches/repository-workbench/repositories/{tutRepositoryServerName}")
+    @PostMapping(path = "/conformance-suite-workbenches/repository-workbench/repositories")
 
-    public VoidResponse enableRepositoryConformanceSuiteWorkbench(@PathVariable String userId,
-                                                                  @PathVariable String serverName,
-                                                                  @PathVariable String tutRepositoryServerName)
+    public VoidResponse enableRepositoryConformanceSuiteWorkbench(@PathVariable String                               userId,
+                                                                  @PathVariable String                               serverName,
+                                                                  @RequestBody  RepositoryConformanceWorkbenchConfig repositoryConformanceWorkbenchConfig)
     {
-        return adminAPI.enableRepositoryConformanceSuiteWorkbench(userId, serverName, tutRepositoryServerName);
+        return adminAPI.enableRepositoryConformanceSuiteWorkbench(userId, serverName, repositoryConformanceWorkbenchConfig);
+    }
+
+
+    /**
+     * Request that the conformance suite services are activated in this server to test the
+     * performance of the repository services running in the server named tutRepositoryServerName.
+     *
+     * @param userId  user that is issuing the request.
+     * @param serverName  local server name.
+     * @param repositoryPerformanceWorkbenchConfig configuration for the repository performance workbench.
+     * @return void response or
+     * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
+     * OMAGInvalidParameterException invalid serverName parameter or
+     * OMAGConfigurationErrorException unexpected exception.
+     */
+    @PostMapping(path = "/conformance-suite-workbenches/repository-workbench/performance")
+
+    public VoidResponse enableRepositoryPerformanceSuiteWorkbench(@PathVariable String                               userId,
+                                                                  @PathVariable String                               serverName,
+                                                                  @RequestBody  RepositoryPerformanceWorkbenchConfig repositoryPerformanceWorkbenchConfig)
+    {
+        return adminAPI.enableRepositoryPerformanceSuiteWorkbench(userId, serverName, repositoryPerformanceWorkbenchConfig);
     }
 
 
@@ -48,10 +81,10 @@ public class ConfigConformanceSuiteServicesResource
      * @param requestBody url of the OMAG platform to test.
      * @return void response or
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
-     * OMAGInvalidParameterException invalid serverName parameter.
+     * OMAGInvalidParameterException invalid serverName parameter or
      * OMAGConfigurationErrorException unexpected exception.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/conformance-suite-workbenches/platform-workbench/platforms")
+    @PostMapping(path = "/conformance-suite-workbenches/platform-workbench/platforms")
 
     public VoidResponse enablePlatformConformanceSuiteWorkbench(@PathVariable String         userId,
                                                                 @PathVariable String         serverName,
@@ -68,10 +101,10 @@ public class ConfigConformanceSuiteServicesResource
      * @param serverName  local server name.
      * @return void response or
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
-     * OMAGInvalidParameterException invalid serverName parameter.
+     * OMAGInvalidParameterException invalid serverName parameter or
      * OMAGConfigurationErrorException unexpected exception.
      */
-    @RequestMapping(method = RequestMethod.DELETE, path = "/conformance-suite-workbenches/repository-workbench")
+    @DeleteMapping(path = "/conformance-suite-workbenches/repository-workbench")
     public VoidResponse disableRepositoryConformanceSuiteServices(@PathVariable String    userId,
                                                                   @PathVariable String    serverName)
     {
@@ -86,10 +119,10 @@ public class ConfigConformanceSuiteServicesResource
      * @param serverName  local server name.
      * @return void response or
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
-     * OMAGInvalidParameterException invalid serverName parameter.
+     * OMAGInvalidParameterException invalid serverName parameter or
      * OMAGConfigurationErrorException unexpected exception.
      */
-    @RequestMapping(method = RequestMethod.DELETE, path = "/conformance-suite-workbenches/platform-workbench")
+    @DeleteMapping(path = "/conformance-suite-workbenches/platform-workbench")
     public VoidResponse disablePlatformConformanceSuiteServices(@PathVariable String    userId,
                                                                 @PathVariable String    serverName)
     {
@@ -104,10 +137,10 @@ public class ConfigConformanceSuiteServicesResource
      * @param serverName  local server name.
      * @return void response or
      * OMAGNotAuthorizedException the supplied userId is not authorized to issue this command or
-     * OMAGInvalidParameterException invalid serverName parameter.
+     * OMAGInvalidParameterException invalid serverName parameter or
      * OMAGConfigurationErrorException unexpected exception.
      */
-    @RequestMapping(method = RequestMethod.DELETE, path = "/conformance-suite-workbenches")
+    @DeleteMapping(path = "/conformance-suite-workbenches")
     public VoidResponse disableAllConformanceSuiteWorkbenches(@PathVariable String    userId,
                                                               @PathVariable String    serverName)
     {

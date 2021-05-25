@@ -14,16 +14,15 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
 /**
- * VirtualizationConfig caches the properties that are used to setup up the connector to the virtualisation
- * solutions in the server. The configurations contain the name of the connector provider and the corresponding
- * additional properties.
- *
- * This configuration class should support various types of the virtualisation connectors
+ * VirtualizationConfig is the configuration for the deprecated Virtualizer OMAG Server.  This function
+ * is replaced by the new Database Integrator OMIS that runs in the Integration Daemon OMAG Server.
  */
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class VirtualizationConfig extends AdminServicesConfigHeader {
+public class VirtualizationConfig extends AdminServicesConfigHeader
+{
+    private static final long    serialVersionUID = 1L;
 
     private String              virtualizationProvider;
     private String              virtualizerOutboundTopicName;
@@ -35,7 +34,7 @@ public class VirtualizationConfig extends AdminServicesConfigHeader {
 
 
     /**
-     * Default constuctor
+     * Default constructor
      */
     public VirtualizationConfig() {
         super();
@@ -44,9 +43,10 @@ public class VirtualizationConfig extends AdminServicesConfigHeader {
     /**
      * Copy data from template
      *
-     * @param template
+     * @param template object to copy
      */
     public VirtualizationConfig(VirtualizationConfig template) {
+        super(template);
         if (template != null) {
             this.virtualizationProvider           = template.virtualizationProvider;
             this.virtualizerOutboundTopicName     = template.virtualizerOutboundTopicName;
@@ -69,7 +69,7 @@ public class VirtualizationConfig extends AdminServicesConfigHeader {
 
     /**
      * Set the name of virtualization provider
-     * @param virtualizationProvider
+     * @param virtualizationProvider connector provider
      */
     public void setVirtualizationProvider(String virtualizationProvider) {
         this.virtualizationProvider = virtualizationProvider;
@@ -171,6 +171,12 @@ public class VirtualizationConfig extends AdminServicesConfigHeader {
      */
     public void setVirtualizationSolutionConfig(Map<String, Object> virtualizationSolutionConfig) {
         this.virtualizationSolutionConfig = virtualizationSolutionConfig;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "VirtualizationConfig{" + "virtualizationProvider='" + virtualizationProvider + '\'' + ", virtualizerOutboundTopicName='" + virtualizerOutboundTopicName + '\'' + ", virtualizerOutboundTopic=" + virtualizerOutboundTopic + ", virtualizerInboundTopicName='" + virtualizerInboundTopicName + '\'' + ", virtualizerInboundTopic=" + virtualizerInboundTopic + ", virtualizationSolutionConnection=" + virtualizationSolutionConnection + ", virtualizationSolutionConfig=" + virtualizationSolutionConfig + '}';
     }
 
     @Override

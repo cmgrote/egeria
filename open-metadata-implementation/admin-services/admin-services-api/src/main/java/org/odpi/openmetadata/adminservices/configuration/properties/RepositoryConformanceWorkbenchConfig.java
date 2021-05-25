@@ -21,7 +21,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private String   tutRepositoryServerName = null;
+    private int      maxSearchResults = 50;
 
 
     /**
@@ -45,6 +48,7 @@ public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHea
         if (template != null)
         {
             tutRepositoryServerName = template.getTutRepositoryServerName();
+            maxSearchResults = template.getMaxSearchResults();
         }
     }
 
@@ -70,6 +74,31 @@ public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHea
         this.tutRepositoryServerName = tutRepositoryServerName;
     }
 
+
+    /**
+     * Return the maximum search results that should processed for testing the search operations of the server under
+     * test.
+     *
+     * @return page size
+     */
+    public int getMaxSearchResults()
+    {
+        return maxSearchResults;
+    }
+
+
+    /**
+     * Set up the maximum search results that should be processed for testing the search operations of the server under
+     * test.
+     *
+     * @param maxSearchResults page size
+     */
+    public void setMaxSearchResults(int maxSearchResults)
+    {
+        this.maxSearchResults = maxSearchResults;
+    }
+
+
     /**
      * Standard toString method.
      *
@@ -80,6 +109,7 @@ public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHea
     {
         return "ConformanceSuiteConfig{" +
                 "tutRepositoryServerName='" + tutRepositoryServerName + '\'' +
+                "maxSearchResults='" + maxSearchResults + '\'' +
                 '}';
     }
 
@@ -102,7 +132,8 @@ public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHea
             return false;
         }
         RepositoryConformanceWorkbenchConfig that = (RepositoryConformanceWorkbenchConfig) objectToCompare;
-        return Objects.equals(getTutRepositoryServerName(), that.getTutRepositoryServerName());
+        return Objects.equals(getTutRepositoryServerName(), that.getTutRepositoryServerName())
+                && Objects.equals(getMaxSearchResults(), that.getMaxSearchResults());
     }
 
 
@@ -114,6 +145,6 @@ public class RepositoryConformanceWorkbenchConfig extends AdminServicesConfigHea
     @Override
     public int hashCode()
     {
-        return Objects.hash(getTutRepositoryServerName());
+        return Objects.hash(getTutRepositoryServerName(), getMaxSearchResults());
     }
 }

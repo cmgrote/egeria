@@ -21,8 +21,11 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class SchemaAnalysisAnnotation extends Annotation
 {
-    private String     schemaName = null;
-    private String     schemaTypeName = null;
+    private static final long    serialVersionUID = 1L;
+
+    private String schemaName           = null;
+    private String schemaTypeName       = null;
+    private int    discoveredDataFields = 0;
 
 
     /**
@@ -87,13 +90,35 @@ public class SchemaAnalysisAnnotation extends Annotation
 
 
     /**
-     * Set up he name of the schema type for this asset.
+     * Set up the name of the schema type for this asset.
      *
      * @param schemaTypeName name
      */
     public void setSchemaTypeName(String schemaTypeName)
     {
         this.schemaTypeName = schemaTypeName;
+    }
+
+
+    /**
+     * Return the number of discovered data fields in this schema.
+     *
+     * @return integer
+     */
+    public int getDiscoveredDataFields()
+    {
+        return discoveredDataFields;
+    }
+
+
+    /**
+     * Set up the number of discovered data fields in this schema.
+     *
+     * @param discoveredDataFields integer
+     */
+    public void setDiscoveredDataFields(int discoveredDataFields)
+    {
+        this.discoveredDataFields = discoveredDataFields;
     }
 
 
@@ -108,6 +133,7 @@ public class SchemaAnalysisAnnotation extends Annotation
         return "SchemaAnalysisAnnotation{" +
                 "schemaName='" + schemaName + '\'' +
                 ", schemaTypeName='" + schemaTypeName + '\'' +
+                ", discoveredDataFields=" + discoveredDataFields +
                 ", annotationType='" + getAnnotationType() + '\'' +
                 ", summary='" + getSummary() + '\'' +
                 ", confidenceLevel=" + getConfidenceLevel() +
@@ -117,14 +143,13 @@ public class SchemaAnalysisAnnotation extends Annotation
                 ", jsonProperties='" + getJsonProperties() + '\'' +
                 ", annotationStatus=" + getAnnotationStatus() +
                 ", numAttachedAnnotations=" + getNumAttachedAnnotations() +
+                ", reviewDate=" + getReviewDate() +
                 ", steward='" + getSteward() + '\'' +
                 ", reviewComment='" + getReviewComment() + '\'' +
                 ", additionalProperties=" + getAdditionalProperties() +
-                ", extendedProperties=" + getExtendedProperties() +
-                ", type=" + getType() +
-                ", GUID='" + getGUID() + '\'' +
-                ", URL='" + getURL() + '\'' +
-                ", classifications=" + getClassifications() +
+                ", headerVersion=" + getHeaderVersion() +
+                ", elementHeader=" + getElementHeader() +
+                ", typeName='" + getTypeName() + '\'' +
                 ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
@@ -139,6 +164,7 @@ public class SchemaAnalysisAnnotation extends Annotation
     @Override
     public boolean equals(Object objectToCompare)
     {
+
         if (this == objectToCompare)
         {
             return true;
@@ -152,10 +178,10 @@ public class SchemaAnalysisAnnotation extends Annotation
             return false;
         }
         SchemaAnalysisAnnotation that = (SchemaAnalysisAnnotation) objectToCompare;
-        return Objects.equals(getSchemaName(), that.getSchemaName()) &&
-                Objects.equals(getSchemaTypeName(), that.getSchemaTypeName());
+        return discoveredDataFields == that.discoveredDataFields &&
+                Objects.equals(schemaName, that.schemaName) &&
+                Objects.equals(schemaTypeName, that.schemaTypeName);
     }
-
 
 
     /**
@@ -166,6 +192,6 @@ public class SchemaAnalysisAnnotation extends Annotation
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), getSchemaName(), getSchemaTypeName());
+        return Objects.hash(super.hashCode(), getSchemaName(), getSchemaTypeName(), getDiscoveredDataFields());
     }
 }

@@ -22,14 +22,17 @@ public class ConnectorTypeConverter extends ReferenceableConverter
      * @param endpointEntity properties to convert
      * @param repositoryHelper helper object to parse entity/relationship objects
      * @param serviceName name of this component
+     * @param serverName called server
      */
     public ConnectorTypeConverter(EntityDetail             endpointEntity,
                                   OMRSRepositoryHelper     repositoryHelper,
-                                  String                   serviceName)
+                                  String                   serviceName,
+                                  String                   serverName)
     {
         super(endpointEntity,
               repositoryHelper,
-              serviceName);
+              serviceName,
+              serverName);
     }
 
 
@@ -39,6 +42,7 @@ public class ConnectorTypeConverter extends ReferenceableConverter
      *
      * @return output bean
      */
+    @Override
     public ConnectorType getBean()
     {
         final String  methodName = "getBean";

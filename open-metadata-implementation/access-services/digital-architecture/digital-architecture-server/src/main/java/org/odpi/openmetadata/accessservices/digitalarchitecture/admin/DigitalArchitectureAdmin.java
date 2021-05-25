@@ -2,13 +2,14 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.digitalarchitecture.admin;
 
-import org.odpi.openmetadata.accessservices.digitalarchitecture.auditlog.DigitalArchitectureAuditCode;
+import org.odpi.openmetadata.accessservices.digitalarchitecture.ffdc.DigitalArchitectureAuditCode;
 import org.odpi.openmetadata.accessservices.digitalarchitecture.listener.DigitalArchitectureOMRSTopicListener;
 import org.odpi.openmetadata.accessservices.digitalarchitecture.server.DigitalArchitectureServicesInstance;
 import org.odpi.openmetadata.adminservices.configuration.properties.AccessServiceConfig;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceAdmin;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
@@ -20,9 +21,9 @@ import java.util.List;
  */
 public class DigitalArchitectureAdmin extends AccessServiceAdmin
 {
-    private OMRSAuditLog                         auditLog            = null;
-    private DigitalArchitectureServicesInstance  instance            = null;
-    private String                               serverName          = null;
+    private AuditLog                            auditLog   = null;
+    private DigitalArchitectureServicesInstance instance   = null;
+    private String                              serverName = null;
 
     /**
      * Default constructor
@@ -42,37 +43,40 @@ public class DigitalArchitectureAdmin extends AccessServiceAdmin
      * @param serverUserName  user id to use on OMRS calls where there is no end user.
      * @throws OMAGConfigurationErrorException invalid parameters in the configuration properties.
      */
+    @Override
     public void initialize(AccessServiceConfig     accessServiceConfig,
                            OMRSTopicConnector      omrsTopicConnector,
                            OMRSRepositoryConnector repositoryConnector,
-                           OMRSAuditLog            auditLog,
+                           AuditLog                auditLog,
                            String                  serverUserName) throws OMAGConfigurationErrorException
     {
-        final String                 actionDescription = "initialize";
-        DigitalArchitectureAuditCode auditCode;
+        final String  actionDescription = "initialize";
 
-        auditCode = DigitalArchitectureAuditCode.SERVICE_INITIALIZING;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, DigitalArchitectureAuditCode.SERVICE_INITIALIZING.getMessageDefinition());
+
+        this.auditLog = auditLog;
 
         try
         {
-            this.auditLog = auditLog;
-
             List<String>  supportedZones = this.extractSupportedZones(accessServiceConfig.getAccessServiceOptions(),
                                                                       accessServiceConfig.getAccessServiceName(),
                                                                       auditLog);
 
+            List<String>  defaultZones = this.extractDefaultZones(accessServiceConfig.getAccessServiceOptions(),
+                                                                      accessServiceConfig.getAccessServiceName(),
+                                                                      auditLog);
+
+            List<String>  publishZones = this.extractPublishZones(accessServiceConfig.getAccessServiceOptions(),
+                                                                      accessServiceConfig.getAccessServiceName(),
+                                                                      auditLog);
+
             this.instance = new DigitalArchitectureServicesInstance(repositoryConnector,
-                                                              supportedZones,
-                                                              auditLog,
-                                                              serverUserName,
-                                                              repositoryConnector.getMaxPageSize());
+                                                                    supportedZones,
+                                                                    defaultZones,
+                                                                    publishZones,
+                                                                    auditLog,
+                                                                    serverUserName,
+                                                                    repositoryConnector.getMaxPageSize());
             this.serverName = instance.getServerName();
 
             /*
@@ -83,11 +87,11 @@ public class DigitalArchitectureAdmin extends AccessServiceAdmin
                 DigitalArchitectureOMRSTopicListener omrsTopicListener;
 
                 omrsTopicListener = new DigitalArchitectureOMRSTopicListener(accessServiceConfig.getAccessServiceOutTopic(),
-                                                                           repositoryConnector.getRepositoryHelper(),
-                                                                           repositoryConnector.getRepositoryValidator(),
-                                                                           accessServiceConfig.getAccessServiceName(),
-                                                                           supportedZones,
-                                                                           auditLog);
+                                                                             repositoryConnector.getRepositoryHelper(),
+                                                                             repositoryConnector.getRepositoryValidator(),
+                                                                             accessServiceConfig.getAccessServiceName(),
+                                                                             supportedZones,
+                                                                             auditLog);
                 super.registerWithEnterpriseTopic(accessServiceConfig.getAccessServiceName(),
                                                   serverName,
                                                   omrsTopicConnector,
@@ -95,29 +99,24 @@ public class DigitalArchitectureAdmin extends AccessServiceAdmin
                                                   auditLog);
             }
 
-            auditCode = DigitalArchitectureAuditCode.SERVICE_INITIALIZED;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                DigitalArchitectureAuditCode.SERVICE_INITIALIZED.getMessageDefinition(serverName),
+                                accessServiceConfig.toString());
         }
         catch (OMAGConfigurationErrorException error)
         {
             throw error;
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            auditCode = DigitalArchitectureAuditCode.SERVICE_INSTANCE_FAILURE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logException(actionDescription,
+                                  DigitalArchitectureAuditCode.SERVICE_INSTANCE_FAILURE.getMessageDefinition(error.getMessage()),
+                                  accessServiceConfig.toString(),
+                                  error);
+
+            super.throwUnexpectedInitializationException(actionDescription,
+                                                         AccessServiceDescription.DIGITAL_ARCHITECTURE_OMAS.getAccessServiceFullName(),
+                                                         error);
         }
     }
 
@@ -125,23 +124,16 @@ public class DigitalArchitectureAdmin extends AccessServiceAdmin
     /**
      * Shutdown the access service.
      */
+    @Override
     public void shutdown()
     {
         final String                  actionDescription = "shutdown";
-        DigitalArchitectureAuditCode  auditCode;
 
         if (instance != null)
         {
             this.instance.shutdown();
         }
 
-        auditCode = DigitalArchitectureAuditCode.SERVICE_SHUTDOWN;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(serverName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, DigitalArchitectureAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(serverName));
     }
 }

@@ -27,8 +27,8 @@ None.
 Below is an example of a failed test case.  The failure occurred early in the
 test cycle and so the test halted before there where any specific assertions
 recorded.
-```json
 
+```json
          {
             "class": "OpenMetadataTestCaseResult",
             "testCaseId": "repository-consistency-of-attribute-typedef-string-12",
@@ -43,7 +43,7 @@ recorded.
             ],
             "conformanceException": {
                 "exceptionClassName": "org.odpi.openmetadata.repositoryservices.ffdc.exception.RepositoryErrorException",
-                "errorMessage": "OMRS-REST-API-503-004 A client-side exception was received from API call getAttributeTypeDefByGUID to repository REST-connected Repository http://localhost:8080/servers/cocoMDS1.  The error message was 500 null"
+                "errorMessage": "OMRS-REST-API-503-004 A client-side exception was received from API call getAttributeTypeDefByGUID to repository REST-connected Repository https://localhost:9443/servers/cocoMDS1.  The error message was 500 null"
             },
             "notSupportAssertions": []
         }
@@ -53,7 +53,6 @@ recorded.
 This next example shows the test case running successfully:
 
 ```json
-
          {
             "class": "OpenMetadataTestCaseResult",
             "testCaseId": "repository-consistency-of-attribute-typedef-string-12",

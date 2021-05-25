@@ -22,7 +22,6 @@ It also appears in an audit log message written at start up.
 OMRS-AUDIT-0001 The Open Metadata Repository Services (OMRS) is initializing
         :                                 :                              :
 OMRS-AUDIT-0003 The local repository is initializing with metadata collection id 1b96495f-82d3-4224-9fdd-31bcb84c224c
- 
 ```
 
 If the server is connected to a cohort, the local **[cohort registry](component-descriptions/cohort-registry.md)**
@@ -77,12 +76,16 @@ sends the local metadata collection id and
         "qualifiedName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
         "name": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
         "description": "OMRS default repository REST API endpoint.",
-        "address": "http://localhost:8080/openmetadata/repositoryservices/"
+        "address": "https://localhost:9443/openmetadata/repositoryservices/"
       }
     }
   }
 }
 ```
+
+
+----
+* Return to [Repository Services Design](.)
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

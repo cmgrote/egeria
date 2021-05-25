@@ -2,6 +2,8 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.communityprofile.server.spring;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfileListResponse;
 import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfileRequestBody;
 import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfileResponse;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/community-profile/users/{userId}")
+
+@Tag(name="Community Profile OMAS", description="The Community Profile OMAS provides APIs and events for tools and applications that are managing information about people and the way they work together.", externalDocs=@ExternalDocumentation(description="Community Profile Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/community-profile/"))
 
 public class PersonalProfileResource
 {
@@ -44,7 +48,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/personal-profiles")
+    @PostMapping(path = "/personal-profiles")
 
     public GUIDResponse createPersonalProfile(@PathVariable String                     serverName,
                                               @PathVariable String                     userId,
@@ -67,7 +71,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/personal-profiles/{profileGUID}")
+    @PostMapping(path = "/personal-profiles/{profileGUID}")
 
     public VoidResponse updatePersonalProfile(@PathVariable String                     serverName,
                                               @PathVariable String                     userId,
@@ -91,7 +95,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/personal-profiles/{profileGUID}/delete")
+    @PostMapping(path = "/personal-profiles/{profileGUID}/delete")
 
     public VoidResponse   deletePersonalProfile(@PathVariable String                              serverName,
                                                 @PathVariable String                              userId,
@@ -114,7 +118,7 @@ public class PersonalProfileResource
      * PropertyServerException there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/personal-profiles/user/{profileUserId}")
+    @GetMapping(path = "/personal-profiles/user/{profileUserId}")
 
     public PersonalProfileResponse getPersonalProfileForUser(@PathVariable String serverName,
                                                              @PathVariable String userId,
@@ -135,7 +139,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/personal-profiles/{profileGUID}")
+    @GetMapping(path = "/personal-profiles/{profileGUID}")
 
     public PersonalProfileResponse getPersonalProfileByGUID(@PathVariable String        serverName,
                                                             @PathVariable String        userId,
@@ -157,7 +161,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/personal-profiles/by-employee-number/{employeeNumber}")
+    @GetMapping(path = "/personal-profiles/by-employee-number/{employeeNumber}")
 
     public PersonalProfileResponse getPersonalProfileByEmployeeNumber(@PathVariable String         serverName,
                                                                       @PathVariable String         userId,
@@ -181,7 +185,7 @@ public class PersonalProfileResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/personal-profiles/by-name/{name}")
+    @GetMapping(path = "/personal-profiles/by-name/{name}")
 
     public PersonalProfileListResponse getPersonalProfilesByName(@PathVariable String        serverName,
                                                                  @PathVariable String        userId,

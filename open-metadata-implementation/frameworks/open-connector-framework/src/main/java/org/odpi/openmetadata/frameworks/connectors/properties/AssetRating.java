@@ -6,7 +6,6 @@ package org.odpi.openmetadata.frameworks.connectors.properties;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Rating;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.StarRating;
 
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -21,6 +20,8 @@ import java.util.Objects;
  */
 public class AssetRating extends AssetElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Rating ratingBean;
 
 
@@ -102,6 +103,17 @@ public class AssetRating extends AssetElementHeader
 
 
     /**
+     * Return if this rating is private to the creating user.
+     *
+     * @return boolean
+     */
+    public boolean isPublic()
+    {
+        return ratingBean.getIsPublic();
+    }
+
+
+    /**
      * Return the user id of the person who created the rating.  Null means the user id is not known.
      *
      * @return String user
@@ -147,7 +159,7 @@ public class AssetRating extends AssetElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetRating))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -156,6 +168,18 @@ public class AssetRating extends AssetElementHeader
             return false;
         }
         AssetRating that = (AssetRating) objectToCompare;
-        return Objects.equals(getRatingBean(), that.getRatingBean());
+        return Objects.equals(ratingBean, that.ratingBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), ratingBean);
     }
 }

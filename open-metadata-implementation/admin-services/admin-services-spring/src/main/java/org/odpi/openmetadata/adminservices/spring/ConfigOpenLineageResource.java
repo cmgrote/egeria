@@ -2,8 +2,10 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.adminservices.spring;
 
-import org.odpi.openmetadata.adminservices.OMAGServerAdminForOpenLineage;
-import org.odpi.openmetadata.adminservices.configuration.properties.OpenLineageConfig;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.adminservices.OMAGServerConfigOpenLineage;
+import org.odpi.openmetadata.adminservices.configuration.properties.OpenLineageServerConfig;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,32 +15,47 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/open-metadata/admin-services/users/{userId}/servers/{serverName}")
+
+@Tag(name="Administration Services - Server Configuration", description="The server configuration administration services support the configuration" +
+        " of the open metadata and governance services within an OMAG Server. This configuration determines which of the Open Metadata and " +
+        "Governance (OMAG) services are active.",
+        externalDocs=@ExternalDocumentation(description="Further information",
+                url="https://egeria.odpi.org/open-metadata-implementation/admin-services/docs/user/configuring-an-omag-server.html"))
+
 public class ConfigOpenLineageResource
 {
-    private OMAGServerAdminForOpenLineage adminAPI = new OMAGServerAdminForOpenLineage();
+    private OMAGServerConfigOpenLineage adminAPI = new OMAGServerConfigOpenLineage();
 
 
     /**
      * @param userId             user that is issuing the request.
      * @param serverName         local server name.
-     * @param openLineageConfig configuration properties for open lineage server
+     * @param openLineageServerConfig configuration properties for open lineage server
      * @return void response or
      * OMAGNotAuthorizedException     the supplied userId is not authorized to issue this command or
      * OMAGInvalidParameterException invalid serverName or accessServicesConfig parameter.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/open-lineage/configuration")
-    public VoidResponse setAccessServicesConfig(@PathVariable String userId,
-                                                @PathVariable String serverName,
-                                                @RequestBody OpenLineageConfig openLineageConfig)
+    @PostMapping(path = "/open-lineage/configuration")
+    public VoidResponse setOpenLineageServicesConfig(@PathVariable String userId,
+                                                     @PathVariable String serverName,
+                                                     @RequestBody OpenLineageServerConfig openLineageServerConfig)
     {
-        return adminAPI.setOpenLineageConfig(userId, serverName, openLineageConfig);
+        return adminAPI.setOpenLineageConfig(userId, serverName, openLineageServerConfig);
+    }
+
+    /**
+     * Remove this service from the server configuration.
+     *
+     * @param userId  user that is issuing the request.
+     * @param serverName  local server name.
+     * @return void response
+     */
+    @DeleteMapping(path = "/open-lineage/configuration")
+    public VoidResponse shutdown(@PathVariable String userId,
+                               @PathVariable String serverName)
+    {
+        return adminAPI.removeOpenLineageConfig(userId, serverName);
     }
 
 
-    @RequestMapping(method = RequestMethod.POST, path = "/open-lineage")
-    public VoidResponse enableOpenLineageServices(@PathVariable String userId,
-                                                  @PathVariable String serverName)
-    {
-        return adminAPI.enableOpenLineageService(userId, serverName);
-    }
 }

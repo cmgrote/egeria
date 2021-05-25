@@ -20,6 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class NoteLog extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of a note log
      */
@@ -133,7 +135,7 @@ public class NoteLog extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof NoteLog))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -143,6 +145,18 @@ public class NoteLog extends Referenceable
         }
         NoteLog noteLog = (NoteLog) objectToCompare;
         return Objects.equals(getDisplayName(), noteLog.getDisplayName()) &&
-                Objects.equals(getDescription(), noteLog.getDescription());
+                       Objects.equals(getDescription(), noteLog.getDescription());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getDisplayName(), getDescription());
     }
 }

@@ -19,20 +19,22 @@ An external tool can [lookup](lookup-registration-tool.md) for the registered ex
 
 #### [Create Port Implementation with schema type](create-port-implementations.md)
 
-#### [Create Port Alias with delegation to a Port Implementation](create-port-alias.md)
+#### [Create Port Alias with delegation to a Port Implementation](create-port-aliases.md)
 
 #### [Create Process, with corresponding Port Aliases, Port Implementations and Schema Types](create-processes.md)
 
 #### [Add lineage mappings to processes](add-lineage-mappings.md)
 
-#### [Add ports to processes](add-ports.md)
+#### [Create Database](create-databases.md) 
 
+#### [Create Relational Tables](create-relational-tables.md) 
+
+#### [Create Data Files](create-data-files.md)
 
 # Sample use case
 
 [Initial load](initial-load-igc-data-stage.md) use case illustrates the integration between 
 Data Engine OMAS and IBM's DataStage ETL tool.
-
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

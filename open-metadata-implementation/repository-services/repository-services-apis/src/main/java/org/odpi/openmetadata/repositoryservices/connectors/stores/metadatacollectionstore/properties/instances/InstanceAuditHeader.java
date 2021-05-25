@@ -4,10 +4,8 @@ package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacolle
 
 import com.fasterxml.jackson.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.io.Serializable;
+import java.util.*;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -68,6 +66,12 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
  *         StatusOnDelete is populated when the instance is deleted and is se to the status when the deleted was
  *         called - it is used set the status if the instance is restored.
  *     </li>
+ *     <li>
+ *         MappingProperties is used by connector implementations that are mapping between an existing repository
+ *         and open metadata. It provides space for the connector to stash identifiers and other values that help
+ *         them to map instances stored with the open metadata equivalent.  These values should be maintained by the
+ *         master repository and stored by any repository that is saving the reference copy.
+ *     </li>
  * </ul>
  *
  */
@@ -84,6 +88,17 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 })
 public abstract class InstanceAuditHeader extends InstanceElementHeader
 {
+    private static final long    serialVersionUID = 1L;
+
+    public static final long CURRENT_AUDIT_HEADER_VERSION = 1;
+
+    /*
+     * Version number for this header.  This is used to ensure that all of the critical header information
+     * in read in a back-level version of the OMRS.  The default is 0 to indicate that the instance came from
+     * a version of the OMRS that does not have a version number encoded.
+     */
+    private long headerVersion = 0;
+
     /*
      * Summary information about this element's type
      */
@@ -115,6 +130,13 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
      */
     private InstanceStatus statusOnDelete  = null;
 
+    /*
+     * Used by connector implementations that are mapping between an existing repository and open metadata.
+     * It provides space for the connector to stash identifiers and other values that help them to map
+     * instances stored with the open metadata equivalent.  These values should be maintained by the
+     * master repository and stored by any repository that is saving the reference copy.
+     */
+    private Map<String, Serializable>  mappingProperties = null;
 
     /**
      * Default Constructor sets the instance to nulls.
@@ -136,6 +158,7 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
 
         if (template != null)
         {
+            this.headerVersion = template.getHeaderVersion();
             this.type = template.getType();
             this.instanceProvenanceType = template.getInstanceProvenanceType();
             this.metadataCollectionId = template.getMetadataCollectionId();
@@ -150,7 +173,36 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
             this.version = template.getVersion();
             this.currentStatus = template.getStatus();
             this.statusOnDelete = template.getStatusOnDelete();
+            this.mappingProperties = template.getMappingProperties();
         }
+    }
+
+
+    /**
+     * Return the version of this header.  This is used by the OMRS to determine if it is back level and
+     * should not process events from a source that is more advanced because it does not have the ability
+     * to receive all of the header properties.
+     *
+     * @return long version number - the value is incremented each time a new non-informational field is added
+     * to the audit header.
+     */
+    public long getHeaderVersion()
+    {
+        return headerVersion;
+    }
+
+
+    /**
+     * Return the version of this header.  This is used by the OMRS to determine if it is back level and
+     * should not process events from a source that is more advanced because it does not have the ability
+     * to receive all of the header properties.
+     *
+     * @param headerVersion long version number - the value is incremented each time a new non-informational field is added
+     * to the audit header.
+     */
+    public void setHeaderVersion(long headerVersion)
+    {
+        this.headerVersion = headerVersion;
     }
 
 
@@ -467,6 +519,39 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
 
 
     /**
+     * Return the additional properties used by the master repository to map to stored instances.
+     *
+     * @return property map
+     */
+    public Map<String, Serializable> getMappingProperties()
+    {
+        if (mappingProperties == null)
+        {
+            return null;
+        }
+        else if (mappingProperties.isEmpty())
+        {
+            return null;
+        }
+        else
+        {
+            return new HashMap<>(mappingProperties);
+        }
+    }
+
+
+    /**
+     * Set up the additional properties used by the master repository to map to stored instances.
+     *
+     * @param mappingProperties property map
+     */
+    public void setMappingProperties(Map<String, Serializable> mappingProperties)
+    {
+        this.mappingProperties = mappingProperties;
+    }
+
+
+    /**
      * Standard toString method.
      *
      * @return JSON style description of variables.
@@ -475,21 +560,22 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
     public String toString()
     {
         return "InstanceAuditHeader{" +
-                "type=" + type +
-                ", instanceProvenanceType=" + instanceProvenanceType +
-                ", metadataCollectionId='" + metadataCollectionId + '\'' +
-                ", metadataCollectionName='" + metadataCollectionName + '\'' +
-                ", replicatedBy='" + replicatedBy + '\'' +
-                ", instanceLicense='" + instanceLicense + '\'' +
-                ", createdBy='" + createdBy + '\'' +
-                ", updatedBy='" + updatedBy + '\'' +
-                ", maintainedBy='" + maintainedBy + '\'' +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                ", version=" + version +
-                ", statusOnDelete=" + statusOnDelete +
-                ", status=" + getStatus() +
-                '}';
+                       "type=" + type +
+                       ", instanceProvenanceType=" + instanceProvenanceType +
+                       ", metadataCollectionId='" + metadataCollectionId + '\'' +
+                       ", metadataCollectionName='" + metadataCollectionName + '\'' +
+                       ", replicatedBy='" + replicatedBy + '\'' +
+                       ", instanceLicense='" + instanceLicense + '\'' +
+                       ", createdBy='" + createdBy + '\'' +
+                       ", updatedBy='" + updatedBy + '\'' +
+                       ", maintainedBy='" + maintainedBy + '\'' +
+                       ", createTime=" + createTime +
+                       ", updateTime=" + updateTime +
+                       ", version=" + version +
+                       ", statusOnDelete=" + statusOnDelete +
+                       ", status=" + getStatus() +
+                       ", mappingProperties=" + getMappingProperties() +
+                       '}';
     }
 
 
@@ -512,19 +598,20 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
         }
         InstanceAuditHeader that = (InstanceAuditHeader) objectToCompare;
         return getVersion() == that.getVersion() &&
-                Objects.equals(getType(), that.getType()) &&
-                getInstanceProvenanceType() == that.getInstanceProvenanceType() &&
-                Objects.equals(getMetadataCollectionId(), that.getMetadataCollectionId()) &&
-                Objects.equals(getMetadataCollectionName(), that.getMetadataCollectionName()) &&
-                Objects.equals(getReplicatedBy(), that.getReplicatedBy()) &&
-                Objects.equals(getInstanceLicense(), that.getInstanceLicense()) &&
-                Objects.equals(getCreatedBy(), that.getCreatedBy()) &&
-                Objects.equals(getUpdatedBy(), that.getUpdatedBy()) &&
-                Objects.equals(getMaintainedBy(), that.getMaintainedBy()) &&
-                Objects.equals(getCreateTime(), that.getCreateTime()) &&
-                Objects.equals(getUpdateTime(), that.getUpdateTime()) &&
-                currentStatus == that.currentStatus &&
-                getStatusOnDelete() == that.getStatusOnDelete();
+                       Objects.equals(getType(), that.getType()) &&
+                       getInstanceProvenanceType() == that.getInstanceProvenanceType() &&
+                       Objects.equals(getMetadataCollectionId(), that.getMetadataCollectionId()) &&
+                       Objects.equals(getMetadataCollectionName(), that.getMetadataCollectionName()) &&
+                       Objects.equals(getReplicatedBy(), that.getReplicatedBy()) &&
+                       Objects.equals(getInstanceLicense(), that.getInstanceLicense()) &&
+                       Objects.equals(getCreatedBy(), that.getCreatedBy()) &&
+                       Objects.equals(getUpdatedBy(), that.getUpdatedBy()) &&
+                       Objects.equals(getMaintainedBy(), that.getMaintainedBy()) &&
+                       Objects.equals(getCreateTime(), that.getCreateTime()) &&
+                       Objects.equals(getUpdateTime(), that.getUpdateTime()) &&
+                       currentStatus == that.currentStatus &&
+                       getStatusOnDelete() == that.getStatusOnDelete() &&
+                       Objects.equals(getMappingProperties(), that.getMappingProperties());
     }
 
 
@@ -540,6 +627,6 @@ public abstract class InstanceAuditHeader extends InstanceElementHeader
         return Objects.hash(getType(), getInstanceProvenanceType(), getMetadataCollectionId(),
                             getMetadataCollectionName(),
                             getInstanceLicense(), getCreatedBy(), getUpdatedBy(), getCreateTime(), getMaintainedBy(), getUpdateTime(),
-                            getVersion(), getStatus(), getStatusOnDelete());
+                            getVersion(), getStatus(), getStatusOnDelete(), getMappingProperties());
     }
 }

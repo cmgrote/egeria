@@ -3,20 +3,20 @@
 package org.odpi.openmetadata.accessservices.assetconsumer.client;
 
 import org.odpi.openmetadata.accessservices.assetconsumer.api.*;
-import org.odpi.openmetadata.accessservices.assetconsumer.properties.GlossaryTerm;
-import org.odpi.openmetadata.accessservices.assetconsumer.rest.GlossaryTermListResponse;
-import org.odpi.openmetadata.accessservices.assetconsumer.rest.GlossaryTermResponse;
-import org.odpi.openmetadata.accessservices.assetconsumer.rest.LogRecordRequestBody;
+import org.odpi.openmetadata.accessservices.assetconsumer.client.rest.AssetConsumerRESTClient;
+import org.odpi.openmetadata.accessservices.assetconsumer.elements.InformalTagElement;
+import org.odpi.openmetadata.accessservices.assetconsumer.elements.MeaningElement;
+import org.odpi.openmetadata.accessservices.assetconsumer.properties.*;
+import org.odpi.openmetadata.accessservices.assetconsumer.rest.*;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDListResponse;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.NullRequestBody;
-import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.client.ConnectedAssetClientBase;
-import org.odpi.openmetadata.commonservices.ocf.metadatamanagement.rest.*;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.Connector;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.*;
 import org.odpi.openmetadata.frameworks.connectors.properties.AssetUniverse;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.*;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +55,25 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      *
      * @param serverName name of the server to connect to
      * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param auditLog logging destination
+     *
+     * @throws InvalidParameterException null URL or server name
+     */
+    public AssetConsumer(String   serverName,
+                         String   serverPlatformRootURL,
+                         AuditLog auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        this.restClient = new AssetConsumerRESTClient(serverName, serverPlatformRootURL, auditLog);
+    }
+
+
+    /**
+     * Create a new client with no authentication embedded in the HTTP request.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
      * @throws InvalidParameterException null URL or server name
      */
     public AssetConsumer(String serverName,
@@ -63,6 +82,29 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         super(serverName, serverPlatformRootURL);
 
         this.restClient = new AssetConsumerRESTClient(serverName, serverPlatformRootURL);
+    }
+
+
+    /**
+     * Create a new client that passes userId and password in each HTTP request.  This is the
+     * userId/password of the calling server.  The end user's userId is sent on each request.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param userId caller's userId embedded in all HTTP requests
+     * @param password caller's userId embedded in all HTTP requests
+     * @param auditLog logging destination
+     * @throws InvalidParameterException null URL or server name
+     */
+    public AssetConsumer(String     serverName,
+                         String     serverPlatformRootURL,
+                         String     userId,
+                         String     password,
+                         AuditLog   auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        this.restClient = new AssetConsumerRESTClient(serverName, serverPlatformRootURL, userId, password, auditLog);
     }
 
 
@@ -87,6 +129,30 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
     }
 
 
+    /**
+     * Create a new client that is going to be used in an OMAG Server (view service or integration service typically).
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param restClient client that issues the REST API calls
+     * @param maxPageSize maximum number of results supported by this server
+     * @param auditLog logging destination
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public AssetConsumer(String                  serverName,
+                         String                  serverPlatformRootURL,
+                         AssetConsumerRESTClient restClient,
+                         int                     maxPageSize,
+                         AuditLog                auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        invalidParameterHandler.setMaxPagingSize(maxPageSize);
+
+        this.restClient = restClient;
+    }
+
     /*
      * ===============================================
      * AssetConsumerAssetInterface
@@ -106,6 +172,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String  getAssetForConnection(String   userId,
                                          String   connectionGUID) throws InvalidParameterException,
                                                                          PropertyServerException,
@@ -133,6 +200,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String  getAssetForConnectionName(String userId,
                                              String connectionName) throws InvalidParameterException,
                                                                            PropertyServerException,
@@ -151,10 +219,6 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
                                                                  userId,
                                                                  connectionName);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUID();
     }
 
@@ -171,6 +235,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving the asset properties from the property servers).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public AssetUniverse getAssetProperties(String userId,
                                             String assetGUID) throws InvalidParameterException,
                                                                      PropertyServerException,
@@ -181,7 +246,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
 
 
     /**
-     * Return a list of assets with the requested name.
+     * Return a list of assets with the requested name.  The name must match exactly.
      *
      * @param userId calling user
      * @param name name to search for
@@ -200,28 +265,42 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
                                          int      startFrom,
                                          int      pageSize,
                                          String   methodName) throws InvalidParameterException,
-                                                                    PropertyServerException,
-                                                                    UserNotAuthorizedException
+                                                                     PropertyServerException,
+                                                                     UserNotAuthorizedException
     {
         final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/by-name?startFrom={2}&pageSize={3}";
 
-        GUIDListResponse restResult = restClient.callGUIDListPostRESTCall(methodName,
-                                                                          serverPlatformRootURL + urlTemplate,
-                                                                          name,
-                                                                          serverName,
-                                                                          userId,
-                                                                          startFrom,
-                                                                          pageSize);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
-        return restResult.getGUIDs();
+        return retrieveAssets(userId, name, startFrom, pageSize, urlTemplate, methodName);
     }
 
+    /**
+     * Return a list of assets with the requested search string in their name, qualified name
+     * or description.  The search string is interpreted as a regular expression (RegEx).
+     *
+     * @param userId calling user
+     * @param searchString string to search for in text
+     * @param startFrom starting element (used in paging through large result sets)
+     * @param pageSize maximum number of results to return
+     *
+     * @return list of assets that match the search string.
+     *
+     * @throws InvalidParameterException the searchString is invalid
+     * @throws PropertyServerException there is a problem access in the property server
+     * @throws UserNotAuthorizedException the user does not have access to the properties
+     */
+    @Override
+    public List<String>  findAssets(String   userId,
+                                    String   searchString,
+                                    int      startFrom,
+                                    int      pageSize) throws InvalidParameterException,
+                                                              PropertyServerException,
+                                                              UserNotAuthorizedException
+    {
+        final String methodName = "findAssets";
+        final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/by-search-string?startFrom={2}&pageSize={3}";
 
-
+        return retrieveAssets(userId, searchString, startFrom, pageSize, urlTemplate, methodName);
+    }
 
 
     /**
@@ -239,27 +318,22 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem access in the property server
      * @throws UserNotAuthorizedException the user does not have access to the properties
      */
-    public List<String>  findAssets(String   userId,
-                                    String   searchString,
-                                    int      startFrom,
-                                    int      pageSize) throws InvalidParameterException,
-                                                              PropertyServerException,
-                                                              UserNotAuthorizedException
+    private List<String>  retrieveAssets(String   userId,
+                                         String   searchString,
+                                         int      startFrom,
+                                         int      pageSize,
+                                         String   urlTemplate,
+                                         String   methodName) throws InvalidParameterException,
+                                                                     PropertyServerException,
+                                                                     UserNotAuthorizedException
     {
-        final String methodName = "findAssets";
-        final String urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/by-search-string?startFrom={2}&pageSize={3}";
-
         GUIDListResponse restResult = restClient.callGUIDListPostRESTCall(methodName,
-                                                                        serverPlatformRootURL + urlTemplate,
+                                                                          serverPlatformRootURL + urlTemplate,
                                                                           searchString,
                                                                           serverName,
                                                                           userId,
                                                                           startFrom,
                                                                           pageSize);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUIDs();
     }
@@ -279,6 +353,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem access in the property server
      * @throws UserNotAuthorizedException the user does not have access to the properties
      */
+    @Override
     public List<String> getAssetsByName(String   userId,
                                         String   name,
                                         int      startFrom,
@@ -313,6 +388,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving the asset properties from the property servers).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public List<String> getAssetsByToken(String userId,
                                          String assetToken,
                                          int    startFrom,
@@ -332,7 +408,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         {
             asset = this.getAssetSummary(restClient, serviceURLName, userId, assetToken, methodName);
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             asset = null;
         }
@@ -358,40 +434,6 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
 
 
     /**
-     * Returns the connection object corresponding to the supplied connection name.
-     *
-     * @param userId  String - userId of user making request.
-     * @param name  this may be the qualifiedName or displayName of the connection.
-     *
-     * @return Connection retrieved from property server.
-     *
-     * @throws InvalidParameterException one of the parameters is null or invalid.
-     * @throws PropertyServerException there is a problem retrieving information from the property (metadata) server.
-     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
-     */
-    private Connection getConnectionByName(String   userId,
-                                           String   name) throws InvalidParameterException,
-                                                                 PropertyServerException,
-                                                                 UserNotAuthorizedException
-    {
-        final String   methodName = "getConnectionByName";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/connections/by-name/{2}";
-
-        ConnectionResponse restResult = restClient.callConnectionGetRESTCall(methodName,
-                                                                             serverPlatformRootURL + urlTemplate,
-                                                                             serverName,
-                                                                             userId,
-                                                                             name);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
-        return restResult.getConnection();
-    }
-
-
-    /**
      * Returns the connector corresponding to the supplied connection name.
      *
      * @param userId           userId of user making request.
@@ -406,6 +448,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public Connector getConnectorByName(String userId,
                                         String connectionName) throws InvalidParameterException,
                                                                       ConnectionCheckedException,
@@ -422,7 +465,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         return this.getConnectorForConnection(restClient,
                                               serviceURLName,
                                               userId,
-                                              this.getConnectionByName(userId, connectionName),
+                                              super.getConnectionByName(restClient, serviceURLName, userId, connectionName),
                                               methodName);
     }
 
@@ -442,6 +485,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public Connector getConnectorForAsset(String userId,
                                           String assetGUID) throws InvalidParameterException,
                                                                    ConnectionCheckedException,
@@ -478,6 +522,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public Connector getConnectorByGUID(String userId,
                                         String connectionGUID) throws InvalidParameterException,
                                                                       ConnectionCheckedException,
@@ -512,6 +557,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      *                                      the creation of a connector.
      * @throws ConnectorCheckedException there are errors in the initialization of the connector.
      */
+    @Override
     public Connector  getConnectorByConnection(String     userId,
                                                Connection connection) throws InvalidParameterException,
                                                                              ConnectionCheckedException,
@@ -545,6 +591,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   addRatingToAsset(String     userId,
                                    String     assetGUID,
                                    StarRating starRating,
@@ -561,24 +608,18 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, guidParameter, methodName);
 
-        RatingRequestBody requestBody = new RatingRequestBody();
+        RatingProperties requestBody = new RatingProperties();
         requestBody.setStarRating(starRating);
         requestBody.setReview(review);
         requestBody.setPublic(isPublic);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
-
-
 
 
     /**
@@ -591,6 +632,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem updating the asset properties in the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void removeRatingFromAsset(String userId,
                                       String assetGUID) throws InvalidParameterException,
                                                                PropertyServerException,
@@ -604,22 +646,17 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, guidParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  nullRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
-
     /**
-     * Adds a "Like" to the asset.
+     * Adds a "LikeProperties" to the asset.
      *
      * @param userId      userId of user making request
      * @param assetGUID   unique identifier for the asset
@@ -629,6 +666,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void addLikeToAsset(String         userId,
                                  String       assetGUID,
                                  boolean      isPublic) throws InvalidParameterException,
@@ -644,22 +682,18 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateGUID(assetGUID, guidParameter, methodName);
 
         FeedbackRequestBody requestBody = new FeedbackRequestBody();
-        requestBody.setPublic(isPublic);
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        requestBody.setIsPublic(isPublic);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
     /**
-     * Removes a "Like" added to the asset by this user.
+     * Removes a "LikeProperties" added to the asset by this user.
      *
      * @param userId   userId of user making request.
      * @param assetGUID unique identifier for the like object.
@@ -668,6 +702,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem updating the asset properties in the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   removeLikeFromAsset(String userId,
                                       String assetGUID) throws InvalidParameterException,
                                                                PropertyServerException,
@@ -681,16 +716,12 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, guidParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  nullRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
@@ -709,6 +740,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String addCommentToAsset(String      userId,
                                     String      assetGUID,
                                     CommentType commentType,
@@ -725,10 +757,10 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(assetGUID, guidParameter, methodName);
 
-        CommentRequestBody requestBody = new CommentRequestBody();
+        CommentProperties requestBody = new CommentProperties();
         requestBody.setCommentType(commentType);
         requestBody.setCommentText(commentText);
-        requestBody.setPublic(isPublic);
+        requestBody.setIsPublic(isPublic);
 
         GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
                                                                   serverPlatformRootURL + urlTemplate,
@@ -736,10 +768,6 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
                                                                   serverName,
                                                                   userId,
                                                                   assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUID();
     }
@@ -761,6 +789,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String addCommentReply(String      userId,
                                   String      assetGUID,
                                   String      commentGUID,
@@ -777,10 +806,10 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(commentGUID, commentGUIDParameter, methodName);
 
-        CommentRequestBody  requestBody = new CommentRequestBody();
+        CommentProperties  requestBody = new CommentProperties();
         requestBody.setCommentType(commentType);
         requestBody.setCommentText(commentText);
-        requestBody.setPublic(isPublic);
+        requestBody.setIsPublic(isPublic);
 
         GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
                                                                   serverPlatformRootURL + urlTemplate,
@@ -788,10 +817,6 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
                                                                   serverName,
                                                                   userId,
                                                                   commentGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUID();
     }
@@ -811,6 +836,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   updateComment(String      userId,
                                 String      assetGUID,
                                 String      commentGUID,
@@ -829,22 +855,18 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(commentGUID, commentGUIDParameter, methodName);
 
-        CommentRequestBody  requestBody = new CommentRequestBody();
+        CommentProperties  requestBody = new CommentProperties();
         requestBody.setCommentType(commentType);
         requestBody.setCommentText(commentText);
-        requestBody.setPublic(isPublic);
+        requestBody.setIsPublic(isPublic);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID,
-                                                                  commentGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        commentGUID);
     }
 
 
@@ -859,6 +881,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem updating the asset properties in the property server.
      * @throws UserNotAuthorizedException the user does not have permission to perform this request.
      */
+    @Override
     public void removeComment(String     userId,
                               String     assetGUID,
                               String     commentGUID) throws InvalidParameterException,
@@ -875,17 +898,13 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(commentGUID, commentGUIDParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  nullRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID,
-                                                                  commentGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        commentGUID);
     }
 
 
@@ -908,10 +927,11 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    public GlossaryTerm getMeaning(String userId,
-                                   String guid) throws InvalidParameterException,
-                                                       PropertyServerException,
-                                                       UserNotAuthorizedException
+    @Override
+    public MeaningElement getMeaning(String userId,
+                                     String guid) throws InvalidParameterException,
+                                                         PropertyServerException,
+                                                         UserNotAuthorizedException
     {
         final String   methodName = "getMeaning";
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/meanings/{2}";
@@ -926,11 +946,35 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
                                                                                  userId,
                                                                                  guid);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+         return restResult.getMeaning();
+    }
 
-        return restResult.getGlossaryTerm();
+
+    /**
+     * Return the full definition (meaning) of the terms exactly matching the supplied name.
+     *
+     * @param userId the name of the calling user.
+     * @param term name of term.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return list of glossary terms that contain the properties that describe the term and its meaning.
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<MeaningElement> getMeaningByName(String userId,
+                                                 String term,
+                                                 int    startFrom,
+                                                 int    pageSize) throws InvalidParameterException,
+                                                                         PropertyServerException,
+                                                                         UserNotAuthorizedException
+    {
+        final String   methodName = "getMeaningByName";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/meanings/by-name/{2}?startFrom={3}&pageSize={4}";
+
+        return retrieveMeanings(userId, term, startFrom, pageSize, urlTemplate, methodName);
     }
 
 
@@ -939,43 +983,109 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      *
      * @param userId the name of the calling user.
      * @param term name of term.  This may include wild card characters.
-     * @param startFrom  index of the list ot start from (0 for start)
+     * @param startFrom  index of the list to start from (0 for start)
      * @param pageSize   maximum number of elements to return.
      *
-     * @return list of glossary terms that contain the properties that describe the term and its meaning.
+     * @return meaning list response or
      * @throws InvalidParameterException the userId is null or invalid.
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    public List<GlossaryTerm> getMeaningByName(String userId,
-                                               String term,
-                                               int    startFrom,
-                                               int    pageSize) throws InvalidParameterException,
-                                                                       PropertyServerException,
-                                                                       UserNotAuthorizedException
+    @Override
+    public List<MeaningElement> findMeanings(String userId,
+                                             String term,
+                                             int    startFrom,
+                                             int    pageSize) throws InvalidParameterException,
+                                                                     PropertyServerException,
+                                                                     UserNotAuthorizedException
     {
-        final String   methodName = "getMeaningByName";
-        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/meanings/by-name/{2}?startFrom={3}&pageSize={4}";
+        final String   methodName = "findMeanings";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/meanings/by-search-string/{2}?startFrom={3}&pageSize={4}";
+
+        return retrieveMeanings(userId, term, startFrom, pageSize, urlTemplate, methodName);
+    }
+
+
+    /**
+     * Return the full definition (meaning) of the terms matching the supplied name.
+     *
+     * @param userId the name of the calling user.
+     * @param term name of term.  This may include wild card characters.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     * @param urlTemplate url template in which the parameters are plugged into
+     * @param methodName calling method
+     *
+     * @return meaning list response or
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    private List<MeaningElement> retrieveMeanings(String userId,
+                                                  String term,
+                                                  int    startFrom,
+                                                  int    pageSize,
+                                                  String urlTemplate,
+                                                  String methodName) throws InvalidParameterException,
+                                                                            PropertyServerException,
+                                                                            UserNotAuthorizedException
+    {
         final String   nameParameter = "term";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateName(term, nameParameter, methodName);
 
-        GlossaryTermListResponse restResult = restClient.callGlossaryTermListGetRESTCall(methodName,
-                                                                                         serverPlatformRootURL + urlTemplate,
-                                                                                         serverName,
-                                                                                         userId,
-                                                                                         term,
-                                                                                         startFrom,
-                                                                                         pageSize);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        GlossaryTermListResponse restResult = restClient.callGlossaryTermListPostRESTCall(methodName,
+                                                                                          serverPlatformRootURL + urlTemplate,
+                                                                                          term,
+                                                                                          serverName,
+                                                                                          userId,
+                                                                                          startFrom,
+                                                                                          pageSize);
 
         return restResult.getMeanings();
     }
 
+
+    /**
+     * Return the list of unique identifiers for assets that are linked to a specific (meaning) either directly or via
+     * fields in the schema.
+     *
+     * @param userId the name of the calling user.
+     * @param termGUID unique identifier of term.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return asset guid list
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<String> getAssetsByMeaning(String userId,
+                                           String termGUID,
+                                           int    startFrom,
+                                           int    pageSize) throws InvalidParameterException,
+                                                                   PropertyServerException,
+                                                                   UserNotAuthorizedException
+    {
+        final String   methodName = "getAssetsByMeaning";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/by-meaning/{2}?startFrom={3}&pageSize={4}";
+        final String   termGUIDParameterName = "termGUID";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(termGUID, termGUIDParameterName, methodName);
+
+        GUIDListResponse restResult = restClient.callGUIDListGetRESTCall(methodName,
+                                                                         serverPlatformRootURL + urlTemplate,
+                                                                         serverName,
+                                                                         userId,
+                                                                         termGUID,
+                                                                         startFrom,
+                                                                         pageSize);
+
+        return restResult.getGUIDs();
+    }
 
 
     /*
@@ -1000,6 +1110,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException There is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void  addLogMessageToAsset(String userId,
                                       String assetGUID,
                                       String connectorInstanceId,
@@ -1025,16 +1136,12 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         requestBody.setContextId(contextId);
         requestBody.setMessage(message);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID);
     }
 
 
@@ -1061,31 +1168,27 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
     private String createTag(boolean isPublic,
-                             String methodName,
-                             String userId,
-                             String tagName,
-                             String tagDescription) throws InvalidParameterException,
-                                                           PropertyServerException,
-                                                           UserNotAuthorizedException
+                             String  methodName,
+                             String  userId,
+                             String  tagName,
+                             String  tagDescription) throws InvalidParameterException,
+                                                            PropertyServerException,
+                                                            UserNotAuthorizedException
     {
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags";
 
         invalidParameterHandler.validateUserId(userId, methodName);
 
-        TagRequestBody  tagRequestBody = new TagRequestBody();
-        tagRequestBody.setPublic(isPublic);
-        tagRequestBody.setTagName(tagName);
-        tagRequestBody.setTagDescription(tagDescription);
+        InformalTagProperties  tagRequestBody = new InformalTagProperties();
+        tagRequestBody.setIsPrivateTag(! isPublic);
+        tagRequestBody.setName(tagName);
+        tagRequestBody.setDescription(tagDescription);
 
         GUIDResponse restResult = restClient.callGUIDPostRESTCall(methodName,
                                                                   serverPlatformRootURL + urlTemplate,
                                                                   tagRequestBody,
                                                                   serverName,
                                                                   userId);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUID();
     }
@@ -1105,6 +1208,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String createPublicTag(String userId,
                                   String tagName,
                                   String tagDescription) throws InvalidParameterException,
@@ -1131,6 +1235,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public String createPrivateTag(String userId,
                                    String tagName,
                                    String tagDescription) throws InvalidParameterException,
@@ -1155,6 +1260,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   updateTagDescription(String userId,
                                        String tagGUID,
                                        String tagDescription) throws InvalidParameterException,
@@ -1169,24 +1275,22 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(tagGUID, guidParameter, methodName);
 
-        TagRequestBody  tagRequestBody = new TagRequestBody();
-        tagRequestBody.setTagDescription(tagDescription);
+        InformalTagProperties  tagRequestBody = new InformalTagProperties();
+        tagRequestBody.setDescription(tagDescription);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  tagRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  tagGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        tagRequestBody,
+                                        serverName,
+                                        userId,
+                                        tagGUID);
     }
 
 
     /**
-     * Removes a tag from the repository.  All of the relationships to referenceables are lost.
+     * Removes a tag from the repository.
+     * A private tag can be deleted by its creator and all of the references are lost;
+     * a public tag can be deleted by anyone, but only if it is not attached to any referenceable.
      *
      * @param userId    userId of user making request.
      * @param tagGUID   unique id for the tag.
@@ -1195,6 +1299,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem updating the asset properties in the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   deleteTag(String userId,
                             String tagGUID) throws InvalidParameterException,
                                                    PropertyServerException,
@@ -1208,16 +1313,12 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(tagGUID, guidParameter, methodName);
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  nullRequestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  tagGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        tagGUID);
     }
 
 
@@ -1232,10 +1333,11 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    public InformalTag getTag(String userId,
-                              String guid) throws InvalidParameterException,
-                                                  PropertyServerException,
-                                                  UserNotAuthorizedException
+    @Override
+    public InformalTagElement getTag(String userId,
+                                     String guid) throws InvalidParameterException,
+                                                         PropertyServerException,
+                                                         UserNotAuthorizedException
     {
         final String   methodName = "getTag";
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags/{2}";
@@ -1244,26 +1346,22 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateGUID(guid, guidParameter, methodName);
 
-        TagResponse restResult = restClient.callTagGetRESTCall(methodName,
-                                                               serverPlatformRootURL + urlTemplate,
-                                                               serverName,
-                                                               userId,
-                                                               guid);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        TagResponse restResult = restClient.callInformalTagGetRESTCall(methodName,
+                                                                       serverPlatformRootURL + urlTemplate,
+                                                                       serverName,
+                                                                       userId,
+                                                                       guid);
 
         return restResult.getTag();
     }
 
 
     /**
-     * Return the list of tags matching the supplied name.
+     * Return the list of tags exactly matching the supplied name.
      *
      * @param userId the name of the calling user.
-     * @param tag name of tag.  This may include wild card characters.
-     * @param startFrom  index of the list ot start from (0 for start)
+     * @param tag name of tag.
+     * @param startFrom  index of the list to start from (0 for start)
      * @param pageSize   maximum number of elements to return.
      *
      * @return tag list
@@ -1271,31 +1369,141 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem retrieving information from the property server(s).
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    public List<InformalTag> getTagsByName(String userId,
-                                           String tag,
-                                           int    startFrom,
-                                           int    pageSize) throws InvalidParameterException,
-                                                                   PropertyServerException,
-                                                                   UserNotAuthorizedException
+    @Override
+    public List<InformalTagElement> getTagsByName(String userId,
+                                                  String tag,
+                                                  int    startFrom,
+                                                  int    pageSize) throws InvalidParameterException,
+                                                                          PropertyServerException,
+                                                                          UserNotAuthorizedException
     {
         final String   methodName = "getTagsByName";
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags/by-name?startFrom={2}&pageSize={3}";
+
+        return retrieveTags(userId, tag, startFrom, pageSize, urlTemplate, methodName);
+    }
+
+
+    /**
+     * Return the list of the calling user's private tags exactly matching the supplied name.
+     *
+     * @param userId the name of the calling user.
+     * @param tag name of tag.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return tag list
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<InformalTagElement> getMyTagsByName(String userId,
+                                                    String tag,
+                                                    int    startFrom,
+                                                    int    pageSize) throws InvalidParameterException,
+                                                                            PropertyServerException,
+                                                                            UserNotAuthorizedException
+    {
+        final String   methodName = "getTagsByName";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags/private/by-name?startFrom={2}&pageSize={3}";
+
+        return retrieveTags(userId, tag, startFrom, pageSize, urlTemplate, methodName);
+    }
+
+
+    /**
+     * Return the list of tags containing the supplied string in either the name or description.
+     *
+     * @param userId the name of the calling user.
+     * @param tag name of tag.  This may include wild card characters.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return tag list
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<InformalTagElement> findTags(String userId,
+                                             String tag,
+                                             int    startFrom,
+                                             int    pageSize) throws InvalidParameterException,
+                                                                     PropertyServerException,
+                                                                     UserNotAuthorizedException
+    {
+        final String   methodName = "findTags";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags/by-search-string?startFrom={2}&pageSize={3}";
+
+        return retrieveTags(userId, tag, startFrom, pageSize, urlTemplate, methodName);
+    }
+
+
+    /**
+     * Return the list of the calling user's private tags containing the supplied string in either the name or description.
+     *
+     * @param userId the name of the calling user.
+     * @param tag name of tag.  This may include wild card characters.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return tag list
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<InformalTagElement> findMyTags(String userId,
+                                               String tag,
+                                               int    startFrom,
+                                               int    pageSize) throws InvalidParameterException,
+                                                                       PropertyServerException,
+                                                                       UserNotAuthorizedException
+    {
+        final String   methodName = "findTags";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/tags/private/by-search-string?startFrom={2}&pageSize={3}";
+
+        return retrieveTags(userId, tag, startFrom, pageSize, urlTemplate, methodName);
+    }
+
+
+    /**
+     * Return the list of tags matching the supplied name.
+     *
+     * @param userId the name of the calling user.
+     * @param tag name of tag or search string.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     * @param urlTemplate url template in which the parameters are plugged into
+     * @param methodName calling method
+     *
+     * @return meaning list response or
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    private List<InformalTagElement> retrieveTags(String userId,
+                                                  String tag,
+                                                  int    startFrom,
+                                                  int    pageSize,
+                                                  String urlTemplate,
+                                                  String methodName) throws InvalidParameterException,
+                                                                            PropertyServerException,
+                                                                            UserNotAuthorizedException
+    {
         final String   nameParameter = "tag";
 
         invalidParameterHandler.validateUserId(userId, methodName);
         invalidParameterHandler.validateName(tag, nameParameter, methodName);
 
-        TagsResponse restResult = restClient.callTagListPostRESTCall(methodName,
-                                                                     serverPlatformRootURL + urlTemplate,
-                                                                     tag,
-                                                                     serverName,
-                                                                     userId,
-                                                                     startFrom,
-                                                                     pageSize);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        TagsResponse restResult = restClient.callInformalTagListPostRESTCall(methodName,
+                                                                             serverPlatformRootURL + urlTemplate,
+                                                                             tag,
+                                                                             serverName,
+                                                                             userId,
+                                                                             startFrom,
+                                                                             pageSize);
 
         return restResult.getTags();
     }
@@ -1313,6 +1521,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem adding the asset properties to the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   addTagToAsset(String  userId,
                                 String  assetGUID,
                                 String  tagGUID,
@@ -1331,19 +1540,58 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateGUID(tagGUID, tagGUIDParameterName, methodName);
 
         FeedbackRequestBody requestBody = new FeedbackRequestBody();
-        requestBody.setPublic(isPublic);
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID,
-                                                                  tagGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        requestBody.setIsPublic(isPublic);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        tagGUID);
     }
+
+
+    /**
+     * Adds a tag (either private of public) to an element attached to an asset - such as schema element, glossary term, ...
+     *
+     * @param userId           userId of user making request.
+     * @param elementGUID      unique id for the element.
+     * @param tagGUID          unique id of the tag.
+     * @param isPublic         flag indicating whether the attachment of the tag is public or not
+     *
+     * @throws InvalidParameterException one of the parameters is null or invalid.
+     * @throws PropertyServerException there is a problem adding the asset properties to the property server.
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public void   addTagToElement(String  userId,
+                                  String  elementGUID,
+                                  String  tagGUID,
+                                  boolean isPublic) throws InvalidParameterException,
+                                                           PropertyServerException,
+                                                           UserNotAuthorizedException
+    {
+        final String   methodName  = "addTagToElement";
+        final String   elementGUIDParameterName = "elementGUID";
+        final String   tagGUIDParameterName = "tagGUID";
+
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/elements/{2}/tags/{3}";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(elementGUID, elementGUIDParameterName, methodName);
+        invalidParameterHandler.validateGUID(tagGUID, tagGUIDParameterName, methodName);
+
+        FeedbackRequestBody requestBody = new FeedbackRequestBody();
+        requestBody.setIsPublic(isPublic);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        requestBody,
+                                        serverName,
+                                        userId,
+                                        elementGUID,
+                                        tagGUID);
+    }
+
 
 
     /**
@@ -1357,6 +1605,7 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
      * @throws PropertyServerException there is a problem updating the asset properties in the property server.
      * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
+    @Override
     public void   removeTagFromAsset(String userId,
                                      String assetGUID,
                                      String tagGUID) throws InvalidParameterException,
@@ -1373,18 +1622,92 @@ public class AssetConsumer extends ConnectedAssetClientBase implements AssetCons
         invalidParameterHandler.validateGUID(assetGUID, assetGUIDParameterName, methodName);
         invalidParameterHandler.validateGUID(tagGUID, tagGUIDParameterName, methodName);
 
-        NullRequestBody  requestBody = new NullRequestBody();
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        assetGUID,
+                                        tagGUID);
+    }
 
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  assetGUID,
-                                                                  tagGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+    /**
+     * Removes a tag from an element attached to an asset - such as schema element, glossary term, ... that was added by this user.
+     *
+     * @param userId    userId of user making request.
+     * @param elementGUID unique id for the element.
+     * @param tagGUID   unique id for the tag.
+     *
+     * @throws InvalidParameterException one of the parameters is null or invalid.
+     * @throws PropertyServerException there is a problem updating the asset properties in the property server.
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public void   removeTagFromElement(String userId,
+                                       String elementGUID,
+                                       String tagGUID) throws InvalidParameterException,
+                                                              PropertyServerException,
+                                                              UserNotAuthorizedException
+    {
+        final String   methodName  = "removeTagFromElement";
+        final String   elementGUIDParameterName = "elementGUID";
+        final String   tagGUIDParameterName = "tagGUID";
+
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/elements/{2}/tags/{3}/delete";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(elementGUID, elementGUIDParameterName, methodName);
+        invalidParameterHandler.validateGUID(tagGUID, tagGUIDParameterName, methodName);
+
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        elementGUID,
+                                        tagGUID);
+    }
+
+
+    /**
+     * Return the list of unique identifiers for assets that are linked to a specific tag either directly, or via one
+     * of its schema elements.  An Asset's GUID may appear multiple times in the results if it is tagged multiple times
+     * with the requested tag.
+     *
+     * @param userId the name of the calling user.
+     * @param tagGUID unique identifier of tag.
+     * @param startFrom  index of the list to start from (0 for start)
+     * @param pageSize   maximum number of elements to return.
+     *
+     * @return asset guid list
+     * @throws InvalidParameterException the userId is null or invalid.
+     * @throws PropertyServerException there is a problem retrieving information from the property server(s).
+     * @throws UserNotAuthorizedException the requesting user is not authorized to issue this request.
+     */
+    @Override
+    public List<String> getAssetsByTag(String userId,
+                                       String tagGUID,
+                                       int    startFrom,
+                                       int    pageSize) throws InvalidParameterException,
+                                                               PropertyServerException,
+                                                               UserNotAuthorizedException
+    {
+        final String   methodName = "getAssetsByTag";
+        final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-consumer/users/{1}/assets/by-tag/{2}?startFrom={3}&pageSize={4}";
+        final String   tagGUIDParameterName = "tagGUID";
+
+        invalidParameterHandler.validateUserId(userId, methodName);
+        invalidParameterHandler.validateGUID(tagGUID, tagGUIDParameterName, methodName);
+
+        GUIDListResponse restResult = restClient.callGUIDListGetRESTCall(methodName,
+                                                                         serverPlatformRootURL + urlTemplate,
+                                                                         serverName,
+                                                                         userId,
+                                                                         tagGUID,
+                                                                         startFrom,
+                                                                         pageSize);
+
+        return restResult.getGUIDs();
     }
 }

@@ -22,10 +22,12 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class VirtualConnection extends Connection
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of a virtual connection
      */
-    protected List<EmbeddedConnection> embeddedConnections = null;
+    private List<EmbeddedConnection> embeddedConnections = null;
 
 
     /**
@@ -51,7 +53,7 @@ public class VirtualConnection extends Connection
         elementType.setElementTypeDescription(elementTypeDescription);
         elementType.setElementSourceServer(elementAccessServiceURL);
         elementType.setElementOrigin(elementOrigin);
-        elementType.setElementHomeMetadataCollectionId(elementHomeMetadataCollectionId);
+        elementType.setElementMetadataCollectionId(elementHomeMetadataCollectionId);
 
         return elementType;
     }
@@ -124,19 +126,34 @@ public class VirtualConnection extends Connection
     public String toString()
     {
         return "VirtualConnection{" +
-                "embeddedConnections=" + embeddedConnections +
-                ", displayName='" + displayName + '\'' +
-                ", description='" + description + '\'' +
-                ", connectorType=" + connectorType +
-                ", endpoint=" + endpoint +
-                ", securedProperties=" + securedProperties +
-                ", qualifiedName='" + qualifiedName + '\'' +
-                ", additionalProperties=" + additionalProperties +
-                ", type=" + type +
-                ", guid='" + guid + '\'' +
-                ", url='" + url + '\'' +
-                ", classifications=" + classifications +
-                '}';
+                       "displayName='" + getDisplayName() + '\'' +
+                       ", description='" + getDescription() + '\'' +
+                       ", connectorType=" + getConnectorType() +
+                       ", userId='" + getUserId() + '\'' +
+                       ", encryptedPassword='" + getEncryptedPassword() + '\'' +
+                       ", clearPassword='" + getClearPassword() + '\'' +
+                       ", endpoint=" + getEndpoint() +
+                       ", configurationProperties=" + getConfigurationProperties() +
+                       ", securedProperties=" + getSecuredProperties() +
+                       ", assetSummary='" + getAssetSummary() + '\'' +
+                       ", qualifiedName='" + getQualifiedName() + '\'' +
+                       ", additionalProperties=" + getAdditionalProperties() +
+                       ", meanings=" + getMeanings() +
+                       ", securityTags=" + getSecurityTags() +
+                       ", searchKeywords=" + getSearchKeywords() +
+                       ", latestChange='" + getLatestChange() + '\'' +
+                       ", latestChangeDetails=" + getLatestChangeDetails() +
+                       ", confidentialityGovernanceClassification=" + getConfidentialityGovernanceClassification() +
+                       ", confidenceGovernanceClassification=" + getConfidenceGovernanceClassification() +
+                       ", criticalityGovernanceClassification=" + getCriticalityGovernanceClassification() +
+                       ", retentionGovernanceClassification=" + getRetentionGovernanceClassification() +
+                       ", type=" + getType() +
+                       ", GUID='" + getGUID() + '\'' +
+                       ", URL='" + getURL() + '\'' +
+                       ", classifications=" + getClassifications() +
+                       ", extendedProperties=" + getExtendedProperties() +
+                       ", headerVersion=" + getHeaderVersion() +
+                       '}';
     }
 
 
@@ -153,7 +170,7 @@ public class VirtualConnection extends Connection
         {
             return true;
         }
-        if (!(objectToCompare instanceof VirtualConnection))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -163,5 +180,17 @@ public class VirtualConnection extends Connection
         }
         VirtualConnection that = (VirtualConnection) objectToCompare;
         return Objects.equals(getEmbeddedConnections(), that.getEmbeddedConnections());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getEmbeddedConnections());
     }
 }

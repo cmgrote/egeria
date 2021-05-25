@@ -2,6 +2,8 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.communityprofile.server.spring;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.accessservices.communityprofile.rest.UserIdentityRequestBody;
 import org.odpi.openmetadata.accessservices.communityprofile.server.UserIdentityRESTServices;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/community-profile/users/{userId}")
+
+@Tag(name="Community Profile OMAS", description="The Community Profile OMAS provides APIs and events for tools and applications that are managing information about people and the way they work together.", externalDocs=@ExternalDocumentation(description="Community Profile Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/community-profile/"))
 
 public class UserIdentityResource
 {
@@ -29,7 +33,7 @@ public class UserIdentityResource
      * PropertyServerException  - there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException - the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/user-identity")
+    @PostMapping(path = "/user-identity")
 
     public VoidResponse createUserIdentity(@PathVariable String                  serverName,
                                            @PathVariable String                  userId,
@@ -53,7 +57,7 @@ public class UserIdentityResource
      * PropertyServerException  - there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException - the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/personal-profiles/{profileGUID}/user-identity")
+    @PostMapping(path = "/personal-profiles/{profileGUID}/user-identity")
 
     public VoidResponse  addIdentityToProfile(@PathVariable String                  serverName,
                                               @PathVariable String                  userId,
@@ -78,7 +82,7 @@ public class UserIdentityResource
      * PropertyServerException  - there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException - the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/personal-profiles/{profileGUID}/user-identity/delete")
+    @PostMapping(path = "/personal-profiles/{profileGUID}/user-identity/delete")
 
     public VoidResponse removeIdentityFromProfile(@PathVariable String                  serverName,
                                                   @PathVariable String                  userId,
@@ -102,7 +106,7 @@ public class UserIdentityResource
      * PropertyServerException  - there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException - the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/user-identity/delete")
+    @PostMapping(path = "/user-identity/delete")
 
     public VoidResponse removeUserIdentity(@PathVariable String                  serverName,
                                            @PathVariable String                  userId,

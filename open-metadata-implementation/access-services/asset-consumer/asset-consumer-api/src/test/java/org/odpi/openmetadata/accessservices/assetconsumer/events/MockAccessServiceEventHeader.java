@@ -6,8 +6,10 @@ package org.odpi.openmetadata.accessservices.assetconsumer.events;
 /**
  * MockAccessServiceEventHeader provides a concrete class to test the access service's event header
  */
-public class MockAccessServiceEventHeader extends AssetConsumerEventHeader
+public class MockAccessServiceEventHeader extends AssetConsumerEvent
 {
+    private static final long    serialVersionUID = 1L;
+
     /**
      * Default constructor
      */

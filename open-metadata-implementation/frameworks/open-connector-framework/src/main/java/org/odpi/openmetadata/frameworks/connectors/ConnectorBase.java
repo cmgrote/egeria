@@ -6,13 +6,11 @@ import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedExcepti
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
-import org.odpi.openmetadata.frameworks.connectors.properties.AdditionalProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectedAssetProperties;
 import org.odpi.openmetadata.frameworks.connectors.properties.ConnectionProperties;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -42,13 +40,14 @@ public abstract class ConnectorBase extends Connector
     protected ConnectionProperties     connectionProperties     = null;
     protected Connection               connectionBean           = null;
     protected ConnectedAssetProperties connectedAssetProperties = null;
-    protected boolean                  isActive                 = false;
+
+    private volatile boolean           isActive                 = false;
 
     /*
      * Secured properties are protected properties from the connection.  They are retrieved as a protected
      * variable to allow subclasses of ConnectorBase to access them.
      */
-    protected Map<String, Object> securedProperties = null;
+    protected Map<String, String> securedProperties = null;
 
     private static final Logger   log = LoggerFactory.getLogger(ConnectorBase.class);
 
@@ -76,6 +75,7 @@ public abstract class ConnectorBase extends Connector
      * @param connectorInstanceId   unique id for the connector instance   useful for messages etc
      * @param connectionProperties   POJO for the configuration used to create the connector.
      */
+    @Override
     public void initialize(String               connectorInstanceId,
                            ConnectionProperties connectionProperties)
     {
@@ -99,6 +99,7 @@ public abstract class ConnectorBase extends Connector
      *
      * @return guid for the connector instance
      */
+    @Override
     public String getConnectorInstanceId()
     {
         return connectorInstanceId;
@@ -112,6 +113,7 @@ public abstract class ConnectorBase extends Connector
      *
      * @return connection properties object
      */
+    @Override
     public ConnectionProperties getConnection()
     {
         return connectionProperties;
@@ -124,6 +126,7 @@ public abstract class ConnectorBase extends Connector
      *
      * @param connectedAssetProperties   properties of the connected asset
      */
+    @Override
     public void initializeConnectedAssetProperties(ConnectedAssetProperties connectedAssetProperties)
     {
         this.connectedAssetProperties = connectedAssetProperties;
@@ -142,6 +145,7 @@ public abstract class ConnectorBase extends Connector
      * @throws PropertyServerException indicates a problem retrieving properties from a metadata repository
      * @throws UserNotAuthorizedException indicates that the user is not authorized to access the asset properties.
      */
+    @Override
     public ConnectedAssetProperties getConnectedAssetProperties(String userId) throws PropertyServerException, UserNotAuthorizedException
     {
         log.debug("ConnectedAssetProperties requested: " + connectorInstanceId + ", " + connectionProperties.getQualifiedName() + "," + connectionProperties.getDisplayName());
@@ -160,7 +164,8 @@ public abstract class ConnectorBase extends Connector
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
-    public void start() throws ConnectorCheckedException
+    @Override
+    public synchronized void start() throws ConnectorCheckedException
     {
         isActive = true;
     }
@@ -171,10 +176,13 @@ public abstract class ConnectorBase extends Connector
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
-    public  void disconnect() throws ConnectorCheckedException
+    @Override
+    public  synchronized void disconnect() throws ConnectorCheckedException
     {
         isActive = false;
     }
+
+
 
 
     /**
@@ -183,7 +191,7 @@ public abstract class ConnectorBase extends Connector
      *
      * @return isActive flag
      */
-    public boolean isActive()
+    public synchronized boolean isActive()
     {
         return isActive;
     }
@@ -196,6 +204,7 @@ public abstract class ConnectorBase extends Connector
      *
      * @return random UUID as hashcode
      */
+    @Override
     public int hashCode()
     {
         return hashCode;
@@ -249,9 +258,11 @@ public abstract class ConnectorBase extends Connector
      * ProtectedConnection provides a subclass to Connection in order to extract protected values from the
      * connection in order to supply them to the Connector implementation.
      */
-    protected class ProtectedConnection extends ConnectionProperties
+    protected static class ProtectedConnection extends ConnectionProperties
     {
-        protected ProtectedConnection(ConnectionProperties templateConnection)
+        private static final long    serialVersionUID = 1L;
+
+        ProtectedConnection(ConnectionProperties templateConnection)
         {
             super(templateConnection);
         }
@@ -263,7 +274,8 @@ public abstract class ConnectorBase extends Connector
          *
          * @return secured properties   typically user credentials for the connection
          */
-        protected Map<String, Object> getSecuredProperties()
+        @Override
+        protected Map<String, String> getSecuredProperties()
         {
             return super.getConnectionBean().getSecuredProperties();
         }
@@ -274,6 +286,7 @@ public abstract class ConnectorBase extends Connector
          *
          * @return Connection bean
          */
+        @Override
         protected Connection getConnectionBean()
         {
             return super.getConnectionBean();

@@ -3,7 +3,6 @@
 package org.odpi.openmetadata.conformance.tests.repository.types;
 
 import org.odpi.openmetadata.conformance.tests.repository.RepositoryConformanceTestCase;
-import org.odpi.openmetadata.conformance.workbenches.repository.RepositoryConformanceProfileRequirement;
 import org.odpi.openmetadata.conformance.workbenches.repository.RepositoryConformanceWorkPad;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.*;
@@ -187,22 +186,32 @@ public class TestSupportedAttributeTypeDef extends RepositoryConformanceTestCase
         /*
          * Verify that the repository confirms it supports this AttributeTypeDef
          */
-        assertCondition(metadataCollection.verifyAttributeTypeDef(workPad.getLocalServerUserId(), attributeTypeDef),
+        long start = System.currentTimeMillis();
+        boolean verified = metadataCollection.verifyAttributeTypeDef(workPad.getLocalServerUserId(), attributeTypeDef);
+        long elapsedTime = System.currentTimeMillis() - start;
+
+        assertCondition(verified,
                         assertion10,
                         testTypeName + assertionMsg10,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "verifyAttributeTypeDef",
+                        elapsedTime);
 
         /*
          * Retrieve the AttributeTypeDef by name and confirm the result is consistent.
          */
+        start = System.currentTimeMillis();
         AttributeTypeDef   resultObject = metadataCollection.getAttributeTypeDefByName(workPad.getLocalServerUserId(), attributeTypeDef.getName());
+        elapsedTime = System.currentTimeMillis() - start;
 
         assertCondition((resultObject != null),
                         assertion11,
                         testTypeName + assertionMsg11,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "getAttributeTypeDefByName",
+                        elapsedTime);
 
         assertCondition(attributeTypeDef.equals(resultObject),
                         assertion12,
@@ -213,13 +222,17 @@ public class TestSupportedAttributeTypeDef extends RepositoryConformanceTestCase
         /*
          * Retrieve the AttributeTypeDef by GUID and confirm the result is consistent.
          */
+        start = System.currentTimeMillis();
         resultObject = metadataCollection.getAttributeTypeDefByGUID(workPad.getLocalServerUserId(), attributeTypeDef.getGUID());
+        elapsedTime = System.currentTimeMillis() - start;
 
         assertCondition((resultObject != null),
                         assertion13,
                         testTypeName + assertionMsg13,
                         super.defaultProfileId,
-                        super.defaultRequirementId);
+                        super.defaultRequirementId,
+                        "getAttributeTypeDefByGUID",
+                        elapsedTime);
 
         assertCondition(attributeTypeDef.equals(resultObject),
                         assertion14,

@@ -22,6 +22,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RelatedMediaReference extends ExternalReference
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of a related media reference
      */
@@ -143,7 +145,7 @@ public class RelatedMediaReference extends ExternalReference
         {
             return true;
         }
-        if (!(objectToCompare instanceof RelatedMediaReference))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -153,6 +155,18 @@ public class RelatedMediaReference extends ExternalReference
         }
         RelatedMediaReference that = (RelatedMediaReference) objectToCompare;
         return getMediaType() == that.getMediaType() &&
-                Objects.equals(getMediaUsageList(), that.getMediaUsageList());
+                       Objects.equals(getMediaUsageList(), that.getMediaUsageList());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getMediaType(), getMediaUsageList());
     }
 }

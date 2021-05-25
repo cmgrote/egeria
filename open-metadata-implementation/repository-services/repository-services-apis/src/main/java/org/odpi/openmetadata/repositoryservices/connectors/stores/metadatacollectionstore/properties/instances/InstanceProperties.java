@@ -62,6 +62,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class InstanceProperties extends InstanceElementHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private Date                                effectiveFromTime = null;
     private Date                                effectiveToTime = null;
     private Map<String, InstancePropertyValue>  instanceProperties = new HashMap<>();
@@ -234,21 +236,16 @@ public class InstanceProperties extends InstanceElementHeader
      */
     public void setProperty(String newPropertyName, InstancePropertyValue newPropertyValue)
     {
+        final String methodName = "setProperty";
+
         if (newPropertyName == null)
         {
-        /*
-         * Build and throw exception.
-         */
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_PROPERTY_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSRuntimeException(errorCode.getHTTPErrorCode(),
+            /*
+             * Build and throw exception.
+             */
+            throw new OMRSRuntimeException(OMRSErrorCode.NULL_PROPERTY_NAME.getMessageDefinition(),
                                            this.getClass().getName(),
-                                           "setProperty",
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
         }
         else if (newPropertyValue == null)
         {

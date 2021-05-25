@@ -23,24 +23,31 @@ Through this open collaboration we aim to build a community of people who are in
 
 These principles should be respected as the procedures used to manage the Egeria project are evolved and matured.
 
-## What does it mean to be part of the Egeria community?
+## Egeria community members
 
-All participants in the Egeria community are bound by the ODPi's
-[Code of Conduct](https://github.com/odpi/specs/wiki/ODPi-Code-of-Conduct).
-There are different roles in the Egeria project.
+Anyone can become a member of the Egeria community by signing up to the
+the Egeria mailing list, joining the slack community, attending the project online meetings
+or contributing content to one of more of the GitHub repositories.
 
-### Egeria project members
+The [Community Guide](./Community-Guide.md) describes how to connect to these channels.
 
-Anyone can become a member of the Egeria community by signing up to the [mailing
-list](https://lists.odpi.org/g/odpi-pmc-datagovernance).
+All participants in the Egeria community are bound by the project's
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 As a member you are able to attend our meetings, just to listen, or to play an active part in the discussion.
-
-When you attend, your name will be recorded in the meeting minutes along with any remarks or suggestions you make.
-The agenda and minutes of our meetings are publicly available on the [Egeria wiki](https://github.com/odpi/egeria/wiki).
+The online meetings are recorded to allow community members to catch up if they are not able to attend the live meeting.
+When you attend the community meetings specifically, your name will be recorded in the meeting minutes along with any remarks or suggestions you make.
+The agenda and minutes of our community meetings are publicly available on the [Egeria wiki](https://github.com/odpi/egeria/wiki).
 
 A member may make contributions to the Egeria content by submitting a
-Git change (Patch or a Git Pull Request) to the Egeria maintainers.
-See the [Community Guide](./Community-Guide.md).
+GitHub pull request on the appropriate Git repository.
+This will be reviewed and processed by the **Egeria maintainers**.
+The process for making a contribution is described in the
+[Egeria Dojo](open-metadata-resources/open-metadata-tutorials/egeria-dojo) education.
+Each contribution is signed by the contributor to confirm they
+agree to our [Developer Certificate of Origin (DCO)](developer-resources/why-the-dco.md).
+
+Community members can progress to be **Egeria Contributors** and then **Egeria Maintainers**.
 
 ### Egeria contributors
 
@@ -48,13 +55,18 @@ Egeria contributors are members who have actively taken additional steps to prom
 
 * Provide best practices for information governance, lineage, metadata management and other related disciplines during active discussions and/or development of material
 * Actively participate in meetings and discussions
-* Promote the goals of ODPi Egeria and the benefits of open metadata to the IT community (deliver presentations, informal talks, assist at trade shows, independent blogs, etc.)
+* Promote the goals of Egeria and the benefits of open metadata to the IT community (deliver presentations, informal talks, assist at trade shows, independent blogs, etc.)
 * Assist in the recruitment of new members
 * Contribute where appropriate to documentation and code reviews, specification development, demonstration assets and other artifacts that help move Egeria forward
 
 #### How to become a contributor
 
-Being recognized as an Egeria contributor is done by nomination of an Egeria maintainer with a majority vote of Egeria maintainers to confirm. Once confirmed, you will recieve a badge to add to your social profiles and/or website, and can refer to yourself as an Egeria contributor publically.
+Being recognized as an Egeria contributor is done by nomination of an Egeria maintainer with a majority vote
+of Egeria maintainers to confirm. Once confirmed, you will receive 
+[an Egeria Contributor badge](developer-resources/badges) to add to
+your social profiles and/or website, and can publicly refer to yourself as an Egeria contributor.
+
+Egeria's contributors are recognized in the [contributors list](CONTRIBUTORS.md)
 
 ### Egeria project maintainers
 
@@ -74,12 +86,17 @@ working on the project (approximately 1.25 business days per week).
 New maintainers are voted onto the maintainers list by the existing maintainers - see
 [maintainer list](./MAINTAINERS.md).
 
-A person wishing to become a maintainer sends a note to the existing maintainers at odpi-project-egeria-maintainers@lists.odpi.org, listing their Egeria contributions to date and requesting to be made a maintainer.
+A person wishing to become a maintainer sends a note to the existing mailing list
+at egeria-technical-discuss@lists.lfaidata.foundation, listing their Egeria contributions to date and
+requesting to be made a maintainer.
 The maintainers vote and if a majority agree then the requester
-is added to the maintainers list and given write access to our
-[git repository](https://github.com/odpi/egeria). 
+is added to the maintainers list and given write access to the
+[Egeria Git repositories](developer-resources/tools/Git-GitHub.md). 
 
-Once confirmed, you will recieve a badge to add to your social profiles and/or website, and can refer to yourself as an Egeria maintainer publically.
+Once confirmed, you will receive an
+[an Egeria Maintainer badge](developer-resources/badges) to add to
+to add to your social profiles and/or website,
+and can publicly refer to yourself as an Egeria maintainer.
 
 #### When does a maintainer lose maintainer status
 
@@ -89,17 +106,14 @@ the maintainers per the voting process below.
 Emeritus maintainers can rejoin the maintainer list through a vote of the
 existing maintainers.
 
-### ODPi Egeria leadership
+### Egeria leadership
 
-The leadership of ODPi Egeria is grated through a vote of the Egeria maintainers.
-ODPi Egeria is currently lead by Mandy Chessell.
+The leadership of Egeria is granted through a vote of the Egeria maintainers.
+Egeria is currently led by Mandy Chessell.
 
 ## Egeria project meetings
 
-Some meetings are face-to-face, but most are conference calls.  For example, there is 
-a weekly call covering both the ODPi Egeria, and its sister project **ODPi Data Governance**,
-every Thursday.  [Follow this link to find out more](https://github.com/odpi/data-governance/wiki).
-
+Some meetings are face-to-face, but most are conference calls.  
 Attendance at meetings is open to all.  Conference calls can be joined without an explicit invitation.
 However, due to physical security requirements at some of the venues we use,
 it is necessary to ensure you are added to the invitee list of any face-to-face meetings
@@ -108,22 +122,23 @@ that you wish to attend and complete the necessary formalities for the venue.
 For example, the face-to-face meeting may be at a conference that requires you to register for the conference to attend.
 Or a meeting may be at an organization's offices that are required to maintain a list of everyone on site.
 
-Irrespective of whether a meeting is face-to-face or a web conference, all meetings are advertised in the Egeria calendar,
-the agenda is published before the meeting in the [Egeria wiki](https://github.com/odpi/egeria/wiki)
-and the minutes are added once the meeting is complete.
-
 ## Egeria on Slack
 
-Egeria uses the [ODPi's Slack community](http://slack.odpi.org/) to provide an ongoing dialogue between members.
+Egeria uses the [LF AI & Data Slack community](http://slack.lfai.foundation) to provide an ongoing dialogue between members.
 This creates a recorded discussion of design decisions and discussions that complement the project meetings.
-This is the main slack channel for the Egeria project:
-[https://odpi.slack.com/messages/CAZDMLTFF](https://odpi.slack.com/messages/CAZDMLTFF]).
-Additional channels will be added as new workgroups and discussion topics are established.
+
+Follow the link above and register with the LF AI & Data slack service using your email address.
+Once signed in you can see all of the active slack channels.
+The main slack channel for the Egeria project is called [#egeria-discussion](https://lfaifoundation.slack.com/archives/C01F40J2XA8)
+
+Additional channels are added from time to time as new workgroups and discussion topics are established. For Egeria these
+channel names will begin with '#egeria', you can also view slack channels from other LF AI & Data projects.
 
 ## Egeria email
 
-Egeria uses the [following distribution list](https://lists.odpi.org/g/odpi-project-egeria)
-to advertise events and news for the community.
+Egeria uses the [announce list](https://lists.lfaidata.foundation/g/egeria-announce/topics)
+to advertise events and news for the community, in addition to the [discussion list](https://lists.lfaidata.foundation/g/egeria-technical-discuss/topics)
+for more general discussion.
 
 ## Egeria content management tools
 
@@ -131,39 +146,21 @@ The Egeria content is managed in GitHub under [https://github.com/odpi/egeria](h
 It may be developed using patches, branches from master, or forks/git pull requests.
 Each change should have a [GitHub issue](https://github.com/odpi/egeria/issues) explaining why the change is being made.
 The new or updated content should follow the Egeria
-[developer guidelines](https://odpi.github.io/egeria/developer-resources/Developer-Guidelines).
+[developer guidelines](https://egeria.odpi.org/developer-resources/Developer-Guidelines).
 
 When new content proposed to the project, the person contributing is required to sign the contribution
 to confirm it conforms to the [Developer Certificate of Origin (DCO)](https://developercertificate.org/).
 
 ## Egeria project releases
 
-The Egeria team aim to create an official release of the open metadata and governance capability twice a year.
+The Egeria team aim to create an official release of the open metadata and governance capability every month.
 This release will be available to include in products and other technology through
-[Maven's Central Repository](https://search.maven.org), or through a download from the ODPi site.
+[Maven's Central Repository](https://search.maven.org), or through a download from the GitHub site.
+Details of the releases are maintained in the [release notes](release-notes).
 
-In between official releases, the latest build is also available to developers, through the Egeria site.
+In between official releases, the latest build is also available to developers in GitHub.
 
-## Egeria project releases
-
-The Egeria team aim to create an official release of the open metadata and governance capability twice a year.
-This release will be available to include in products and other technology through
-[Maven's Central Repository](https://search.maven.org), or through a download from the ODPi site.
-
-In between official releases, the latest build is also available to developers, through the Egeria site.
-
-### Release Process Overview
-
-New releases can be created by Egeria maintainers that have the appropriate access
-on [Maven Central](https://oss.sonatype.org) and are set up to sign the release with gpg2.
-
-Creating a new release has the following stages:
-
-* Creating a branch of master for the release code.
-* Within the branch removing "-SNAPSHOT" from all of the Egeria version numbers in the pom files and committing with a pull request.
-* Pushing the release to [Maven Central](https://oss.sonatype.org).
-* Documenting the release with a [Git Release](https://github.com/odpi/egeria/releases).
-* Incrementing the release numbers in the pom files in master and committing through a pull request.
+The process for creating a release is described in the [developer-resources](developer-resources/Release-Process.md)
 
 ## Conflict resolution and voting
 
@@ -172,6 +169,12 @@ between the persons involved. If a dispute cannot be decided independently, the 
 called in to decide an issue. If the maintainers themselves cannot decide an issue, the issue will
 be resolved by voting. The voting process is a simple majority in which each maintainer receives one vote.
 
+----
+* Return to [Egeria's Home Page](https://egeria.odpi.org)
+* Return to [Egeria's GitHub Top-level](https://github.com/odpi/egeria)
+
+
+* Link to [Egeria's Community Guide](Community-Guide.md)
 
 
 ----

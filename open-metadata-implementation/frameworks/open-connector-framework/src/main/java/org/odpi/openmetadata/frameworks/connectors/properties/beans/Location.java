@@ -21,6 +21,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Location extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Properties that make up the location of the asset.
      */
@@ -134,7 +136,7 @@ public class Location extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof Location))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -144,6 +146,18 @@ public class Location extends Referenceable
         }
         Location location = (Location) objectToCompare;
         return Objects.equals(getDisplayName(), location.getDisplayName()) &&
-                Objects.equals(getDescription(), location.getDescription());
+                       Objects.equals(getDescription(), location.getDescription());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getDisplayName(), getDescription());
     }
 }

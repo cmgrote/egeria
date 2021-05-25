@@ -22,8 +22,11 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ConformanceSuiteConfig extends AdminServicesConfigHeader
 {
-    private PlatformConformanceWorkbenchConfig   platformWorkbenchConfig   = null;
-    private RepositoryConformanceWorkbenchConfig repositoryWorkbenchConfig = null;
+    private static final long    serialVersionUID = 1L;
+
+    private PlatformConformanceWorkbenchConfig   platformWorkbenchConfig     = null;
+    private RepositoryConformanceWorkbenchConfig repositoryWorkbenchConfig   = null;
+    private RepositoryPerformanceWorkbenchConfig repositoryPerformanceConfig = null;
 
 
     /**
@@ -48,6 +51,7 @@ public class ConformanceSuiteConfig extends AdminServicesConfigHeader
         {
             platformWorkbenchConfig = template.getPlatformWorkbenchConfig();
             repositoryWorkbenchConfig = template.getRepositoryWorkbenchConfig();
+            repositoryPerformanceConfig = template.getRepositoryPerformanceConfig();
         }
     }
 
@@ -97,6 +101,28 @@ public class ConformanceSuiteConfig extends AdminServicesConfigHeader
 
 
     /**
+     * Return the configuration for the repository performance workbench.
+     *
+     * @return repository performance workbench config properties
+     */
+    public RepositoryPerformanceWorkbenchConfig getRepositoryPerformanceConfig()
+    {
+        return repositoryPerformanceConfig;
+    }
+
+
+    /**
+     * Set up the configuration for the repository performance workbench.
+     *
+     * @param repositoryPerformanceConfig repository performance workbench config properties
+     */
+    public void setRepositoryPerformanceConfig(RepositoryPerformanceWorkbenchConfig repositoryPerformanceConfig)
+    {
+        this.repositoryPerformanceConfig = repositoryPerformanceConfig;
+    }
+
+
+    /**
      * Standard toString method.
      *
      * @return JSON style description of variables.
@@ -107,6 +133,7 @@ public class ConformanceSuiteConfig extends AdminServicesConfigHeader
         return "ConformanceSuiteConfig{" +
                 ", platformWorkbenchConfig=" + platformWorkbenchConfig +
                 ", repositoryWorkbenchConfig=" + repositoryWorkbenchConfig +
+                ", repositoryWorkbenchConfig=" + repositoryPerformanceConfig +
                 '}';
     }
 
@@ -130,7 +157,8 @@ public class ConformanceSuiteConfig extends AdminServicesConfigHeader
         }
         ConformanceSuiteConfig that = (ConformanceSuiteConfig) objectToCompare;
         return Objects.equals(getPlatformWorkbenchConfig(), that.getPlatformWorkbenchConfig()) &&
-                Objects.equals(getRepositoryWorkbenchConfig(), that.getRepositoryWorkbenchConfig());
+                Objects.equals(getRepositoryWorkbenchConfig(), that.getRepositoryWorkbenchConfig()) &&
+                Objects.equals(getRepositoryPerformanceConfig(), that.getRepositoryPerformanceConfig());
     }
 
 
@@ -142,6 +170,6 @@ public class ConformanceSuiteConfig extends AdminServicesConfigHeader
     @Override
     public int hashCode()
     {
-        return Objects.hash(getPlatformWorkbenchConfig(), getRepositoryWorkbenchConfig());
+        return Objects.hash(getPlatformWorkbenchConfig(), getRepositoryWorkbenchConfig(), getRepositoryPerformanceConfig());
     }
 }

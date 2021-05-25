@@ -16,6 +16,42 @@ or a little less freedom of action for the original developer.
 
 As such, these guidelines exist to remind us of these broader responsibilities.
 
+## Java
+
+The minimum level required to build & run Egeria is Java 8. 
+ The code is also buildable under Java 11, but is configured for Java 8 language level and bytecode. It is also runnable under Java 11. 
+ 
+ Non-LTS releases are not tested.
+ 
+ The Java distributions we are using include:
+  * Azul zulu - as provided by Azure Pipelines. 
+  * openjdk - from Ubuntu distributions 
+  * Adoptopenjdk openjdk (with hotspot)
+  * Adoptopenjdk openjdk (with J9)  
+  
+ All automated builds are performed on Linux (Ubuntu) only using the Azul vm provided by Azure pipelines.
+  
+ Most developers use MacOS, but Windows should work also.
+
+ Also you must ensure JAVA_HOME is set, and pointing to a JDK. If this is not done, an error such as `Failed to execute goal org.apache.maven.plugins:maven-javadoc-plugin:3.1.1:jar (attach-javadocs) on project open-connector-framework: MavenReportException: Error while generating Javadoc: Unable to find javadoc command: The environment variable JAVA_HOME is not correctly set.` will be seen as the javadoc maven plugin depends on this value to work correctly.
+ 
+ Problems with any of these should be raised as issues.
+
+## Maven
+
+[Apache Maven](tools/Maven.md) is used to control the builds.
+Maven 3.5 or higher is required to build Egeria. 3.6.x or above is recommended.
+
+Note: Gradle is not currently supported. You will see build.gradle configuration files, but this is currently for prototyping only. A gradle build is neither supported nor working at this point. 
+
+## Build warnings
+
+Build output should be checked for any warnings ie `[WARNING]` and these should be eliminated.
+
+For example the java compiler is set to use `-Xlint:all` and may report warnings about deprecated function, unsafe casts, unchecked conversions etc which should be addressed.
+
+Other tools used in the build may also result in warnings which should also be addressed, whilst testcases should ensure output is captured to avoid such warnings appear in the build logs.
+
 ## License text in files
 
 All files for Egeria should have a license included.  We are using the Apache 2.0 license,
@@ -39,7 +75,7 @@ behaviour and philosophy helps people to understand its capability faster.
 
 ### README markdown files
 
-Each directory (particularly code modules) should have a `README.md` file that describes the
+Each directory (apart from Java packages) should have a `README.md` file that describes the
 content of the directory.  These files are displayed automatically by GitHub when the
 directory is accessed and this helps someone navigating through the directory structures.
 
@@ -63,6 +99,17 @@ package and its content.
 Java code files may have additional comments, particularly where the processing is complex.
 The most useful comments are those that describe the purpose, or intent of the code,
 rather than a description of what each line of code is doing.
+
+The output from a build should be checked to ensure there are no javadoc warnings - 
+for example about undocumented parameters or exceptions.
+
+## Diagnostics
+
+Egeria will typically be embedded in complex deployment environments.
+This means that we can not rely on standard developer logging provided by components
+such as SLF4J.  We try to practice First Failure Data Capture (FFDC).
+This is describes by the [FFDC Services](../open-metadata-implementation/common-services/ffdc-services) and the 
+[Audit Log Framework (ALF)](../open-metadata-implementation/frameworks/audit-log-framework).
 
 ## Dependent libraries
 
@@ -115,16 +162,77 @@ code is committed into git.
 
 * For java unit tests use /src/test/java folder of the module (standard maven location), and postfix java file names with "Test".
 
+### Working with Date and Time
+
+In Egeria, date / time instants are always represented as Unix Epoch time with millisecond precision (milliseconds elapsed since January 1, 1970).
+
+- The Egeria OMRS layer handles date / time as either `java.lang.Long` or as `java.util.Date` objects. It does not store localised versions of the date / time.
+- In other Egeria APIs that might be developed, it is **strongly recommended** to store dates and times as a Long or Date. 
+- In addition, it is possible to expose localised date representations if required.
+
 ## Testing
 
-All code submissions should be accompanied by automated tests that validate
-the essential behaviour of the code.  These automated tests should be
-incorporated in the build so that they run either at the **test** or **verify**
-stages of the build.
+Egeria is an integration technology which means that it uses
+a comprehensive multi-level approach to testing.
 
-Our preferred Java test frameworks are [TestNG](http://testng.org) and [Mockito](http://mockito.org).
+Modules include unit tests.  These unit tests should focus on
+simple validation of Java Beans, utilities and code that can easily be tested
+in isolation.  The unit tests run as part of the build and a pull request
+can not be incorporated into master if
+any unit tests are failing.  They should not significantly extend the time of the
+build since this impacts all of the contributors productivity.
+Our preferred Java frameworks for unit testing are [TestNG](http://testng.org) and [Mockito](http://mockito.org).
 
+External APIs (typically they include both a client and a server component)
+are tested using functional verification tests (FVTs).  These are located
+in the [open-metadata-test/open-metadata-fvt](../open-metadata-test/open-metadata-fvt).
+The aim of these tests is to check that the APIs validate all of their parameters and function correctly in a single server environment.
+These tests also operate as part of the build but are not run as part of the PR process.
+Modules should ensure they include some FVTs as they move to from development to
+technical preview.  By the time the module is moving to released function, the
+FVTs should be able to validate that this function is stable and correct.
+(Details of the development phases are defined on the 
+[Content Status](../open-metadata-publication/website/content-status) page.)
 
+Some connectors are tested via the [Conformance Test Suite](../open-metadata-conformance-suite).
+If you deliver a connector that is covered by this test suite, you should run the tests before
+merging changes into master.  The conformance test suite is also
+run as part of the release process.
+
+Egeria's [hands on labs](../open-metadata-resources/open-metadata-labs)
+provide a complex multi-server environment and are typically used
+by contributors to verify that their changes have not regressed any of the
+basic function.
+
+We are also interested in building out a comprehensive integration test to 
+allow automated complex multi-server scenarios that can be running
+continuously.
+
+## Using an IDE
+
+IDEs can make navigating the Egeria code easier. Each IDE can vary a lot. 
+Many of our team use [JetBrains IntelliJ](tools/IntelliJ.md).
+
+In the case of problems the first problem determination step is to check you can build Egeria normally at the command line ie `mvn clean install` from the source 
+root. That will prove at least java, maven are correct . 
+
+In addition, importantly, this also will retrieve additional dependencies which are not available in public
+repositories are retrieved, otherwise you may see an error like `Cannot resolve com.ibm.gaiandb:gaian` or `Cannot resolve org.apache.derby:derby`.
+
+We have also noticed that you need to ensure JAVA_HOME is set (see under 'Java' earlier on this page) or the build will fail running javadoc. 
+
+## Issue Tracking
+
+See [Issue Tracking](Issue-Tracking.md) for information about how we use issues in Egeria.
+
+## Creating Postman Samples
+
+[Postman](https://www.getpostman.com) is a great tool for experimenting with REST APIs.  It helps during development
+and also while someone is learning how to call Egeria.
+[Creating Postman Samples](Postman-Samples.md) describes how to create a Postman sample for a new API.
+
+----
+* Return to [Developer Resources](.)
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

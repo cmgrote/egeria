@@ -3,6 +3,8 @@
 package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore;
 
 
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Classification;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.AttributeTypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefPatch;
@@ -11,11 +13,14 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryValidator;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
 
+import java.util.Date;
+import java.util.List;
+
 
 /**
  * OMRSDynamicTypeMetadataCollectionBase provides a base class for an open metadata repository that
  * has a dynamic type system.  It begins with no types defined and builds up the knowledge of the types
- * as they are added through the API
+ * as they are added through the API.
  */
 public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectionBase
 {
@@ -56,6 +61,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      * @throws InvalidTypeDefException the new TypeDef has invalid contents.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public void addTypeDef(String  userId,
                            TypeDef newTypeDef) throws InvalidParameterException,
                                                       RepositoryErrorException,
@@ -100,6 +106,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      * @throws InvalidTypeDefException the new TypeDef has invalid contents.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public  void addAttributeTypeDef(String             userId,
                                      AttributeTypeDef newAttributeTypeDef) throws InvalidParameterException,
                                                                                   RepositoryErrorException,
@@ -144,6 +151,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      * @throws InvalidTypeDefException the new TypeDef has invalid contents.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public boolean verifyTypeDef(String       userId,
                                  TypeDef      typeDef) throws InvalidParameterException,
                                                               RepositoryErrorException,
@@ -169,9 +177,8 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
             return false;
         }
         else if ((existingTypeDef.getName().equals(typeDef.getName())) &&
-                (existingTypeDef.getVersion() == typeDef.getVersion()) &&
-                (existingTypeDef.getVersionName().equals(typeDef.getVersionName())) &&
-                (existingTypeDef.getCreateTime().equals(typeDef.getCreateTime())))
+                 (existingTypeDef.getGUID().equals(typeDef.getGUID())) &&
+                 (existingTypeDef.getVersionName().equals(typeDef.getVersionName())))
         {
             return true;
         }
@@ -196,6 +203,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      * @throws InvalidTypeDefException the new TypeDef has invalid contents.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public  boolean verifyAttributeTypeDef(String            userId,
                                            AttributeTypeDef  attributeTypeDef) throws InvalidParameterException,
                                                                                       RepositoryErrorException,
@@ -245,36 +253,27 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      * @throws TypeDefNotKnownException the requested TypeDef is not found in the metadata collection.
      * @throws PatchErrorException the TypeDef can not be updated because the supplied patch is incompatible
      *                               with the stored TypeDef.
-     * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public TypeDef updateTypeDef(String       userId,
                                  TypeDefPatch typeDefPatch) throws InvalidParameterException,
                                                                    RepositoryErrorException,
                                                                    TypeDefNotKnownException,
-                                                                   PatchErrorException,
-                                                                   UserNotAuthorizedException
+                                                                   PatchErrorException
     {
         final String  methodName           = "updateTypeDef";
-        final String  typeDefParameterName = "typeDefPatch";
 
         /*
-         * Validate parameters
+         * Validate parameters - this method returns the existing TypeDef if needed.
          */
-        super.updateTypeDefParameterValidation(userId, typeDefPatch, methodName);
+        TypeDef typeDef = super.updateTypeDefParameterValidation(userId, typeDefPatch, methodName);
 
         /*
-         * Perform operation
+         * Perform operation - this function will validate the patch (throwing exceptions if errors found
+         * and apply it to the existing typedef, returning the updated one.  If the real repository implementation
+         * needs to work with the patched TypeDef, it can use the result from applyPatch().
          */
-        TypeDef  existingTypeDef = repositoryHelper.getTypeDefByName(repositoryName, typeDefPatch.getTypeName());
-
-        if (existingTypeDef == null)
-        {
-            super.reportUnknownTypeGUID(typeDefPatch.getTypeDefGUID(),
-                                        typeDefParameterName,
-                                        methodName);
-        }
-
-        return repositoryHelper.applyPatch(repositoryName, existingTypeDef, typeDefPatch);
+        return repositoryHelper.applyPatch(repositoryName, typeDef, typeDefPatch);
     }
 
 
@@ -294,6 +293,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      *                                 TypeDef can be deleted.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public void deleteTypeDef(String    userId,
                               String    obsoleteTypeDefGUID,
                               String    obsoleteTypeDefName) throws InvalidParameterException,
@@ -346,6 +346,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      *                                 AttributeTypeDef can be deleted.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public void deleteAttributeTypeDef(String    userId,
                                        String    obsoleteTypeDefGUID,
                                        String    obsoleteTypeDefName) throws InvalidParameterException,
@@ -400,6 +401,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      *                                    in the metadata collection.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public  TypeDef reIdentifyTypeDef(String     userId,
                                       String     originalTypeDefGUID,
                                       String     originalTypeDefName,
@@ -470,6 +472,7 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
      *                                    found in the metadata collection.
      * @throws UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
+    @Override
     public  AttributeTypeDef reIdentifyAttributeTypeDef(String     userId,
                                                         String     originalAttributeTypeDefGUID,
                                                         String     originalAttributeTypeDefName,
@@ -519,5 +522,97 @@ public class OMRSDynamicTypeMetadataCollectionBase extends OMRSMetadataCollectio
         }
 
         return existingAttributeTypeDef;
+    }
+
+
+    /**
+     * Retrieve any locally homed classifications assigned to the requested entity.  This method is implemented by repository connectors that are able
+     * to store classifications for entities that are homed in another repository.
+     *
+     * @param userId unique identifier for requesting user.
+     * @param entityGUID unique identifier of the entity with classifications to retrieve
+     * @return list of all of the classifications for this entity that are homed in this repository
+     * @throws InvalidParameterException the entity is null.
+     * @throws RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored.
+     * @throws EntityNotKnownException the entity is not recognized by this repository
+     * @throws UserNotAuthorizedException to calling user is not authorized to retrieve this metadata
+     * @throws FunctionNotSupportedException this method is not supported
+     */
+    @Override
+    public List<Classification> getHomeClassifications(String userId,
+                                                       String entityGUID) throws InvalidParameterException,
+                                                                                 RepositoryErrorException,
+                                                                                 EntityNotKnownException,
+                                                                                 UserNotAuthorizedException,
+                                                                                 FunctionNotSupportedException
+    {
+        final String  methodName = "getHomeClassifications";
+
+        /*
+         * Validate parameters
+         */
+        super.getInstanceParameterValidation(userId, entityGUID, methodName);
+
+        /*
+         * Perform operation
+         */
+        try
+        {
+            EntityDetail entityDetail = this.getEntityDetail(userId, entityGUID);
+
+            return repositoryHelper.getHomeClassificationsFromEntity(repositoryName, entityDetail, metadataCollectionId, methodName);
+        }
+        catch (EntityProxyOnlyException  error)
+        {
+            return null;
+        }
+    }
+
+
+    /**
+     * Retrieve any locally homed classifications assigned to the requested entity.  This method is implemented by repository connectors that are able
+     * to store classifications for entities that are homed in another repository.
+     *
+     * @param userId unique identifier for requesting user.
+     * @param entityGUID unique identifier of the entity with classifications to retrieve
+     * @param asOfTime the time used to determine which version of the entity that is desired.
+     * @return list of all of the classifications for this entity that are homed in this repository
+     * @throws InvalidParameterException the entity is null.
+     * @throws RepositoryErrorException there is a problem communicating with the metadata repository where
+     *                                    the metadata collection is stored.
+     * @throws EntityNotKnownException the entity is not recognized by this repository
+     * @throws UserNotAuthorizedException to calling user is not authorized to retrieve this metadata
+     * @throws FunctionNotSupportedException this method is not supported
+     */
+    @Override
+    public List<Classification> getHomeClassifications(String userId,
+                                                       String entityGUID,
+                                                       Date asOfTime) throws InvalidParameterException,
+                                                                             RepositoryErrorException,
+                                                                             EntityNotKnownException,
+                                                                             UserNotAuthorizedException,
+                                                                             FunctionNotSupportedException
+    {
+        final String  methodName = "getHomeClassifications (with history)";
+
+        /*
+         * Validate parameters
+         */
+        super.getInstanceParameterValidation(userId, entityGUID, methodName);
+
+        /*
+         * Perform operation
+         */
+        try
+        {
+            EntityDetail entityDetail = this.getEntityDetail(userId, entityGUID, asOfTime);
+
+            return repositoryHelper.getHomeClassificationsFromEntity(repositoryName, entityDetail, metadataCollectionId, methodName);
+        }
+        catch (EntityProxyOnlyException  error)
+        {
+            return null;
+        }
     }
 }

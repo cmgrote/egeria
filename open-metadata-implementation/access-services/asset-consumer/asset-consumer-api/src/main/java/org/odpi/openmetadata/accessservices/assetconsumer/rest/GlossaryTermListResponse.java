@@ -6,9 +6,10 @@ package org.odpi.openmetadata.accessservices.assetconsumer.rest;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.odpi.openmetadata.accessservices.assetconsumer.properties.GlossaryTerm;
+import org.odpi.openmetadata.accessservices.assetconsumer.elements.MeaningElement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,10 +23,12 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class GlossaryTermListResponse extends AssetConsumerOMASAPIResponse
+public class GlossaryTermListResponse extends PagedResponse
 {
-    private List<GlossaryTerm> meanings            = null;
-    private int                startingFromElement = 0;
+    private static final long    serialVersionUID = 1L;
+
+    private List<MeaningElement> meanings            = null;
+    private int                  startingFromElement = 0;
 
 
     /**
@@ -59,7 +62,7 @@ public class GlossaryTermListResponse extends AssetConsumerOMASAPIResponse
      *
      * @return list of glossary terms
      */
-    public List<GlossaryTerm> getMeanings()
+    public List<MeaningElement> getMeanings()
     {
         if (meanings == null)
         {
@@ -71,11 +74,11 @@ public class GlossaryTermListResponse extends AssetConsumerOMASAPIResponse
         }
         else
         {
-            List<GlossaryTerm>  clonedList = new ArrayList<>();
+            List<MeaningElement>  clonedList = new ArrayList<>();
 
-            for (GlossaryTerm  existingElement : meanings)
+            for (MeaningElement  existingElement : meanings)
             {
-                clonedList.add(new GlossaryTerm(existingElement));
+                clonedList.add(new MeaningElement(existingElement));
             }
 
             return clonedList;
@@ -88,7 +91,7 @@ public class GlossaryTermListResponse extends AssetConsumerOMASAPIResponse
      *
      * @param meanings list
      */
-    public void setMeanings(List<GlossaryTerm> meanings)
+    public void setMeanings(List<MeaningElement> meanings)
     {
         this.meanings = meanings;
     }
@@ -127,9 +130,13 @@ public class GlossaryTermListResponse extends AssetConsumerOMASAPIResponse
         return "GlossaryTermListResponse{" +
                 "meanings=" + meanings +
                 ", startingFromElement=" + startingFromElement +
-                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +

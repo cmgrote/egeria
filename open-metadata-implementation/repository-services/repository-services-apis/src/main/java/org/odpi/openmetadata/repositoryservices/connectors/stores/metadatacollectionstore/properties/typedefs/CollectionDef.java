@@ -23,6 +23,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class CollectionDef extends AttributeTypeDef
 {
+    private static final long    serialVersionUID = 1L;
+
     private CollectionDefCategory      collectionDefCategory = null;
     private int                        argumentCount         = 0;
     private List<PrimitiveDefCategory> argumentTypes         = null;
@@ -162,14 +164,7 @@ public class CollectionDef extends AttributeTypeDef
      */
     public void setArgumentTypes(List<PrimitiveDefCategory> argumentTypes)
     {
-        if (argumentTypes == null)
-        {
-            this.argumentTypes = null;
-        }
-        else
-        {
-            this.argumentTypes = new ArrayList<>(argumentTypes);
-        }
+        this.argumentTypes = argumentTypes;
     }
 
 
@@ -195,10 +190,10 @@ public class CollectionDef extends AttributeTypeDef
 
 
     /**
-     * Verify that supplied object has the same properties.
+     * Validate that an object is equal depending on their stored values.
      *
-     * @param objectToCompare object to test
-     * @return result
+     * @param objectToCompare object
+     * @return boolean result
      */
     @Override
     public boolean equals(Object objectToCompare)
@@ -207,7 +202,7 @@ public class CollectionDef extends AttributeTypeDef
         {
             return true;
         }
-        if (!(objectToCompare instanceof CollectionDef))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -216,8 +211,20 @@ public class CollectionDef extends AttributeTypeDef
             return false;
         }
         CollectionDef that = (CollectionDef) objectToCompare;
-        return getArgumentCount() == that.getArgumentCount() &&
-                getCollectionDefCategory() == that.getCollectionDefCategory() &&
-                Objects.equals(getArgumentTypes(), that.getArgumentTypes());
+        return argumentCount == that.argumentCount &&
+                       collectionDefCategory == that.collectionDefCategory &&
+                       Objects.equals(argumentTypes, that.argumentTypes);
+    }
+
+
+    /**
+     * Return a hash code based on the values of this object.
+     *
+     * @return in hash code
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), collectionDefCategory, argumentCount, argumentTypes);
     }
 }

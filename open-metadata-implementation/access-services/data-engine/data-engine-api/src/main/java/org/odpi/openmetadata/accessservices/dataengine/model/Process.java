@@ -5,193 +5,238 @@ package org.odpi.openmetadata.accessservices.dataengine.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.OwnerType;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
+/**
+ * The type Process.
+ */
 @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Process implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private String qualifiedName;
+public class Process extends Asset {
     private String name;
-    private String description;
-    private String latestChange;
-    private List<String> zoneMembership;
-    private String displayName;
-    private String owner;
-    private OwnerType ownerType;
     private String formula;
+    private String implementationLanguage;
     private List<PortImplementation> portImplementations;
     private List<PortAlias> portAliases;
     private List<LineageMapping> lineageMappings;
+    private Collection collection;
+    private UpdateSemantic updateSemantic;
+    private List<ParentProcess> parentProcesses;
 
+    /**
+     * Instantiates a new Process.
+     */
     public Process() {
+        super();
     }
 
-    public Process(String qualifiedName, String name, String description, String latestChange,
-                   List<String> zoneMembership, String displayName, String formula, String owner, OwnerType ownerType,
-                   List<PortImplementation> portImplementations, List<PortAlias> portAliases,
-                   List<LineageMapping> lineageMappings) {
-        this.qualifiedName = qualifiedName;
-        this.name = name;
-        this.description = description;
-        this.latestChange = latestChange;
-        this.zoneMembership = zoneMembership;
-        this.displayName = displayName;
-        this.formula = formula;
-        this.owner = owner;
-        this.ownerType = ownerType;
-        this.portImplementations = portImplementations;
-        this.portAliases = portAliases;
-        this.lineageMappings = lineageMappings;
-
-    }
-
-    public String getQualifiedName() {
-        return qualifiedName;
-    }
-
-    public void setQualifiedName(String qualifiedName) {
-        this.qualifiedName = qualifiedName;
-    }
-
+    /**
+     * Gets the process name.
+     *
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets up the process name.
+     *
+     * @param name string name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getLatestChange() {
-        return latestChange;
-    }
-
-    public void setLatestChange(String latestChange) {
-        this.latestChange = latestChange;
-    }
-
-    public List<String> getZoneMembership() {
-        return zoneMembership;
-    }
-
-    public void setZoneMembership(List<String> zoneMembership) {
-        this.zoneMembership = zoneMembership;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    public void setOwner(String owner) {
-        this.owner = owner;
-    }
-
-    public OwnerType getOwnerType() {
-        return ownerType;
-    }
-
-    public void setOwnerType(OwnerType ownerType) {
-        this.ownerType = ownerType;
-    }
-
+    /**
+     * Return the description of the processing performed by this process.
+     *
+     * @return string description
+     */
     public String getFormula() {
         return formula;
     }
 
+    /**
+     * Set up the the description of the processing performed by this process.
+     *
+     * @param formula string description
+     */
     public void setFormula(String formula) {
         this.formula = formula;
     }
 
+    /**
+     * Return the name of the programming language that this process is implemented in.
+     *
+     * @return string name
+     */
+    public String getImplementationLanguage() {
+        return implementationLanguage;
+    }
+
+    /**
+     * Set up the name of the programming language that this process is implemented in.
+     *
+     * @param implementationLanguage string name
+     */
+    public void setImplementationLanguage(String implementationLanguage) {
+        this.implementationLanguage = implementationLanguage;
+    }
+
+    /**
+     * Gets port implementations.
+     *
+     * @return the port implementations
+     */
     public List<PortImplementation> getPortImplementations() {
         return portImplementations;
     }
 
+    /**
+     * Sets port implementations.
+     *
+     * @param portImplementations the port implementations
+     */
     public void setPortImplementations(List<PortImplementation> portImplementations) {
         this.portImplementations = portImplementations;
     }
 
+    /**
+     * Gets port aliases.
+     *
+     * @return the port aliases
+     */
     public List<PortAlias> getPortAliases() {
         return portAliases;
     }
 
+    /**
+     * Sets port aliases.
+     *
+     * @param portAliases the port aliases
+     */
     public void setPortAliases(List<PortAlias> portAliases) {
         this.portAliases = portAliases;
     }
 
+    /**
+     * Gets lineage mappings.
+     *
+     * @return the lineage mappings
+     */
     public List<LineageMapping> getLineageMappings() {
         return lineageMappings;
     }
 
+    /**
+     * Sets lineage mappings.
+     *
+     * @param lineageMappings the lineage mappings
+     */
     public void setLineageMappings(List<LineageMapping> lineageMappings) {
         this.lineageMappings = lineageMappings;
     }
 
-    @Override
-    public String toString() {
-        return "Process{" +
-                "qualifiedName='" + qualifiedName + '\'' +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", latestChange='" + latestChange + '\'' +
-                ", zoneMembership=" + zoneMembership +
-                ", displayName='" + displayName + '\'' +
-                ", owner='" + owner + '\'' +
-                ", ownerType=" + ownerType +
-                ", formula='" + formula + '\'' +
-                ", portImplementations=" + portImplementations +
-                ", portAliases=" + portAliases +
-                ", lineageMappings=" + lineageMappings +
-                '}';
+    /**
+     * Gets update semantic.
+     *
+     * @return the update semantic
+     */
+    public UpdateSemantic getUpdateSemantic() {
+        if (updateSemantic == null) {
+            return UpdateSemantic.REPLACE;
+        }
+
+        return updateSemantic;
+    }
+
+    /**
+     * Sets update semantic.
+     *
+     * @param updateSemantic the update semantic
+     */
+    public void setUpdateSemantic(UpdateSemantic updateSemantic) {
+        this.updateSemantic = updateSemantic;
+    }
+
+    /**
+     * Gets parent processes.
+     *
+     * @return the parent processes
+     */
+    public List<ParentProcess> getParentProcesses() {
+        return parentProcesses;
+    }
+
+    /**
+     * Sets parent processes.
+     *
+     * @param parentProcesses the parent processes
+     */
+    public void setParentProcesses(List<ParentProcess> parentProcesses) {
+        this.parentProcesses = parentProcesses;
+    }
+
+
+    /**
+     *  Retrieves the collection to which the process belongs
+     * */
+    public Collection getCollection() {
+        return collection;
+    }
+
+
+    /**
+     * Sets the collection.
+     *
+     * @param collection the collection to which the process belongs
+     */
+    public void setCollection(Collection collection) {
+        this.collection = collection;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
         Process process = (Process) o;
-        return Objects.equals(qualifiedName, process.qualifiedName) &&
-                Objects.equals(name, process.name) &&
-                Objects.equals(description, process.description) &&
-                Objects.equals(latestChange, process.latestChange) &&
-                Objects.equals(zoneMembership, process.zoneMembership) &&
-                Objects.equals(displayName, process.displayName) &&
-                Objects.equals(owner, process.owner) &&
-                ownerType == process.ownerType &&
+        return Objects.equals(name, process.name) &&
                 Objects.equals(formula, process.formula) &&
+                Objects.equals(implementationLanguage, process.implementationLanguage) &&
                 Objects.equals(portImplementations, process.portImplementations) &&
                 Objects.equals(portAliases, process.portAliases) &&
-                Objects.equals(lineageMappings, process.lineageMappings);
+                Objects.equals(lineageMappings, process.lineageMappings) &&
+                Objects.equals(collection, process.collection) &&
+                updateSemantic == process.updateSemantic &&
+                Objects.equals(parentProcesses, process.parentProcesses);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(qualifiedName, name, description, latestChange, zoneMembership, displayName, owner,
-                ownerType, formula, portImplementations, portAliases, lineageMappings);
+        return Objects.hash(super.hashCode(), name, formula, implementationLanguage, portImplementations, portAliases, lineageMappings,
+                collection, updateSemantic, parentProcesses);
+    }
+
+    @Override
+    public String toString() {
+        return "Process{" +
+                "name='" + name + '\'' +
+                ", formula='" + formula + '\'' +
+                ", implementationLanguage='" + implementationLanguage + '\'' +
+                ", portImplementations=" + portImplementations +
+                ", portAliases=" + portAliases +
+                ", lineageMappings=" + lineageMappings +
+                ", collection=" + collection +
+                ", updateSemantic=" + updateSemantic +
+                ", parentProcesses=" + parentProcesses +
+                '}';
     }
 }
-

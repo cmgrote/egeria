@@ -20,6 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Relationship extends InstanceHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private   InstanceProperties    relationshipProperties = null;
 
     private   EntityProxy           entityOneProxy         = null;
@@ -134,7 +136,9 @@ public class Relationship extends InstanceHeader
         {
             return null;
         }
-        else if (relationshipProperties.getInstanceProperties() == null)
+        else if ((relationshipProperties.getInstanceProperties() == null) &&
+                 (relationshipProperties.getEffectiveFromTime() == null) &&
+                 (relationshipProperties.getEffectiveToTime() == null))
         {
             return null;
         }

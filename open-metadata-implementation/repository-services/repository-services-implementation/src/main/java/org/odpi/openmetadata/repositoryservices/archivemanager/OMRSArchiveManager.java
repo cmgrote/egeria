@@ -2,10 +2,10 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.archivemanager;
 
-import org.odpi.openmetadata.repositoryservices.archivemanager.opentypes.OpenMetadataTypesArchive;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.opentypes.OpenMetadataTypesArchive;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 
 import org.odpi.openmetadata.repositoryservices.connectors.stores.archivestore.properties.*;
@@ -37,7 +37,7 @@ public class OMRSArchiveManager
      * The audit log provides a verifiable record of the open metadata archives that have been loaded into
      * the open metadata repository.  The Logger is for standard debug.
      */
-    private OMRSAuditLog auditLog;
+    private AuditLog auditLog;
 
     /**
      * Constructor to save the initial list of open metadata archives from the server startup configuration.
@@ -47,7 +47,7 @@ public class OMRSArchiveManager
      * @param auditLog audit log for this component.
      */
     public OMRSArchiveManager(List<OpenMetadataArchiveStoreConnector>    startUpOpenMetadataArchives,
-                              OMRSAuditLog                               auditLog)
+                              AuditLog                                   auditLog)
     {
         this.auditLog = auditLog;
 
@@ -71,7 +71,7 @@ public class OMRSArchiveManager
                 {
                     archiveStore.disconnect();
                 }
-                catch (Throwable error)
+                catch (Exception error)
                 {
                     /*
                      * nothing to do
@@ -106,7 +106,7 @@ public class OMRSArchiveManager
          */
         for (OpenMetadataArchiveStoreConnector archiveStore : this.openMetadataArchiveStores)
         {
-            processOpenMetadataArchiveStore(archiveStore, repositoryContentManager, instanceProcessor);
+            processOpenMetadataArchiveStore(archiveStore, "Startup archive list", repositoryContentManager, instanceProcessor);
         }
     }
 
@@ -116,10 +116,12 @@ public class OMRSArchiveManager
      * This method allows archives to be loaded into a running server.
      *
      * @param archiveStore  new open metadata archive to process
+     * @param archiveSource source of the archive
      */
-    public void addOpenMetadataArchive(OpenMetadataArchiveStoreConnector     archiveStore)
+    public void addOpenMetadataArchive(OpenMetadataArchiveStoreConnector     archiveStore,
+                                       String                                archiveSource)
     {
-        this.processOpenMetadataArchiveStore(archiveStore, repositoryContentManager, localInstanceEventProcessor);
+        this.processOpenMetadataArchiveStore(archiveStore, archiveSource, repositoryContentManager, localInstanceEventProcessor);
         this.openMetadataArchiveStores.add(archiveStore);
     }
 
@@ -134,7 +136,7 @@ public class OMRSArchiveManager
         OpenMetadataArchive      openMetadataTypes        = openMetadataTypesArchive.getOpenMetadataArchive();
 
         repositoryContentManager.setOpenMetadataTypesOriginGUID(openMetadataTypesArchive.getArchiveGUID());
-        processOpenMetadataArchive(openMetadataTypes, repositoryContentManager, localInstanceEventProcessor);
+        processOpenMetadataArchive(openMetadataTypes, "Open Metadata Types", repositoryContentManager, localInstanceEventProcessor);
     }
 
 
@@ -143,10 +145,12 @@ public class OMRSArchiveManager
      * repository (if it exists).
      *
      * @param archiveStore open metadata archive  to process
+     * @param archiveSource source of the archive - such as file name
      * @param typeDefProcessor receiver of new TypeDefs
      * @param instanceProcessor receiver of new instances
      */
     private void processOpenMetadataArchiveStore(OpenMetadataArchiveStoreConnector    archiveStore,
+                                                 String                               archiveSource,
                                                  OMRSTypeDefEventProcessorInterface   typeDefProcessor,
                                                  OMRSInstanceEventProcessorInterface  instanceProcessor)
     {
@@ -162,18 +166,11 @@ public class OMRSArchiveManager
             {
                 final String     actionDescription = "Process Open Metadata Archive";
 
-                OMRSAuditCode auditCode = OMRSAuditCode.EMPTY_ARCHIVE;
-                auditLog.logRecord(actionDescription,
-                                   auditCode.getLogMessageId(),
-                                   auditCode.getSeverity(),
-                                   auditCode.getFormattedLogMessage(),
-                                   null,
-                                   auditCode.getSystemAction(),
-                                   auditCode.getUserAction());
+                auditLog.logMessage(actionDescription, OMRSAuditCode.EMPTY_ARCHIVE.getMessageDefinition(archiveSource));
             }
             else
             {
-                processOpenMetadataArchive(archiveContent, typeDefProcessor, instanceProcessor);
+                processOpenMetadataArchive(archiveContent, archiveSource, typeDefProcessor, instanceProcessor);
             }
         }
     }
@@ -184,28 +181,22 @@ public class OMRSArchiveManager
      * exists).
      *
      * @param archiveContent open metadata archive to process
+     * @param archiveSource source of the archive - such as file name
      * @param typeDefProcessor processor of type definitions found in the archive
      * @param instanceProcessor processor of instances found in the archive
      */
     private void processOpenMetadataArchive(OpenMetadataArchive                   archiveContent,
+                                            String                                archiveSource,
                                             OMRSTypeDefEventProcessorInterface    typeDefProcessor,
                                             OMRSInstanceEventProcessorInterface   instanceProcessor)
     {
-        OMRSAuditCode    auditCode;
         final String     actionDescription = "Process Open Metadata Archive";
 
         OpenMetadataArchiveProperties archiveProperties = archiveContent.getArchiveProperties();
 
         if (archiveProperties != null)
         {
-            auditCode = OMRSAuditCode.PROCESSING_ARCHIVE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(archiveProperties.getArchiveName()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription, OMRSAuditCode.PROCESSING_ARCHIVE.getMessageDefinition(archiveProperties.getArchiveName()));
 
 
             OpenMetadataArchiveTypeStore     archiveTypeStore     = archiveContent.getArchiveTypeStore();
@@ -225,27 +216,14 @@ public class OMRSArchiveManager
                 instanceCount = this.processInstanceStore(archiveProperties, archiveInstanceStore, instanceProcessor);
             }
 
-            auditCode = OMRSAuditCode.COMPLETED_ARCHIVE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(Integer.toString(typeCount),
-                                                                Integer.toString(instanceCount),
-                                                                archiveProperties.getArchiveName()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OMRSAuditCode.COMPLETED_ARCHIVE.getMessageDefinition(Integer.toString(typeCount),
+                                                                                     Integer.toString(instanceCount),
+                                                                                     archiveProperties.getArchiveName()));
         }
         else
         {
-            auditCode = OMRSAuditCode.NULL_PROPERTIES_IN_ARCHIVE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription, OMRSAuditCode.NULL_PROPERTIES_IN_ARCHIVE.getMessageDefinition(archiveSource));
         }
     }
 
@@ -277,6 +255,7 @@ public class OMRSArchiveManager
             String       originatorServerName = archiveProperties.getArchiveName();
             String       originatorServerType = null;
             String       originatorName = archiveProperties.getOriginatorName();
+            String       archiveVersion = archiveProperties.getArchiveVersion();
             String       originatorOrganizationName = archiveProperties.getOriginatorOrganization();
 
             /*
@@ -287,26 +266,11 @@ public class OMRSArchiveManager
                 originatorName = sourceName;
             }
 
+            String archiveId = originatorName + " (" + archiveVersion + ")";
+
             if (archiveProperties.getArchiveType() != null)
             {
                 originatorServerType = archiveProperties.getArchiveType().getName();
-            }
-
-            if (typeDefPatches != null)
-            {
-                for (TypeDefPatch typeDefPatch : typeDefPatches)
-                {
-                    if (typeDefPatch != null)
-                    {
-                        typeDefProcessor.processUpdatedTypeDefEvent(originatorName,
-                                                                    originatorMetadataCollectionId,
-                                                                    originatorServerName,
-                                                                    originatorServerType,
-                                                                    originatorOrganizationName,
-                                                                    typeDefPatch);
-                        typeCount ++;
-                    }
-                }
             }
 
             if (newAttributeTypeDefs != null)
@@ -315,12 +279,12 @@ public class OMRSArchiveManager
                 {
                     if (newAttributeTypeDef != null)
                     {
-                        typeDefProcessor.processNewAttributeTypeDefEvent(originatorName,
-                                                                originatorMetadataCollectionId,
-                                                                originatorServerName,
-                                                                originatorServerType,
-                                                                originatorOrganizationName,
-                                                                newAttributeTypeDef);
+                        typeDefProcessor.processNewAttributeTypeDefEvent(archiveId,
+                                                                         originatorMetadataCollectionId,
+                                                                         originatorServerName,
+                                                                         originatorServerType,
+                                                                         originatorOrganizationName,
+                                                                         newAttributeTypeDef);
 
                         typeCount ++;
                     }
@@ -333,12 +297,29 @@ public class OMRSArchiveManager
                 {
                     if (newTypeDef != null)
                     {
-                        typeDefProcessor.processNewTypeDefEvent(originatorName,
+                        typeDefProcessor.processNewTypeDefEvent(archiveId,
                                                                 originatorMetadataCollectionId,
                                                                 originatorServerName,
                                                                 originatorServerType,
                                                                 originatorOrganizationName,
                                                                 newTypeDef);
+                        typeCount ++;
+                    }
+                }
+            }
+
+            if (typeDefPatches != null)
+            {
+                for (TypeDefPatch typeDefPatch : typeDefPatches)
+                {
+                    if (typeDefPatch != null)
+                    {
+                        typeDefProcessor.processUpdatedTypeDefEvent(archiveId,
+                                                                    originatorMetadataCollectionId,
+                                                                    originatorServerName,
+                                                                    originatorServerType,
+                                                                    originatorOrganizationName,
+                                                                    typeDefPatch);
                         typeCount ++;
                     }
                 }
@@ -381,9 +362,11 @@ public class OMRSArchiveManager
             InstanceProvenanceType provenanceType             = InstanceProvenanceType.CONTENT_PACK;
             Date                   archiveCreationTime        = archiveProperties.getCreationDate();
             String                 originatorName             = archiveProperties.getOriginatorName();
+            String                 archiveVersion             = archiveProperties.getArchiveVersion();
             String                 originatorOrganizationName = archiveProperties.getOriginatorOrganization();
             String                 originatorLicense          = archiveProperties.getOriginatorLicense();
 
+            String archiveId = originatorName + " (" + archiveVersion + ")";
 
             if (archiveProperties.getArchiveType() == OpenMetadataArchiveType.METADATA_EXPORT)
             {
@@ -406,7 +389,7 @@ public class OMRSArchiveManager
                                                     originatorLicense,
                                                     entity);
 
-                        instanceProcessor.processNewEntityEvent(sourceName,
+                        instanceProcessor.processNewEntityEvent(archiveId,
                                                                 homeMetadataCollectionId,
                                                                 archiveName,
                                                                 originatorServerType,
@@ -433,7 +416,7 @@ public class OMRSArchiveManager
                                                     originatorLicense,
                                                     relationship);
 
-                        instanceProcessor.processNewRelationshipEvent(sourceName,
+                        instanceProcessor.processNewRelationshipEvent(archiveId,
                                                                       homeMetadataCollectionId,
                                                                       archiveName,
                                                                       originatorServerType,
@@ -466,7 +449,7 @@ public class OMRSArchiveManager
 
                         // Todo
                         /* new method required
-                        instanceProcessor.processNewClassificationEvent(sourceName,
+                        instanceProcessor.processNewClassificationEvent(archiveId,
                                                                         homeMetadataCollectionId,
                                                                         originatorServerName,
                                                                         originatorServerType,

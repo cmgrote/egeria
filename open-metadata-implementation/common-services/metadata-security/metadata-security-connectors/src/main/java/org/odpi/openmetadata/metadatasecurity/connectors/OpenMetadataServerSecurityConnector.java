@@ -2,13 +2,13 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.metadatasecurity.connectors;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLoggingComponent;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.metadatasecurity.OpenMetadataAssetSecurity;
 import org.odpi.openmetadata.metadatasecurity.OpenMetadataConnectionSecurity;
 import org.odpi.openmetadata.metadatasecurity.OpenMetadataServerSecurity;
@@ -16,11 +16,14 @@ import org.odpi.openmetadata.metadatasecurity.OpenMetadataServiceSecurity;
 import org.odpi.openmetadata.metadatasecurity.ffdc.OpenMetadataSecurityAuditCode;
 import org.odpi.openmetadata.metadatasecurity.ffdc.OpenMetadataSecurityErrorCode;
 import org.odpi.openmetadata.metadatasecurity.properties.AssetAuditHeader;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
-import org.odpi.openmetadata.repositoryservices.connectors.auditable.AuditableConnector;
+import org.odpi.openmetadata.metadatasecurity.properties.Asset;
+import org.odpi.openmetadata.metadatasecurity.properties.Connection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OpenMetadataRepositorySecurity;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.AttributeTypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDef;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefPatch;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefSummary;
 
 import java.util.List;
 
@@ -34,17 +37,15 @@ import java.util.List;
  * in this base class can be called if access is to be denied as a way of making use of the message
  * logging and exceptions.
  */
-public class OpenMetadataServerSecurityConnector extends ConnectorBase implements AuditableConnector,
-                                                                                  OpenMetadataRepositorySecurity,
-                                                                                  OpenMetadataServerSecurity,
-                                                                                  OpenMetadataServiceSecurity,
-                                                                                  OpenMetadataConnectionSecurity,
-                                                                                  OpenMetadataAssetSecurity
+public class OpenMetadataServerSecurityConnector extends ConnectorBase implements AuditLoggingComponent
+
 {
-    protected  OMRSAuditLog  auditLog = null;
-    protected  String        serverName = null;
-    protected  String        localServerUserId = null;
-    protected  String        connectorName = null;
+    protected AuditLog auditLog          = null;
+    protected String   serverName        = null;
+    protected String   localServerUserId = null;
+    protected String   connectorName     = null;
+
+    protected final String unknownTypeName = "<Unknown>";
 
 
     /**
@@ -54,17 +55,10 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            final String                  actionDescription = "start";
-            OpenMetadataSecurityAuditCode auditCode;
+            final String actionDescription = "start";
 
-            auditCode = OpenMetadataSecurityAuditCode.SERVICE_INITIALIZING;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(connectorName, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OpenMetadataSecurityAuditCode.SERVICE_INITIALIZING.getMessageDefinition(connectorName, serverName));
         }
     }
 
@@ -76,17 +70,10 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            final String                  actionDescription = "disconnect";
-            OpenMetadataSecurityAuditCode auditCode;
+            final String actionDescription = "disconnect";
 
-            auditCode = OpenMetadataSecurityAuditCode.SERVICE_SHUTDOWN;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(connectorName, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                OpenMetadataSecurityAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(connectorName, serverName));
         }
     }
 
@@ -200,28 +187,12 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVER_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName, OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVER_ACCESS.getMessageDefinition(userId, serverName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVER_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId, serverName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVER_ACCESS.getMessageDefinition(userId, serverName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -243,28 +214,16 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVICE_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, serviceOperationName, serviceName, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVICE_ACCESS.getMessageDefinition(userId,
+                                                                                                               serviceOperationName,
+                                                                                                               serviceName,
+                                                                                                               serverName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVICE_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId, serviceOperationName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVICE_ACCESS.getMessageDefinition(userId, serviceOperationName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -286,28 +245,16 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_TYPE_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, typeName, typeGUID, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_TYPE_ACCESS.getMessageDefinition(userId, typeName, typeGUID, serverName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_TYPE_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId, typeName, typeGUID, serverName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_TYPE_ACCESS.getMessageDefinition(userId,
+                                                                                                                         typeName,
+                                                                                                                         typeGUID,
+                                                                                                                         serverName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -329,28 +276,41 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_TYPE_CHANGE;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, typeName, typeGUID, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_TYPE_CHANGE.getMessageDefinition(userId, typeName, typeGUID, serverName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_TYPE_CHANGE;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                + errorCode.getFormattedErrorMessage(userId, typeName, typeGUID, serverName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_TYPE_CHANGE.getMessageDefinition(userId,
+                                                                                                                         typeName,
+                                                                                                                         typeGUID,
+                                                                                                                         serverName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
+                                             userId);
+    }
+
+
+    /**
+     * Write an audit log message and throw exception to record an unauthorized access.
+     *
+     * @param userId calling user
+     * @param typeGUID uniqueId of type
+     * @param methodName calling method
+     * @throws UserNotAuthorizedException the authorization check failed
+     */
+    protected void throwUnauthorizedInstanceCreate(String   userId,
+                                                   String   typeGUID,
+                                                   String   methodName) throws UserNotAuthorizedException
+    {
+        if (auditLog != null)
+        {
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_INSTANCE_CREATE.getMessageDefinition(userId, typeGUID, serverName));
+        }
+
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_TYPE_CHANGE.getMessageDefinition(userId, typeGUID, serverName),
+                                             this.getClass().getName(),
+                                             methodName,
                                              userId);
     }
 
@@ -372,31 +332,19 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_INSTANCE_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, instanceGUID, typeName, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_INSTANCE_ACCESS.getMessageDefinition(userId,
+                                                                                                                instanceGUID,
+                                                                                                                typeName,
+                                                                                                                serverName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_INSTANCE_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        instanceGUID,
-                                                                                        typeName,
-                                                                                        serverName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_INSTANCE_ACCESS.getMessageDefinition(userId,
+                                                                                                                             instanceGUID,
+                                                                                                                             typeName,
+                                                                                                                             serverName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -418,31 +366,20 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_INSTANCE_CHANGE;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, instanceGUID, typeName, serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_INSTANCE_CHANGE.getMessageDefinition(userId,
+                                                                                                                instanceGUID,
+                                                                                                                typeName,
+                                                                                                                serverName,
+                                                                                                                methodName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_INSTANCE_CHANGE;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        instanceGUID,
-                                                                                        typeName,
-                                                                                        serverName);
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_INSTANCE_CHANGE.getMessageDefinition(userId,
+                                                                                                                             instanceGUID,
+                                                                                                                             typeName,
+                                                                                                                             serverName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -462,28 +399,14 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, this.getAssetGUID(asset)),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_ACCESS.getMessageDefinition(userId, this.getAssetGUID(asset)));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId, this.getAssetGUID(asset));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_ACCESS.getMessageDefinition(userId,
+                                                                                                                          this.getAssetGUID(asset)),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -503,29 +426,14 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_CHANGE;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, this.getAssetGUID(asset)),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_CHANGE.getMessageDefinition(userId, this.getAssetGUID(asset)));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_CHANGE;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        this.getAssetGUID(asset));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_CHANGE.getMessageDefinition(userId,
+                                                                                                                          this.getAssetGUID(asset)),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -539,35 +447,50 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param methodName calling method
      * @throws UserNotAuthorizedException the authorization check failed
      */
+    protected void throwUnauthorizedAssetCreate(String   userId,
+                                                Asset    asset,
+                                                String   methodName) throws UserNotAuthorizedException
+    {
+        if (auditLog != null)
+        {
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_CREATE.getMessageDefinition(userId, asset.getTypeName()));
+        }
+
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_CREATE.getMessageDefinition(userId,
+                                                                                                                          asset.getTypeName()),
+                                             this.getClass().getName(),
+                                             methodName,
+                                             userId);
+    }
+
+
+    /**
+     * Write an audit log message and throw exception to record an
+     * unauthorized access.
+     *
+     * @param userId calling user
+     * @param asset asset being accessed
+     * @param propertyName name of property that is missing
+     * @param methodName calling method
+     * @throws UserNotAuthorizedException the authorization check failed
+     */
     protected void throwIncompleteAsset(String   userId,
                                         Asset    asset,
+                                        String   propertyName,
                                         String   methodName) throws UserNotAuthorizedException
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.INCOMPLETE_ASSET;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, this.getAssetGUID(asset)),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.INCOMPLETE_ASSET.getMessageDefinition(userId, this.getAssetGUID(asset), propertyName));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.INCOMPLETE_ASSET;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        this.getAssetGUID(asset));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.INCOMPLETE_ASSET.getMessageDefinition(userId,
+                                                                                                                 this.getAssetGUID(asset),
+                                                                                                                 propertyName),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -591,34 +514,19 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_ZONE_CHANGE;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId,
-                                                                this.getAssetGUID(asset),
-                                                                this.printZoneList(originalZones),
-                                                                this.printZoneList(newZones)),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_ZONE_CHANGE.getMessageDefinition(userId,
+                                                                                                            this.getAssetGUID(asset),
+                                                                                                            this.printZoneList(originalZones),
+                                                                                                            this.printZoneList(newZones)));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_ZONE_CHANGE;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        this.getAssetGUID(asset),
-                                                                                        this.printZoneList(originalZones),
-                                                                                        this.printZoneList(newZones));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_ZONE_CHANGE.getMessageDefinition(userId,
+                                                                                                                         this.getAssetGUID(asset),
+                                                                                                                         this.printZoneList(originalZones),
+                                                                                                                         this.printZoneList(newZones)),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -638,30 +546,15 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_FEEDBACK;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId,
-                                                                this.getAssetGUID(asset)),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_ASSET_FEEDBACK.getMessageDefinition(userId,
+                                                                                                               this.getAssetGUID(asset)));
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_FEEDBACK;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId,
-                                                                                        this.getAssetGUID(asset));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_ASSET_FEEDBACK.getMessageDefinition(userId,
+                                                                                                                            this.getAssetGUID(asset)),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -682,28 +575,16 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
     {
         if (auditLog != null)
         {
-            OpenMetadataSecurityAuditCode auditCode;
-
-            auditCode = OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVICE_ACCESS;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(userId, this.getConnectionQualifiedName(connection)),
-                               connection.toString(),
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OpenMetadataSecurityAuditCode.UNAUTHORIZED_SERVICE_ACCESS.getMessageDefinition(userId,
+                                                                                                               this.getConnectionQualifiedName(connection)),
+                                connection.toString());
         }
 
-        OpenMetadataSecurityErrorCode errorCode = OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVICE_ACCESS;
-        String                        errorMessage = errorCode.getErrorMessageId()
-                                                   + errorCode.getFormattedErrorMessage(userId, this.getConnectionQualifiedName(connection));
-
-        throw new UserNotAuthorizedException(errorCode.getHTTPErrorCode(),
+        throw new UserNotAuthorizedException(OpenMetadataSecurityErrorCode.UNAUTHORIZED_SERVICE_ACCESS.getMessageDefinition(userId,
+                                                                                                                            this.getConnectionQualifiedName(connection)),
                                              this.getClass().getName(),
                                              methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction(),
                                              userId);
     }
 
@@ -714,7 +595,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @param auditLog audit log object
      */
-    public void setAuditLog(OMRSAuditLog auditLog)
+    @Override
+    public void setAuditLog(AuditLog auditLog)
     {
         this.auditLog = auditLog;
     }
@@ -748,12 +630,34 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public void start() throws ConnectorCheckedException
     {
         super.start();
 
         connectorName = this.getClass().getName();
         logConnectorStarting();
+    }
+
+
+    /**
+     * Determine the appropriate setting for the supported zones depending on the user and the
+     * default supported zones set up for the service.  This is called whenever an asset is accessed.
+     *
+     * @param supportedZones default setting of the supported zones for the service
+     * @param serviceName name of the called service
+     * @param user name of the user
+     *
+     * @return list of supported zones for the user
+     * @throws InvalidParameterException one of the parameter values is invalid
+     * @throws PropertyServerException there is a problem calculating the zones
+     */
+    protected List<String> setSupportedZonesForUser(List<String>  supportedZones,
+                                                    String        serviceName,
+                                                    String        user) throws InvalidParameterException,
+                                                                               PropertyServerException
+    {
+        return supportedZones;
     }
 
 
@@ -771,9 +675,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @throws InvalidParameterException one of the asset values is invalid
      * @throws PropertyServerException there is a problem calculating the zones
      */
-    public List<String> initializeAssetZones(List<String>  defaultZones,
-                                             Asset         asset) throws InvalidParameterException,
-                                                                         PropertyServerException
+    protected List<String> setAssetZonesToDefault(List<String>  defaultZones,
+                                                  Asset         asset) throws InvalidParameterException,
+                                                                              PropertyServerException
     {
         List<String>  resultingZones = null;
 
@@ -802,6 +706,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @param defaultZones setting of the default zones for the service
      * @param supportedZones setting of the supported zones for the service
+     * @param publishZones  setting of the publishZones for the service
      * @param originalAsset original values for the asset
      * @param updatedAsset updated values for the asset
      *
@@ -809,11 +714,12 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @throws InvalidParameterException one of the asset values is invalid
      * @throws PropertyServerException there is a problem calculating the zones
      */
-    public List<String> verifyAssetZones(List<String>  defaultZones,
-                                         List<String>  supportedZones,
-                                         Asset         originalAsset,
-                                         Asset         updatedAsset) throws InvalidParameterException,
-                                                                            PropertyServerException
+    protected List<String> verifyAssetZones(List<String>  defaultZones,
+                                            List<String>  supportedZones,
+                                            List<String>  publishZones,
+                                            Asset         originalAsset,
+                                            Asset         updatedAsset) throws InvalidParameterException,
+                                                                               PropertyServerException
     {
         List<String>  resultingZones = null;
 
@@ -833,7 +739,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to access this function
      */
-    public void  validateUserForServer(String   userId) throws UserNotAuthorizedException
+    protected void validateUserForServer(String   userId) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForServer";
 
@@ -848,7 +754,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to change configuration
      */
-    public void  validateUserAsServerAdmin(String   userId) throws UserNotAuthorizedException
+    protected void  validateUserAsServerAdmin(String   userId) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserAsServerAdmin";
         final String  serviceName = "Administration Services";
@@ -865,7 +771,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to issue operator commands to this server
      */
-    public void  validateUserAsServerOperator(String   userId) throws UserNotAuthorizedException
+    protected void  validateUserAsServerOperator(String   userId) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserAsServerOperator";
         final String  serviceName = "Administration Services";
@@ -882,7 +788,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to issue diagnostic commands to this server
      */
-    public void  validateUserAsServerInvestigator(String   userId) throws UserNotAuthorizedException
+    protected void  validateUserAsServerInvestigator(String   userId) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserAsServerInvestigator";
         final String  serviceName = "Administration Services";
@@ -900,8 +806,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to access this service
      */
-    public void  validateUserForService(String   userId,
-                                        String   serviceName) throws UserNotAuthorizedException
+    protected void  validateUserForService(String   userId,
+                                           String   serviceName) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForService";
         final String  serviceOperationName = "any";
@@ -919,9 +825,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      *
      * @throws UserNotAuthorizedException the user is not authorized to access this service
      */
-    public void  validateUserForServiceOperation(String   userId,
-                                                 String   serviceName,
-                                                 String   serviceOperationName) throws UserNotAuthorizedException
+    protected void  validateUserForServiceOperation(String   userId,
+                                                    String   serviceName,
+                                                    String   serviceOperationName) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForServiceOperation";
 
@@ -935,12 +841,55 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param connection connection object
      * @throws UserNotAuthorizedException the user is not authorized to access this service
      */
-    public void  validateUserForConnection(String     userId,
-                                           Connection connection) throws UserNotAuthorizedException
+    protected void  validateUserForConnection(String     userId,
+                                              Connection connection) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForConnection";
 
         throwUnauthorizedConnectionAccess(userId, connection, methodName);
+    }
+
+
+    /**
+     * Select a connection from the list of connections attached to an asset.
+     *
+     * @param userId calling user
+     * @param asset asset requested by caller
+     * @param connections list of attached connections
+     * @return selected connection or null (pretend there are no connections attached to the asset) or
+     * @throws UserNotAuthorizedException the user is not authorized to access this service
+     */
+    protected Connection validateUserForAssetConnectionList(String           userId,
+                                                            Asset            asset,
+                                                            List<Connection> connections) throws UserNotAuthorizedException
+    {
+        UserNotAuthorizedException caughtException = null;
+
+        if ((connections != null) && (! connections.isEmpty()))
+        {
+            for (Connection connection : connections)
+            {
+                if (connection != null)
+                {
+                    try
+                    {
+                        validateUserForConnection(userId, connection);
+                        return connection;
+                    }
+                    catch (UserNotAuthorizedException error)
+                    {
+                        caughtException = error;
+                    }
+                }
+            }
+        }
+
+        if (caughtException != null)
+        {
+            throw caughtException;
+        }
+
+        return null;
     }
 
 
@@ -951,12 +900,12 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param asset asset details
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
-    public void  validateUserForAssetCreate(String     userId,
-                                            Asset      asset) throws UserNotAuthorizedException
+    protected void  validateUserForAssetCreate(String     userId,
+                                               Asset      asset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetCreate";
 
-        throwUnauthorizedAssetChange(userId, asset, methodName);
+        throwUnauthorizedAssetCreate(userId, asset, methodName);
     }
 
 
@@ -967,8 +916,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param asset asset to test
      * @throws UserNotAuthorizedException the user is not authorized to access this asset
      */
-    public void  validateUserForAssetRead(String     userId,
-                                          Asset      asset) throws UserNotAuthorizedException
+    protected void  validateUserForAssetRead(String     userId,
+                                             Asset      asset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetRead";
 
@@ -987,10 +936,10 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param newAsset new asset details
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
-    public void  validateUserForAssetDetailUpdate(String           userId,
-                                                  Asset            originalAsset,
-                                                  AssetAuditHeader originalAssetAuditHeader,
-                                                  Asset            newAsset) throws UserNotAuthorizedException
+    protected void  validateUserForAssetDetailUpdate(String           userId,
+                                                     Asset            originalAsset,
+                                                     AssetAuditHeader originalAssetAuditHeader,
+                                                     Asset            newAsset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetDetailUpdate";
 
@@ -1006,8 +955,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param asset original asset details
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
-    public void  validateUserForAssetAttachmentUpdate(String     userId,
-                                                      Asset      asset) throws UserNotAuthorizedException
+    protected void validateUserForAssetAttachmentUpdate(String     userId,
+                                                        Asset      asset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetAttachmentUpdate";
 
@@ -1023,8 +972,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param asset original asset details
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
-    public void  validateUserForAssetFeedback(String     userId,
-                                              Asset      asset) throws UserNotAuthorizedException
+    protected void  validateUserForAssetFeedback(String     userId,
+                                                 Asset      asset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetFeedback";
 
@@ -1039,8 +988,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param asset asset details
      * @throws UserNotAuthorizedException the user is not authorized to change this asset
      */
-    public void  validateUserForAssetDelete(String     userId,
-                                            Asset      asset) throws UserNotAuthorizedException
+    protected void  validateUserForAssetDelete(String     userId,
+                                               Asset      asset) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForAssetDelete";
 
@@ -1049,16 +998,16 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
-     * Tests for whether a specific user should have the right to create a typeDef within a repository.
+     * Tests for whether a specific user should have the right to create a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef type details
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
-    public void  validateUserForTypeCreate(String     userId,
-                                           String     metadataCollectionName,
-                                           TypeDef    typeDef) throws UserNotAuthorizedException
+    protected void  validateUserForTypeCreate(String     userId,
+                                              String     metadataCollectionName,
+                                              TypeDef    typeDef) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForTypeCreate";
 
@@ -1070,16 +1019,37 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
-     * Tests for whether a specific user should have read access to a specific typeDef within a repository.
+     * Tests for whether a specific user should have the right to create a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param attributeTypeDef type details
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    protected void  validateUserForTypeCreate(String              userId,
+                                              String              metadataCollectionName,
+                                              AttributeTypeDef    attributeTypeDef) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForTypeCreate";
+
+        if (attributeTypeDef != null)
+        {
+            throwUnauthorizedTypeChange(userId, attributeTypeDef.getGUID(), attributeTypeDef.getName(), methodName);
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have read access to a specific type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param typeDef  type details
      * @throws UserNotAuthorizedException the user is not authorized to retrieve types
      */
-    public void  validateUserForTypeRead(String     userId,
-                                         String     metadataCollectionName,
-                                         TypeDef    typeDef) throws UserNotAuthorizedException
+    protected void  validateUserForTypeRead(String       userId,
+                                            String       metadataCollectionName,
+                                            TypeDef      typeDef) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForTypeRead";
 
@@ -1091,16 +1061,39 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
+     * Tests for whether a specific user should have read access to a specific type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param attributeTypeDef  type details
+     * @throws UserNotAuthorizedException the user is not authorized to retrieve types
+     */
+    protected void  validateUserForTypeRead(String                userId,
+                                            String                metadataCollectionName,
+                                            AttributeTypeDef      attributeTypeDef) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForTypeRead";
+
+        if (attributeTypeDef != null)
+        {
+            throwUnauthorizedTypeAccess(userId, attributeTypeDef.getGUID(), attributeTypeDef.getName(), methodName);
+        }
+    }
+
+
+    /**
      * Tests for whether a specific user should have the right to update a typeDef within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef current typeDef details
+     * @param patch proposed changes to type
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
-    public void  validateUserForTypeUpdate(String     userId,
-                                           String     metadataCollectionName,
-                                           TypeDef    typeDef) throws UserNotAuthorizedException
+    protected void  validateUserForTypeUpdate(String       userId,
+                                              String       metadataCollectionName,
+                                              TypeDef      typeDef,
+                                              TypeDefPatch patch) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForTypeUpdate";
 
@@ -1112,16 +1105,16 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
-     * Tests for whether a specific user should have the right to delete a typeDef within a repository.
+     * Tests for whether a specific user should have the right to delete a type within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param typeDef typeDef details
+     * @param typeDef type details
      * @throws UserNotAuthorizedException the user is not authorized to maintain types
      */
-    public void  validateUserForTypeDelete(String     userId,
-                                           String     metadataCollectionName,
-                                           TypeDef    typeDef) throws UserNotAuthorizedException
+    protected void  validateUserForTypeDelete(String     userId,
+                                              String     metadataCollectionName,
+                                              TypeDef    typeDef) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForTypeDelete";
 
@@ -1133,29 +1126,100 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
+     * Tests for whether a specific user should have the right to delete a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param attributeTypeDef type details
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    protected void  validateUserForTypeDelete(String           userId,
+                                              String           metadataCollectionName,
+                                              AttributeTypeDef attributeTypeDef) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForTypeDelete";
+
+        if (attributeTypeDef != null)
+        {
+            throwUnauthorizedTypeChange(userId, attributeTypeDef.getGUID(), attributeTypeDef.getName(), methodName);
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the identifiers for a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param originalTypeDef type details
+     * @param newTypeDefGUID the new identifier for the type.
+     * @param newTypeDefName new name for this type.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    protected void  validateUserForTypeReIdentify(String  userId,
+                                                  String  metadataCollectionName,
+                                                  TypeDef originalTypeDef,
+                                                  String  newTypeDefGUID,
+                                                  String  newTypeDefName) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForTypeReIdentify";
+
+        if (originalTypeDef != null)
+        {
+            throwUnauthorizedTypeChange(userId, originalTypeDef.getGUID(), originalTypeDef.getName(), methodName);
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the identifiers for a type within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param originalAttributeTypeDef type details
+     * @param newTypeDefGUID the new identifier for the type.
+     * @param newTypeDefName new name for this type.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain types
+     */
+    protected void  validateUserForTypeReIdentify(String           userId,
+                                                  String           metadataCollectionName,
+                                                  AttributeTypeDef originalAttributeTypeDef,
+                                                  String           newTypeDefGUID,
+                                                  String           newTypeDefName) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForTypeReIdentify";
+
+        if (originalAttributeTypeDef != null)
+        {
+            throwUnauthorizedTypeChange(userId,
+                                        originalAttributeTypeDef.getGUID(),
+                                        originalAttributeTypeDef.getName(),
+                                        methodName);
+        }
+    }
+
+
+    /**
      * Tests for whether a specific user should have the right to create a instance within a repository.
      *
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
-     * @param instance instance details
+     * @param entityTypeGUID unique identifier (guid) for the new entity's type.
+     * @param initialProperties initial list of properties for the new entity null means no properties.
+     * @param initialClassifications initial list of classifications for the new entity null means no classifications.
+     * @param initialStatus initial status typically DRAFT, PREPARED or ACTIVE.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForEntityCreate(String       userId,
-                                             String       metadataCollectionName,
-                                             EntityDetail instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntityCreate(String                     userId,
+                                                String                     metadataCollectionName,
+                                                String                     entityTypeGUID,
+                                                InstanceProperties         initialProperties,
+                                                List<Classification>       initialClassifications,
+                                                InstanceStatus             initialStatus) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityCreate";
 
-        if (instance != null)
-        {
-            String typeName = null;
-
-            if (instance.getType() != null)
-            {
-                typeName = instance.getType().getTypeDefName();
-            }
-            throwUnauthorizedInstanceChange(userId, instance.getGUID(), typeName, methodName);
-        }
+        throwUnauthorizedInstanceCreate(userId, entityTypeGUID, methodName);
     }
 
 
@@ -1165,11 +1229,12 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
+     * @return entity to return (may be altered by the connector)
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
-    public void  validateUserForEntityRead(String          userId,
-                                           String          metadataCollectionName,
-                                           EntityDetail    instance) throws UserNotAuthorizedException
+    protected EntityDetail  validateUserForEntityRead(String          userId,
+                                                      String          metadataCollectionName,
+                                                      EntityDetail    instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityRead";
 
@@ -1181,8 +1246,11 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
             {
                 typeName = instance.getType().getTypeDefName();
             }
+
             throwUnauthorizedInstanceAccess(userId, instance.getGUID(), typeName, methodName);
         }
+
+        return null;
     }
 
 
@@ -1193,9 +1261,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
-    public void  validateUserForEntitySummaryRead(String        userId,
-                                                  String        metadataCollectionName,
-                                                  EntitySummary instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntitySummaryRead(String        userId,
+                                                     String        metadataCollectionName,
+                                                     EntitySummary instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntitySummaryRead";
 
@@ -1220,9 +1288,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
-    public void  validateUserForEntityProxyRead(String      userId,
-                                                String      metadataCollectionName,
-                                                EntityProxy instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntityProxyRead(String      userId,
+                                                   String      metadataCollectionName,
+                                                   EntityProxy instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityProxyRead";
 
@@ -1234,6 +1302,7 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
             {
                 typeName = instance.getType().getTypeDefName();
             }
+
             throwUnauthorizedInstanceAccess(userId, instance.getGUID(), typeName, methodName);
         }
     }
@@ -1247,11 +1316,43 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForEntityUpdate(String          userId,
-                                             String          metadataCollectionName,
-                                             EntityDetail    instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntityUpdate(String          userId,
+                                                String          metadataCollectionName,
+                                                EntityDetail    instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityUpdate";
+
+        if (instance != null)
+        {
+            String typeName = null;
+
+            if (instance.getType() != null)
+            {
+                typeName = instance.getType().getTypeDefName();
+            }
+            throwUnauthorizedInstanceChange(userId, instance.getGUID(), typeName, methodName);
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to add a classification to an entity instance
+     * within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param classificationName String name for the classification.
+     * @param properties list of properties for the classification.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForEntityClassificationAdd(String               userId,
+                                                           String               metadataCollectionName,
+                                                           EntityDetail         instance,
+                                                           String               classificationName,
+                                                           InstanceProperties   properties) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForEntityClassificationAdd";
 
         if (instance != null)
         {
@@ -1273,15 +1374,47 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param userId identifier of user
      * @param metadataCollectionName configurable name of the metadata collection
      * @param instance instance details
-     * @param classification classification details
+     * @param classificationName String name for the classification.
+     * @param properties list of properties for the classification.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForEntityClassificationUpdate(String          userId,
-                                                           String          metadataCollectionName,
-                                                           EntityDetail    instance,
-                                                           Classification  classification) throws UserNotAuthorizedException
+    protected void  validateUserForEntityClassificationUpdate(String               userId,
+                                                              String               metadataCollectionName,
+                                                              EntityDetail         instance,
+                                                              String               classificationName,
+                                                              InstanceProperties   properties) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityClassificationUpdate";
+
+        if (instance != null)
+        {
+            String typeName = null;
+
+            if (instance.getType() != null)
+            {
+                typeName = instance.getType().getTypeDefName();
+            }
+            throwUnauthorizedInstanceChange(userId, instance.getGUID(), typeName, methodName);
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to delete a classification from an entity instance
+     * within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param classificationName String name for the classification.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForEntityClassificationDelete(String               userId,
+                                                              String               metadataCollectionName,
+                                                              EntityDetail         instance,
+                                                              String               classificationName) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForEntityClassificationDelete";
 
         if (instance != null)
         {
@@ -1304,9 +1437,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForEntityDelete(String       userId,
-                                             String       metadataCollectionName,
-                                             EntityDetail instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntityDelete(String       userId,
+                                                String       metadataCollectionName,
+                                                EntityDetail instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForEntityDelete";
 
@@ -1324,28 +1457,144 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
-     * Tests for whether a specific user should have the right to create a instance within a repository.
+     * Tests for whether a specific user should have the right to restore a instance within a repository.
      *
      * @param userId identifier of user
-     * @param instance instance details
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param deletedEntityGUID String unique identifier (guid) for the entity.
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForRelationshipCreate(String       userId,
-                                                   String       metadataCollectionName,
-                                                   Relationship instance) throws UserNotAuthorizedException
+    protected void  validateUserForEntityRestore(String       userId,
+                                                 String       metadataCollectionName,
+                                                 String       deletedEntityGUID) throws UserNotAuthorizedException
     {
-        final String  methodName = "validateUserForRelationshipCreate";
+        final String  methodName = "validateUserForEntityRestore";
+
+        throwUnauthorizedInstanceChange(userId, deletedEntityGUID, "<Unknown>", methodName);
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the guid on a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newGUID the new guid for the instance.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForEntityReIdentification(String       userId,
+                                                          String       metadataCollectionName,
+                                                          EntityDetail instance,
+                                                          String       newGUID) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForEntityReIdentification";
 
         if (instance != null)
         {
-            String typeName = null;
+            InstanceType type = instance.getType();
 
-            if (instance.getType() != null)
+            if (type != null)
             {
-                typeName = instance.getType().getTypeDefName();
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
             }
-            throwUnauthorizedInstanceChange(userId, instance.getGUID(), typeName, methodName);
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
         }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the type of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newTypeDefSummary details of this instance's new TypeDef.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForEntityReTyping(String         userId,
+                                                  String         metadataCollectionName,
+                                                  EntityDetail   instance,
+                                                  TypeDefSummary newTypeDefSummary) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForEntityReTyping";
+
+        if (instance != null)
+        {
+            InstanceType type = instance.getType();
+
+            if (type != null)
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
+            }
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the home of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newHomeMetadataCollectionId unique identifier for the new home metadata collection/repository.
+     * @param newHomeMetadataCollectionName display name for the new home metadata collection/repository.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForEntityReHoming(String         userId,
+                                                  String         metadataCollectionName,
+                                                  EntityDetail   instance,
+                                                  String         newHomeMetadataCollectionId,
+                                                  String         newHomeMetadataCollectionName) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForEntityReHoming";
+
+        if (instance != null)
+        {
+            InstanceType type = instance.getType();
+
+            if (type != null)
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
+            }
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to create a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param relationshipTypeGUID unique identifier (guid) for the new relationship's type.
+     * @param initialProperties initial list of properties for the new entity null means no properties.
+     * @param entityOneSummary the unique identifier of one of the entities that the relationship is connecting together.
+     * @param entityTwoSummary the unique identifier of the other entity that the relationship is connecting together.
+     * @param initialStatus initial status typically DRAFT, PREPARED or ACTIVE.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForRelationshipCreate(String               userId,
+                                                      String               metadataCollectionName,
+                                                      String               relationshipTypeGUID,
+                                                      InstanceProperties   initialProperties,
+                                                      EntitySummary        entityOneSummary,
+                                                      EntitySummary        entityTwoSummary,
+                                                      InstanceStatus       initialStatus) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForRelationshipCreate";
+
+        throwUnauthorizedInstanceCreate(userId, relationshipTypeGUID, methodName);
     }
 
 
@@ -1357,9 +1606,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to retrieve instances
      */
-    public void  validateUserForRelationshipRead(String          userId,
-                                                 String          metadataCollectionName,
-                                                 Relationship    instance) throws UserNotAuthorizedException
+    protected Relationship validateUserForRelationshipRead(String       userId,
+                                                           String       metadataCollectionName,
+                                                           Relationship instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForRelationshipRead";
 
@@ -1373,6 +1622,8 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
             }
             throwUnauthorizedInstanceAccess(userId, instance.getGUID(), typeName, methodName);
         }
+
+        return null;
     }
 
 
@@ -1384,9 +1635,9 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForRelationshipUpdate(String          userId,
-                                                   String          metadataCollectionName,
-                                                   Relationship    instance) throws UserNotAuthorizedException
+    protected void validateUserForRelationshipUpdate(String        userId,
+                                                     String        metadataCollectionName,
+                                                     Relationship  instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForRelationshipUpdate";
 
@@ -1411,15 +1662,15 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
      * @param instance instance details
      * @throws UserNotAuthorizedException the user is not authorized to maintain instances
      */
-    public void  validateUserForRelationshipDelete(String       userId,
-                                                   String       metadataCollectionName,
-                                                   Relationship instance) throws UserNotAuthorizedException
+    protected void  validateUserForRelationshipDelete(String       userId,
+                                                      String       metadataCollectionName,
+                                                      Relationship instance) throws UserNotAuthorizedException
     {
         final String  methodName = "validateUserForRelationshipDelete";
 
         if (instance != null)
         {
-            String typeName = null;
+            String typeName = "<Unknown>";
 
             if (instance.getType() != null)
             {
@@ -1431,10 +1682,126 @@ public class OpenMetadataServerSecurityConnector extends ConnectorBase implement
 
 
     /**
+     * Tests for whether a specific user should have the right to restore a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param deletedRelationshipGUID String unique identifier (guid) for the relationship.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForRelationshipRestore(String       userId,
+                                                       String       metadataCollectionName,
+                                                       String       deletedRelationshipGUID) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForRelationshipRestore";
+
+        throwUnauthorizedInstanceChange(userId, deletedRelationshipGUID, "<Unknown>", methodName);
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the guid on a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newGUID the new guid for the instance.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForRelationshipReIdentification(String       userId,
+                                                                String       metadataCollectionName,
+                                                                Relationship instance,
+                                                                String       newGUID) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForRelationshipReIdentification";
+
+        if (instance != null)
+        {
+            InstanceType type = instance.getType();
+
+            if (type != null)
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
+            }
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the type of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newTypeDefSummary details of this instance's new TypeDef.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForRelationshipReTyping(String         userId,
+                                                        String         metadataCollectionName,
+                                                        Relationship   instance,
+                                                        TypeDefSummary newTypeDefSummary) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForRelationshipReTyping";
+
+        if (instance != null)
+        {
+            InstanceType type = instance.getType();
+
+            if (type != null)
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
+            }
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
+        }
+    }
+
+
+    /**
+     * Tests for whether a specific user should have the right to change the home of a instance within a repository.
+     *
+     * @param userId identifier of user
+     * @param metadataCollectionName configurable name of the metadata collection
+     * @param instance instance details
+     * @param newHomeMetadataCollectionId unique identifier for the new home metadata collection/repository.
+     * @param newHomeMetadataCollectionName display name for the new home metadata collection/repository.
+     * @throws UserNotAuthorizedException the user is not authorized to maintain instances
+     */
+    protected void  validateUserForRelationshipReHoming(String         userId,
+                                                        String         metadataCollectionName,
+                                                        Relationship   instance,
+                                                        String         newHomeMetadataCollectionId,
+                                                        String         newHomeMetadataCollectionName) throws UserNotAuthorizedException
+    {
+        final String  methodName = "validateUserForRelationshipReHoming";
+
+        if (instance != null)
+        {
+            InstanceType type = instance.getType();
+
+            if (type != null)
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), type.getTypeDefName(), methodName);
+            }
+            else
+            {
+                throwUnauthorizedInstanceChange(userId, instance.getGUID(), unknownTypeName, methodName);
+            }
+        }
+    }
+
+    /**
      * Free up any resources held since the connector is no longer needed.
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
         super.disconnect();

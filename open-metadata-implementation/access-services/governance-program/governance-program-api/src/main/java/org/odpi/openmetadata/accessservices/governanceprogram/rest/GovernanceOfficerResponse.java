@@ -5,8 +5,9 @@ package org.odpi.openmetadata.accessservices.governanceprogram.rest;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.odpi.openmetadata.accessservices.governanceprogram.properties.GovernanceOfficer;
+import org.odpi.openmetadata.accessservices.governanceprogram.properties.GovernanceOfficerProperties;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -22,7 +23,9 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class GovernanceOfficerResponse extends GovernanceProgramOMASAPIResponse
 {
-    private GovernanceOfficer governanceOfficer = null;
+    private static final long    serialVersionUID = 1L;
+
+    private GovernanceOfficerProperties governanceOfficer = null;
 
 
     /**
@@ -53,9 +56,9 @@ public class GovernanceOfficerResponse extends GovernanceProgramOMASAPIResponse
     /**
      * Return the governanceOfficer result.
      *
-     * @return GovernanceOfficer object
+     * @return GovernanceOfficerProperties object
      */
-    public GovernanceOfficer getGovernanceOfficer()
+    public GovernanceOfficerProperties getGovernanceOfficer()
     {
         return governanceOfficer;
     }
@@ -64,9 +67,9 @@ public class GovernanceOfficerResponse extends GovernanceProgramOMASAPIResponse
     /**
      * Set up the governanceOfficer result.
      *
-     * @param guid GovernanceOfficer object
+     * @param guid GovernanceOfficerProperties object
      */
-    public void setGovernanceOfficer(GovernanceOfficer guid)
+    public void setGovernanceOfficer(GovernanceOfficerProperties guid)
     {
         this.governanceOfficer = guid;
     }
@@ -82,9 +85,13 @@ public class GovernanceOfficerResponse extends GovernanceProgramOMASAPIResponse
     {
         return "GovernanceOfficerResponse{" +
                 "governanceOfficer='" + getGovernanceOfficer() + '\'' +
-                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +

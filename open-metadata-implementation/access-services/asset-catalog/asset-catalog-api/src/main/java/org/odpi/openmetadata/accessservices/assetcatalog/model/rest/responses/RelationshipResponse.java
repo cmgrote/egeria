@@ -4,6 +4,10 @@ package org.odpi.openmetadata.accessservices.assetcatalog.model.rest.responses;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.odpi.openmetadata.accessservices.assetcatalog.model.Relationship;
 
 import java.io.Serializable;
@@ -18,15 +22,13 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility = PUBLIC_ONLY, setterVisibility = PUBLIC_ONLY, fieldVisibility = NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
+@Setter
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class RelationshipResponse extends AssetCatalogOMASAPIResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private Relationship relationship;
-
-    public Relationship getRelationship() {
-        return relationship;
-    }
-
-    public void setRelationship(Relationship relationship) {
-        this.relationship = relationship;
-    }
 }

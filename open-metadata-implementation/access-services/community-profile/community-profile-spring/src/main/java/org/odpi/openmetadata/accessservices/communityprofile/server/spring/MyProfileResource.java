@@ -2,7 +2,11 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.communityprofile.server.spring;
 
-import org.odpi.openmetadata.accessservices.communityprofile.rest.*;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.accessservices.communityprofile.rest.AssetListResponse;
+import org.odpi.openmetadata.accessservices.communityprofile.rest.MyProfileRequestBody;
+import org.odpi.openmetadata.accessservices.communityprofile.rest.PersonalProfileResponse;
 import org.odpi.openmetadata.accessservices.communityprofile.server.MyProfileRESTServices;
 import org.odpi.openmetadata.commonservices.ffdc.rest.NullRequestBody;
 import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
@@ -16,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/community-profile/users/{userId}")
+
+@Tag(name="Community Profile OMAS", description="The Community Profile OMAS provides APIs and events for tools and applications that are managing information about people and the way they work together.",
+        externalDocs=@ExternalDocumentation(description="Community Profile Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/community-profile/"))
+
 public class MyProfileResource
 {
     private MyProfileRESTServices restAPI = new MyProfileRESTServices();
@@ -39,7 +47,7 @@ public class MyProfileResource
      * PropertyServerException there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/my-profile")
+    @GetMapping(path = "/my-profile")
 
     public PersonalProfileResponse getMyProfile(@PathVariable String serverName,
                                                 @PathVariable String userId)
@@ -59,7 +67,7 @@ public class MyProfileResource
      * PropertyServerException - there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException - the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/my-profile")
+    @PostMapping(path = "/my-profile")
 
     public VoidResponse updateMyProfile(@PathVariable String               serverName,
                                         @PathVariable String               userId,
@@ -82,7 +90,7 @@ public class MyProfileResource
      * PropertyServerException there is a problem retrieving information from the property server(s) or
      * UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/my-assets")
+    @GetMapping(path = "/my-assets")
 
     public AssetListResponse getMyAssets(@PathVariable String    serverName,
                                          @PathVariable String    userId,
@@ -106,16 +114,15 @@ public class MyProfileResource
      * PropertyServerException there is a problem updating information in the property server(s) or
      * UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/my-assets/{assetGUID}")
+    @PostMapping(path = "/my-assets/{assetGUID}")
 
-    public VoidResponse  addToMyAssets(@PathVariable String           serverName,
-                                       @PathVariable String           userId,
-                                       @PathVariable String           assetGUID,
-                                       @RequestBody  NullRequestBody  nullRequestBody)
+    public VoidResponse  addToMyAssets(@PathVariable                  String           serverName,
+                                       @PathVariable                  String           userId,
+                                       @PathVariable                  String           assetGUID,
+                                       @RequestBody(required = false) NullRequestBody  nullRequestBody)
     {
         return restAPI.addToMyAssets(serverName, userId, assetGUID, nullRequestBody);
     }
-
 
 
     /**
@@ -131,14 +138,13 @@ public class MyProfileResource
      * PropertyServerException there is a problem updating information in the property server(s) or
      * UserNotAuthorizedException the requesting user is not authorized to issue this request.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/my-assets/{assetGUID}/delete")
+    @PostMapping(path = "/my-assets/{assetGUID}/delete")
 
-    public VoidResponse  removeFromMyAssets(@PathVariable String           serverName,
-                                            @PathVariable String           userId,
-                                            @PathVariable String           assetGUID,
-                                            @RequestBody  NullRequestBody  nullRequestBody)
+    public VoidResponse  removeFromMyAssets(@PathVariable                  String           serverName,
+                                            @PathVariable                  String           userId,
+                                            @PathVariable                  String           assetGUID,
+                                            @RequestBody(required = false) NullRequestBody  nullRequestBody)
     {
         return restAPI.removeFromMyAssets(serverName, userId, assetGUID, nullRequestBody);
     }
-
 }

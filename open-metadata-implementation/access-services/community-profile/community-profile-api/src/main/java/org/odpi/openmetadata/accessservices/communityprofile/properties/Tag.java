@@ -19,6 +19,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Tag extends UserFeedbackHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private String  name = null;
     private String  description = null;
     private boolean isPrivate = false;
@@ -46,7 +48,7 @@ public class Tag extends UserFeedbackHeader
         {
             name = template.getName();
             description = template.getDescription();
-            isPrivate = template.isPrivate();
+            isPrivate = template.getIsPrivate();
         }
     }
 
@@ -100,7 +102,7 @@ public class Tag extends UserFeedbackHeader
      *
      * @return private tag indicator
      */
-    public boolean isPrivate()
+    public boolean getIsPrivate()
     {
         return isPrivate;
     }
@@ -111,7 +113,7 @@ public class Tag extends UserFeedbackHeader
      *
      * @param privateTag private tag indicator
      */
-    public void setPrivate(boolean privateTag)
+    public void setIsPrivate(boolean privateTag)
     {
         isPrivate = privateTag;
     }
@@ -159,7 +161,7 @@ public class Tag extends UserFeedbackHeader
             return false;
         }
         Tag tag = (Tag) objectToCompare;
-        return isPrivate() == tag.isPrivate() &&
+        return getIsPrivate() == tag.getIsPrivate() &&
                 Objects.equals(getName(), tag.getName()) &&
                 Objects.equals(getDescription(), tag.getDescription());
     }
@@ -173,6 +175,6 @@ public class Tag extends UserFeedbackHeader
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), getName(), getDescription(), isPrivate());
+        return Objects.hash(super.hashCode(), getName(), getDescription(), getIsPrivate());
     }
 }

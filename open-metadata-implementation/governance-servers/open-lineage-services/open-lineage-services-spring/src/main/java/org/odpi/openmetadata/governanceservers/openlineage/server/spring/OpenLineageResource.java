@@ -3,18 +3,17 @@
 package org.odpi.openmetadata.governanceservers.openlineage.server.spring;
 
 
-import org.odpi.openmetadata.governanceservers.openlineage.converters.ScopeEnumConverter;
-import org.odpi.openmetadata.governanceservers.openlineage.converters.ViewEnumConverter;
-import org.odpi.openmetadata.governanceservers.openlineage.model.Scope;
-import org.odpi.openmetadata.governanceservers.openlineage.model.View;
-import org.odpi.openmetadata.governanceservers.openlineage.responses.VoidResponse;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.governanceservers.openlineage.model.LineageQueryParameters;
+import org.odpi.openmetadata.governanceservers.openlineage.responses.LineageVertexResponse;
+import org.odpi.openmetadata.governanceservers.openlineage.responses.LineageResponse;
 import org.odpi.openmetadata.governanceservers.openlineage.server.OpenLineageRestServices;
 import org.springframework.http.MediaType;
-
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,6 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/open-lineage/users/{userId}")
+
+@Tag(name="Open Lineage Services", description="The Open Lineage Services provides a historic reporting warehouse for lineage. It listens to events that are sent out by the Asset Lineage OMAS, and stores lineage data in a database. ", externalDocs=@ExternalDocumentation(description="Open Lineage Services",url="https://egeria.odpi.org/open-metadata-implementation//governance-servers/open-lineage-services/"))
+
 public class OpenLineageResource {
 
     private final OpenLineageRestServices restAPI = new OpenLineageRestServices();
@@ -34,72 +36,32 @@ public class OpenLineageResource {
      *
      * @param userId     calling user.
      * @param serverName name of the server instance to connect to.
-     * @param view       The view queried by the user: hostview, tableview, columnview.
-     * @param scope      ultimate-source, ultimate-destination, glossary.
-     * @param graph      main, buffer, mock, history.
-     * @param guid       The guid of the node of which the lineage is queried of.
+     * @param params
      * @return A subgraph containing all relevant paths, in graphSON format.
      */
-    @GetMapping(path = "/lineage/sources/{graph}/scopes/{scope}/views/{view}/entities/{guid}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public String lineage(
+    @PostMapping(path = "/lineage/entities/{guid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public LineageResponse lineage(
             @PathVariable("serverName") String serverName,
             @PathVariable("userId") String userId,
-            @PathVariable("graph") String graph,
-            @PathVariable("scope") Scope scope,
-            @PathVariable("view") View view,
+            @PathVariable("guid") String guid,
+            @RequestBody LineageQueryParameters params) {
+        return restAPI.lineage(serverName, userId, params.getScope(), guid, params.getDisplayNameMustContain(), params.isIncludeProcesses());
+    }
+
+    /**
+     * Gets entity details.
+     *
+     * @param serverName the server name
+     * @param userId     the user id
+     * @param guid       the guid
+     * @return the entity details
+     */
+    @GetMapping(path = "/lineage/entities/{guid}/details", produces = MediaType.APPLICATION_JSON_VALUE)
+    public LineageVertexResponse getEntityDetails(
+            @PathVariable("serverName") String serverName,
+            @PathVariable("userId") String userId,
             @PathVariable("guid") String guid) {
-        return restAPI.lineage(serverName, userId, graph, scope, view, guid);
-    }
-
-
-    /**
-     * Write an entire graph to disc in the Egeria root folder, in the .GraphMl format.
-     *
-     * @param userId     calling user.
-     * @param serverName name of the server instance to connect to.
-     * @param graph      MAIN, BUFFER, MOCK, HISTORY.
-     * @return Voidresponse
-     */
-    @GetMapping(path = "/dump/sources/{graph}")
-    public VoidResponse dumpGraph(@PathVariable("userId") String userId,
-                                  @PathVariable("serverName") String serverName,
-                                  @PathVariable("graph") String graph) {
-        return restAPI.dumpGraph(serverName, userId, graph);
-    }
-
-    /**
-     * Return an entire graph, in GraphSON format.
-     *
-     * @param userId     calling user.
-     * @param serverName name of the server instance to connect to.
-     * @param graph      MAIN, BUFFER, MOCK, HISTORY.
-     * @return The queried graph, in graphSON format.
-     */
-    @GetMapping(path = "/export/sources/{graph}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public String exportGraph(@PathVariable("userId") String userId,
-                              @PathVariable("serverName") String serverName,
-                              @PathVariable("graph") String graph) {
-        return restAPI.exportGraph(serverName, userId, graph);
-    }
-
-    /**
-     * Generate the MOCK graph, which can be used for performance testing, or demoing lineage with large amounts of
-     * data.
-     *
-     * @param userId     calling user.
-     * @param serverName name of the server instance to connect to.
-     * @return Voidresponse.
-     */
-    @GetMapping(path = "/generate-mock-graph")
-    public VoidResponse generateGraph(@PathVariable("userId") String userId,
-                                      @PathVariable("serverName") String serverName) {
-        return restAPI.generateGraph(serverName, userId);
-    }
-
-    @InitBinder
-    public void initBinder(final WebDataBinder webdataBinder) {
-        webdataBinder.registerCustomEditor(View.class, new ViewEnumConverter());
-        webdataBinder.registerCustomEditor(Scope.class, new ScopeEnumConverter());
+        return restAPI.getEntityDetails(serverName, userId, guid);
     }
 
 }

@@ -3,7 +3,7 @@
 package org.odpi.openmetadata.accessservices.itinfrastructure.server;
 
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHandler;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstanceHandler;
 
 
 /**
@@ -11,14 +11,14 @@ import org.odpi.openmetadata.commonservices.multitenant.OCFOMASServiceInstanceHa
  * access service instances.  The instance map is thread-safe.  Instances are added
  * and removed by the ITInfrastructureAdmin class.
  */
-class ITInfrastructureInstanceHandler extends OCFOMASServiceInstanceHandler
+class ITInfrastructureInstanceHandler extends OMASServiceInstanceHandler
 {
     /**
      * Default constructor registers the access service
      */
     ITInfrastructureInstanceHandler()
     {
-        super(AccessServiceDescription.IT_INFRASTRUCTURE_OMAS.getAccessServiceName() + " OMAS");
+        super(AccessServiceDescription.IT_INFRASTRUCTURE_OMAS.getAccessServiceFullName());
 
         ITInfrastructureRegistration.registerAccessService();
     }

@@ -1,6 +1,7 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
+![Released](../../../open-metadata-publication/website/images/egeria-content-status-released.png#pagewidth)
 
 # Open Connector Framework (OCF)
 
@@ -8,7 +9,7 @@ The OCF, as the name suggests, is an open framework for supporting connectors.
 Connector provide client-side access to remote digital [Assets](../../../open-metadata-implementation/access-services/docs/concepts/assets)
 such as data sets, APIs and software components.
 OCF Connectors also provide access to metadata about the asset and they may call
-the [Governance Action Framework (GAF)](../governance-action-framework) to execute
+the [Governance Action Framework (GAF)](../governance-action-framework) to log audit messages and execute
 appropriate governance actions related to the use of these assets
 in real-time.
 
@@ -19,7 +20,7 @@ Applications and tools benefit from using OCF connectors because:
 * Network and security parameters for accessing the data resources are managed in the metadata repository as part of a named connection.
 The application need only supply the identifier of the connection and provided they have the appropriate security credentials then a connector is returned to them for use. 
  
-  * There is no need to hard code user ids and passwords in the application code - nor manage keystores for this sensitive information since the metadata repository handles this.
+  * There is no need to hard code user ids and passwords in the application code - nor manage key stores for this sensitive information since the metadata repository handles this.
   * If the location of the data changes, then the named connection configuration is changed in the metadata repository and the application will be connected to the new location the next time they request a connector.
 
 * The OCF connector provides two sets of APIs.  The first set provides access to the Asset contents and the second set provides access to the properties of the asset stored in the open metadata repositories.
@@ -58,7 +59,6 @@ Different providers of these properties can plug into the OCF.
 Egeria provides an implementation of this interface to supply Asset properties stored in open metadata repositories
 in the [OCF Metadata Management modules](../../common-services/ocf-metadata-management) service.
 
-
 ## Terminology
 
 There are a number of key components within the OCF:
@@ -78,6 +78,12 @@ It is used by the Connector Broker. See [docs](docs/concepts/connector-provider.
 * **Connected Asset Properties** - this is the properties of the Asset that the connector is accessing.
 It is hosted by a metadata server.  See [docs](docs/concepts/connected-asset-properties.md) for more information.
 
+## Implementation scenarios
+
+For further information on implementing OCF components:
+
+* [Creating an OCF connector to access the contents of an asset](docs/design/connector-to-asset.md)
+* [Creating an OCF connector to access an underlying system](docs/design/connector-to-system.md)
 
 ## Open Metadata Types
 
@@ -105,7 +111,7 @@ These are read only facades around the beans.
 
 ## Related Modules
 
-The [OCF Metadata Managment](../../common-services/ocf-metadata-management) supports the retrieval
+The [OCF Metadata Management](../../common-services/ocf-metadata-management) supports the retrieval
 of connection and connected asset properties from the open metadata
 repository/repositories.
 
@@ -116,7 +122,18 @@ The [Open Metadata Repository Services (OMRS)](../../repository-services)
 makes extensive use of OCF connectors for accessing open metadata repository servers and other resources.
 These connectors are collectively called the [OMRS Connectors](../../repository-services/docs/component-descriptions/connectors).
 
+Many of the [Open Metadata Governance Servers](../../admin-services/docs/concepts/governance-server-types.md) make use of OCF connectors to
+loosely-couple integration with a variety of underlying technologies.
 
+The [Developer Guide](../../../open-metadata-publication/website/developer-guide) provides more
+information on writing connectors for Egeria.
+
+The [Connector Catalog](../../../open-metadata-publication/website/connector-catalog) lists the
+pre-built connectors supplied by Egeria.
+
+
+----
+Return to [frameworks](..).
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

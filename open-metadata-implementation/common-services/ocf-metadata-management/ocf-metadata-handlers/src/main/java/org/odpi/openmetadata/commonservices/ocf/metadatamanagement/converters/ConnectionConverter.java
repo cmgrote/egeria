@@ -33,17 +33,20 @@ public class ConnectionConverter extends ReferenceableConverter
      * @param embeddedConnections list of embedded connections (optional)
      * @param repositoryHelper helper object to parse entity/relationship objects
      * @param serviceName name of this component
+     * @param serverName called server
      */
     public ConnectionConverter(EntityDetail             connectionEntity,
                                Endpoint                 endpoint,
                                ConnectorType            connectorType,
                                List<EmbeddedConnection> embeddedConnections,
                                OMRSRepositoryHelper     repositoryHelper,
-                               String                   serviceName)
+                               String                   serviceName,
+                               String                   serverName)
     {
         super(connectionEntity,
               repositoryHelper,
-              serviceName);
+              serviceName,
+              serverName);
 
         this.endpoint = endpoint;
         this.connectorType = connectorType;
@@ -59,6 +62,7 @@ public class ConnectionConverter extends ReferenceableConverter
      *
      * @return output bean
      */
+    @Override
     public Connection getBean()
     {
         final String  methodName = "getBean";
@@ -116,10 +120,10 @@ public class ConnectionConverter extends ReferenceableConverter
                                                                                 instanceProperties,
                                                                                 methodName));
 
-                bean.setSecuredProperties(repositoryHelper.removeMapFromProperty(serviceName,
-                                                                                 ConnectionMapper.SECURED_PROPERTIES_PROPERTY_NAME,
-                                                                                 instanceProperties,
-                                                                                 methodName));
+                bean.setSecuredProperties(repositoryHelper.removeStringMapFromProperty(serviceName,
+                                                                                       ConnectionMapper.SECURED_PROPERTIES_PROPERTY_NAME,
+                                                                                       instanceProperties,
+                                                                                       methodName));
                 bean.setConfigurationProperties(repositoryHelper.removeMapFromProperty(serviceName,
                                                                                        ConnectionMapper.CONFIGURATION_PROPERTIES_PROPERTY_NAME,
                                                                                        instanceProperties,

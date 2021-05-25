@@ -12,6 +12,8 @@ import java.util.Objects;
  */
 public class AssetLike extends AssetElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Like likeBean = null;
 
 
@@ -90,6 +92,17 @@ public class AssetLike extends AssetElementHeader
 
 
     /**
+     * Return if this like is private to the creating user.
+     *
+     * @return boolean
+     */
+    public boolean isPublic()
+    {
+        return likeBean.getIsPublic();
+    }
+
+
+    /**
      * Return the user id of the person who created the like.  Null means the user id is not known.
      *
      * @return String   liking user
@@ -122,7 +135,7 @@ public class AssetLike extends AssetElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetLike))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -130,7 +143,19 @@ public class AssetLike extends AssetElementHeader
         {
             return false;
         }
-        AssetLike that = (AssetLike) objectToCompare;
-        return Objects.equals(getLikeBean(), that.getLikeBean());
+        AssetLike assetLike = (AssetLike) objectToCompare;
+        return Objects.equals(likeBean, assetLike.likeBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), likeBean);
     }
 }

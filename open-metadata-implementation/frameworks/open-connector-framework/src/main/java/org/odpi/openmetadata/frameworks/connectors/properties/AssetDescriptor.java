@@ -7,6 +7,7 @@ import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This is the base class for a connected asset.  It is passed to all of the embedded property objects so the name
@@ -15,6 +16,8 @@ import java.util.List;
  */
 public abstract class AssetDescriptor extends AssetPropertyElementBase
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Asset assetBean;
 
     /*
@@ -32,7 +35,8 @@ public abstract class AssetDescriptor extends AssetPropertyElementBase
     protected AssetDescriptor()
     {
         super();
-        this.assetBean = new Asset();
+
+        this.setAssetBean(null);
     }
 
 
@@ -46,6 +50,40 @@ public abstract class AssetDescriptor extends AssetPropertyElementBase
     {
         super();
 
+        this.setAssetBean(assetBean);
+    }
+
+
+    /**
+     * Copy/clone Constructor - used to copy the asset descriptor for a new consumer.
+     *
+     * @param templateAssetDescriptor template asset descriptor to copy.
+     */
+    public AssetDescriptor(AssetDescriptor templateAssetDescriptor)
+    {
+        super();
+
+        if (templateAssetDescriptor != null)
+        {
+            this.setAssetBean(templateAssetDescriptor.getAssetBean());
+            this.assetName = templateAssetDescriptor.getAssetName();
+            this.assetTypeName = templateAssetDescriptor.getAssetTypeName();
+            this.assetSuperTypeNames = templateAssetDescriptor.getAssetSuperTypeNames();
+        }
+        else
+        {
+            this.setAssetBean(null);
+        }
+    }
+
+
+    /**
+     * Set up private attributes based on the supplied asset bean.
+     *
+     * @param assetBean bean containing all of the properties
+     */
+    protected void setAssetBean(Asset assetBean)
+    {
         if (assetBean == null)
         {
             this.assetBean = new Asset();
@@ -89,29 +127,6 @@ public abstract class AssetDescriptor extends AssetPropertyElementBase
 
                 assetSuperTypeNames = elementType.getElementSuperTypeNames();
             }
-        }
-    }
-
-
-    /**
-     * Copy/clone Constructor - used to copy the asset descriptor for a new consumer.
-     *
-     * @param templateAssetDescriptor template asset descriptor to copy.
-     */
-    public AssetDescriptor(AssetDescriptor templateAssetDescriptor)
-    {
-        super();
-
-        if (templateAssetDescriptor != null)
-        {
-            this.assetBean = templateAssetDescriptor.getAssetBean();
-            this.assetName = templateAssetDescriptor.getAssetName();
-            this.assetTypeName = templateAssetDescriptor.getAssetTypeName();
-            this.assetSuperTypeNames = templateAssetDescriptor.getAssetSuperTypeNames();
-        }
-        else
-        {
-            this.assetBean = new Asset();
         }
     }
 
@@ -170,4 +185,44 @@ public abstract class AssetDescriptor extends AssetPropertyElementBase
         }
     }
 
+
+    /**
+     * Compare the values of the supplied object with those stored in the current object.
+     *
+     * @param objectToCompare supplied object
+     * @return boolean result of comparison
+     */
+    @Override
+    public boolean equals(Object objectToCompare)
+    {
+        if (this == objectToCompare)
+        {
+            return true;
+        }
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
+        {
+            return false;
+        }
+        if (!super.equals(objectToCompare))
+        {
+            return false;
+        }
+        AssetDescriptor that = (AssetDescriptor) objectToCompare;
+        return Objects.equals(assetBean, that.assetBean) &&
+                       Objects.equals(assetName, that.assetName) &&
+                       Objects.equals(assetTypeName, that.assetTypeName) &&
+                       Objects.equals(assetSuperTypeNames, that.assetSuperTypeNames);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), assetBean, assetName, assetTypeName, assetSuperTypeNames);
+    }
 }

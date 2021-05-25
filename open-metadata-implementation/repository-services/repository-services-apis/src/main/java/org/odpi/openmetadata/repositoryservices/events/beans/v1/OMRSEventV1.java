@@ -26,6 +26,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 
 public class OMRSEventV1 extends OMRSEventBean
 {
+    private static final long    serialVersionUID = 1L;
+
     private       Date                       timestamp            = null;
     private       OMRSEventOriginator        originator           = null;
     private       OMRSEventCategory          eventCategory        = null;
@@ -130,5 +132,26 @@ public class OMRSEventV1 extends OMRSEventBean
     public void setErrorSection(OMRSEventV1ErrorSection errorSection)
     {
         this.errorSection = errorSection;
+    }
+
+    /**
+     * JSON-style toString.
+     *
+     * @return list of properties and their values.
+     */
+    @Override
+    public String toString()
+    {
+        return "OMRSEventV1{" +
+                       "timestamp=" + timestamp +
+                       ", originator=" + originator +
+                       ", eventCategory=" + eventCategory +
+                       ", registryEventSection=" + registryEventSection +
+                       ", typeDefEventSection=" + typeDefEventSection +
+                       ", instanceEventSection=" + instanceEventSection +
+                       ", errorSection=" + errorSection +
+                       ", protocolVersionId='" + protocolVersionId + '\'' +
+                       ", protocolVersionId='" + getProtocolVersionId() + '\'' +
+                       '}';
     }
 }

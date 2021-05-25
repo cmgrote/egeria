@@ -2,11 +2,17 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.subjectarea.client;
 
-import org.odpi.openmetadata.accessservices.subjectarea.*;
+import org.odpi.openmetadata.accessservices.subjectarea.SubjectArea;
+import org.odpi.openmetadata.accessservices.subjectarea.client.configs.SubjectAreaConfigClient;
+import org.odpi.openmetadata.accessservices.subjectarea.client.nodes.DefaultSubjectAreaNodeClients;
+import org.odpi.openmetadata.accessservices.subjectarea.client.nodes.SubjectAreaNodeClients;
+import org.odpi.openmetadata.accessservices.subjectarea.client.relationships.SubjectAreaGraphClient;
+import org.odpi.openmetadata.accessservices.subjectarea.client.relationships.SubjectAreaRelationship;
+import org.odpi.openmetadata.accessservices.subjectarea.client.relationships.SubjectAreaRelationshipClients;
+import org.odpi.openmetadata.accessservices.subjectarea.ffdc.SubjectAreaErrorCode;
 import org.odpi.openmetadata.accessservices.subjectarea.ffdc.exceptions.InvalidParameterException;
 import org.odpi.openmetadata.accessservices.subjectarea.validators.InputValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.ExceptionMessageDefinition;
 
 
 /**
@@ -14,20 +20,14 @@ import org.slf4j.LoggerFactory;
  * This interface provides glossary authoring interfaces for subject area experts.
  */
 public class SubjectAreaImpl implements SubjectArea {
-    private static final Logger log = LoggerFactory.getLogger(SubjectAreaImpl.class);
-
     private static final String className = SubjectAreaImpl.class.getName();
-    static final String SUBJECT_AREA_BASE_URL = "/servers/%s/open-metadata/access-services/subject-area/users/%s/";
 
-    private final SubjectAreaTermImpl termAPI;
-    private final SubjectAreaCategoryImpl categoryAPI;
-    private final SubjectAreaGlossaryImpl glossaryAPI;
-    private final SubjectAreaProjectImpl projectAPI;
-    public final SubjectAreaRelationshipImpl relationshipAPI;
-    public final SubjectAreaGraphImpl graphAPI;
-    public final String serverName;
-    public final String omasServerUrl;
-
+    private final SubjectAreaNodeClients nodeClients;
+    private final SubjectAreaRelationshipClients relationshipAPI;
+    private final SubjectAreaGraphClient graphAPI;
+    private final SubjectAreaConfigClient configAPI;
+    private final String serverName;
+    private final String omasServerUrl;
 
     /**
      * Default Constructor used once a connector is created.
@@ -38,53 +38,44 @@ public class SubjectAreaImpl implements SubjectArea {
      */
     public SubjectAreaImpl(String serverName, String omasServerURL) throws InvalidParameterException {
         String methodName = "SubjectAreaImpl";
-        InputValidator.validateOMASServerURLNotNull(className, methodName, omasServerURL);
-        this.glossaryAPI = new SubjectAreaGlossaryImpl(omasServerURL, serverName);
-        this.termAPI = new SubjectAreaTermImpl(omasServerURL, serverName);
-        this.categoryAPI = new SubjectAreaCategoryImpl(omasServerURL, serverName);
-        this.relationshipAPI = new SubjectAreaRelationshipImpl(omasServerURL, serverName);
-        this.graphAPI = new SubjectAreaGraphImpl(omasServerURL, serverName);
-        this.projectAPI = new SubjectAreaProjectImpl(omasServerURL, serverName);
+        InputValidator.validateRemoteServerNameNotNull(className, methodName, serverName);
+        InputValidator.validateRemoteServerURLNotNull(className, methodName, omasServerURL);
+        try {
+            SubjectAreaRestClient client = new SubjectAreaRestClient(serverName, omasServerURL);
+            DefaultSubjectAreaNodeClients subjectAreaNode = new DefaultSubjectAreaNodeClients(client);
+            SubjectAreaRelationship subjectAreaRelationship = new SubjectAreaRelationship(client);
+            SubjectAreaGraphClient subjectAreaGraph = new SubjectAreaGraphClient(client);
+            SubjectAreaConfigClient subjectAreaConfig = new SubjectAreaConfigClient(client);
+
+            this.nodeClients = subjectAreaNode;
+            this.relationshipAPI = subjectAreaRelationship;
+            this.graphAPI = subjectAreaGraph;
+            this.configAPI = subjectAreaConfig;
+
+        } catch (org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException e) {
+            String parameterName = "serverName or omasServerURL";
+            String parameterValue = "unknown";
+            if (serverName == null ||  "".equals(serverName)) {
+                parameterName = "serverName";
+                parameterValue = serverName;
+            }
+            if (omasServerURL == null || "".equals(omasServerURL)) {
+                parameterName = "omasServerURL";
+                parameterValue = omasServerURL;
+            }
+            ExceptionMessageDefinition messageDefinition = SubjectAreaErrorCode.SUBJECT_AREA_FAILED_TO_INITIALISE.getMessageDefinition();
+            messageDefinition.setMessageParameters(parameterName, parameterValue);
+            throw new InvalidParameterException(messageDefinition, className, methodName, e, parameterName, parameterValue);
+        }
+
         this.serverName = serverName;
         this.omasServerUrl = omasServerURL;
     }
 
-    /**
-     * Get the Category API. Use this API to author Glossary Categories.
-     *
-     * @return SubjectAreaCategoryImpl
-     */
-    @Override
-    public SubjectAreaCategory getSubjectAreaCategory() {
-        return categoryAPI;
-    }
 
-    /**
-     * Get the Glossary API. Use this API to author Glossaries
-     *
-     * @return SubjectAreaGlossaryImpl
-     */
     @Override
-    public SubjectAreaGlossary getSubjectAreaGlossary() {
-        return glossaryAPI;
-    }
-    /**
-     * Get the subject area project API class - use this class to issue project calls.
-     * @return subject area project API class
-     */
-    @Override
-    public SubjectAreaProject getSubjectAreaProject() {
-        return  projectAPI;
-    }
-
-    /**
-     * Get the Relationship API. Use this API to author Glossary Terms.
-     *
-     * @return SubjectAreaRelationshipImpl
-     */
-    @Override
-    public SubjectAreaTerm getSubjectAreaTerm() {
-        return this.termAPI;
+    public SubjectAreaNodeClients nodeClients() {
+        return this.nodeClients;
     }
 
     /**
@@ -93,19 +84,26 @@ public class SubjectAreaImpl implements SubjectArea {
      * @return subject area relationship API class
      */
     @Override
-    public SubjectAreaRelationship getSubjectAreaRelationship() {
+    public SubjectAreaRelationshipClients relationshipClients() {
         return this.relationshipAPI;
     }
 
+    /**
+     * Get the subject area graph API class - use this class to issue config calls.
+     *
+     * @return subject area config API class
+     */
+    @Override
+    public SubjectAreaConfigClient subjectAreaConfigClient() {
+        return this.configAPI;
+    }
     /**
      * Get the subject area graph API class - use this class to issue graph calls.
      *
      * @return subject area graph API class
      */
     @Override
-    public SubjectAreaGraph getSubjectAreaGraph() {
-        return this.graphAPI;
-    }
+    public SubjectAreaGraphClient subjectAreaGraphClient() { return this.graphAPI; }
 
     /**
      * Server Name under which this request is performed, this is used in multi tenanting to identify the tenant
@@ -114,7 +112,7 @@ public class SubjectAreaImpl implements SubjectArea {
      */
 
     @Override
-    public String getServerName() {
+    public String serverName() {
         return serverName;
     }
 
@@ -124,7 +122,7 @@ public class SubjectAreaImpl implements SubjectArea {
      * @return url of the server
      */
     @Override
-    public String getOmasServerUrl() {
+    public String omasServerUrl() {
         return omasServerUrl;
     }
 }

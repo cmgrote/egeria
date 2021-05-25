@@ -2,7 +2,7 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.enterprise.repositoryconnector.executors;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.SequencingOrder;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceStatus;
@@ -61,7 +61,7 @@ public class GetRelationshipsForEntityExecutor extends PageableRepositoryExecuto
                                              SequencingOrder         sequencingOrder,
                                              int                     pageSize,
                                              String                  localMetadataCollectionId,
-                                             OMRSAuditLog            auditLog,
+                                             AuditLog                auditLog,
                                              OMRSRepositoryValidator repositoryValidator,
                                              String                  methodName)
     {
@@ -109,7 +109,7 @@ public class GetRelationshipsForEntityExecutor extends PageableRepositoryExecuto
                                               List<InstanceStatus>    limitResultsByStatus,
                                               Date                    asOfTime,
                                               String                  sequencingProperty,
-                                              SequencingOrder         sequencingOrder,
+                                              SequencingOrder sequencingOrder,
                                               int                     pageSize,
                                               RelationshipAccumulator accumulator,
                                               String                  methodName)
@@ -186,7 +186,10 @@ public class GetRelationshipsForEntityExecutor extends PageableRepositoryExecuto
         }
         catch (EntityNotKnownException error)
         {
-            accumulator.captureException(metadataCollectionId, error);
+            /*
+             * The entity is not known in the remote system so convert this to a null response.
+             */
+            accumulator.addRelationships(null, metadataCollectionId);
         }
         catch (FunctionNotSupportedException error)
         {
@@ -212,9 +215,9 @@ public class GetRelationshipsForEntityExecutor extends PageableRepositoryExecuto
         {
             accumulator.captureException(metadataCollectionId, error);
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            accumulator.captureGenericException(metadataCollectionId, error);
+            accumulator.captureGenericException(methodName, metadataCollectionId, error);
         }
 
         return true;

@@ -13,7 +13,7 @@ In Egeria, new GUIDs are created
 using the `UUID.randomUUID().toString()` method and they look something like this:
 
 ```
-  "87b06ffe-9db2-4ef5-ba6e-8127480cf30d"
+87b06ffe-9db2-4ef5-ba6e-8127480cf30d
 ```
 
 They are often used on [Open Metadata Access Service (OMAS)](../../../open-metadata-implementation/access-services)
@@ -28,6 +28,9 @@ output on the detecting server's
 [audit log](../../../open-metadata-implementation/repository-services/docs/component-descriptions/audit-log.md).
 The repository services also have APIs for re-identifying (ie changing the guid)
 for a metadata instance.
+
+----
+* Return to [Glossary](../open-metadata-glossary.md)
 
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),

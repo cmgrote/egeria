@@ -21,6 +21,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class ExternalIdentifier extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     /*
      * Attributes of an external identifier
      */
@@ -257,7 +259,7 @@ public class ExternalIdentifier extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof ExternalIdentifier))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -267,11 +269,24 @@ public class ExternalIdentifier extends Referenceable
         }
         ExternalIdentifier that = (ExternalIdentifier) objectToCompare;
         return Objects.equals(getIdentifier(), that.getIdentifier()) &&
-                Objects.equals(getDescription(), that.getDescription()) &&
-                Objects.equals(getUsage(), that.getUsage()) &&
-                Objects.equals(getSource(), that.getSource()) &&
-                getKeyPattern() == that.getKeyPattern() &&
-                Objects.equals(getScope(), that.getScope()) &&
-                Objects.equals(getScopeDescription(), that.getScopeDescription());
+                       Objects.equals(getDescription(), that.getDescription()) &&
+                       Objects.equals(getUsage(), that.getUsage()) &&
+                       Objects.equals(getSource(), that.getSource()) &&
+                       getKeyPattern() == that.getKeyPattern() &&
+                       Objects.equals(getScope(), that.getScope()) &&
+                       Objects.equals(getScopeDescription(), that.getScopeDescription());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getIdentifier(), getDescription(), getUsage(), getSource(), getKeyPattern(), getScope(),
+                            getScopeDescription());
     }
 }

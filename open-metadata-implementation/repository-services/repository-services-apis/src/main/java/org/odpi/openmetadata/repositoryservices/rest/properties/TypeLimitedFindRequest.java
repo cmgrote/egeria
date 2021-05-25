@@ -23,10 +23,13 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonSubTypes(
         {
                 @JsonSubTypes.Type(value = PropertyMatchFindRequest.class, name = "PropertyMatchFindRequest"),
-                @JsonSubTypes.Type(value = TypeLimitedHistoricalFindRequest.class, name = "TypeLimitedHistoricalFindRequest")
+                @JsonSubTypes.Type(value = TypeLimitedHistoricalFindRequest.class, name = "TypeLimitedHistoricalFindRequest"),
+                @JsonSubTypes.Type(value = SubtypeLimitedFindRequest.class, name = "SubtypeLimitedFindRequest")
         })
 public class TypeLimitedFindRequest extends OMRSAPIPagedFindRequest
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                     typeGUID = null;
 
 

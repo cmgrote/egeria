@@ -20,6 +20,8 @@ import java.util.List;
  */
 public class ConnectedAssetNotes extends AssetNotes
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                 serviceName;
     private String                 serverName;
     private String                 userId;
@@ -94,6 +96,7 @@ public class ConnectedAssetNotes extends AssetNotes
      * @param parentAsset descriptor of parent asset
      * @return new cloned object.
      */
+    @Override
     protected  AssetNotes cloneIterator(AssetDescriptor parentAsset)
     {
         return new ConnectedAssetNotes(connectedAsset, this);
@@ -108,6 +111,7 @@ public class ConnectedAssetNotes extends AssetNotes
      * @param template object to clone
      * @return new cloned object.
      */
+    @Override
     protected  AssetPropertyBase cloneElement(AssetDescriptor  parentAsset, AssetPropertyBase template)
     {
         return new AssetNote(parentAsset, (AssetNote)template);
@@ -122,6 +126,7 @@ public class ConnectedAssetNotes extends AssetNotes
      * @return list of elements corresponding to the supplied cache pointers.
      * @throws PropertyServerException there is a problem retrieving elements from the property (metadata) server.
      */
+    @Override
     protected  List<AssetPropertyBase> getCachedList(int  cacheStartPointer,
                                                      int  maximumSize) throws PropertyServerException
     {
@@ -141,9 +146,9 @@ public class ConnectedAssetNotes extends AssetNotes
                                                                        cacheStartPointer,
                                                                        maximumSize);
 
-            restExceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-            restExceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-            restExceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+            restExceptionHandler.detectAndThrowInvalidParameterException(restResult);
+            restExceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+            restExceptionHandler.detectAndThrowPropertyServerException(restResult);
 
             List<Note>  beans = restResult.getList();
             if ((beans == null) || (beans.isEmpty()))

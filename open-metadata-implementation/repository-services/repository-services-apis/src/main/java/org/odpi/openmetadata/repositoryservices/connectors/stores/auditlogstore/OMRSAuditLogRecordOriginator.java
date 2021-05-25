@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -18,12 +20,20 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class OMRSAuditLogRecordOriginator
+public class OMRSAuditLogRecordOriginator implements Serializable
 {
-    private String                   metadataCollectionId = null;
+    private static final long    serialVersionUID = 1L;
+
+    public static String SERVER_NAME_PROPERTY            = "Server Name";
+    public static String SERVER_TYPE_PROPERTY            = "Server Type";
+    public static String ORGANIZATION_NAME_PROPERTY      = "Organization Name";
+    public static String METADATA_COLLECTION_ID_PROPERTY = "Metadata Collection Id";
+
     private String                   serverName           = null;
     private String                   serverType           = null;
     private String                   organizationName     = null;
+
+    private String                   metadataCollectionId = null;
 
     /**
      * Default constructor used by parsing engines and other consumers.
@@ -33,25 +43,15 @@ public class OMRSAuditLogRecordOriginator
     }
 
 
-    /**
-     * Returns the unique identifier (guid) of the originating repository's metadata collection.
-     *
-     * @return String guid
-     */
-    public String getMetadataCollectionId()
+    OMRSAuditLogRecordOriginator(Map<String, String>  originatorProperties)
     {
-        return metadataCollectionId;
-    }
-
-
-    /**
-     * Sets up the unique identifier (guid) of the originating repository.
-     *
-     * @param metadataCollectionId  String guid
-     */
-    public void setMetadataCollectionId(String metadataCollectionId)
-    {
-        this.metadataCollectionId = metadataCollectionId;
+        if (originatorProperties != null)
+        {
+            serverName = originatorProperties.get(SERVER_NAME_PROPERTY);
+            serverType = originatorProperties.get(SERVER_TYPE_PROPERTY);
+            organizationName = originatorProperties.get(ORGANIZATION_NAME_PROPERTY);
+            metadataCollectionId = originatorProperties.get(METADATA_COLLECTION_ID_PROPERTY);
+        }
     }
 
 
@@ -126,6 +126,28 @@ public class OMRSAuditLogRecordOriginator
 
 
     /**
+     * Returns the unique identifier (guid) of the originating repository's metadata collection.
+     *
+     * @return String guid
+     */
+    public String getMetadataCollectionId()
+    {
+        return metadataCollectionId;
+    }
+
+
+    /**
+     * Sets up the unique identifier (guid) of the originating repository.
+     *
+     * @param metadataCollectionId  String guid
+     */
+    public void setMetadataCollectionId(String metadataCollectionId)
+    {
+        this.metadataCollectionId = metadataCollectionId;
+    }
+
+
+    /**
      * Standard toString method.
      *
      * @return JSON style description of variables.
@@ -134,10 +156,10 @@ public class OMRSAuditLogRecordOriginator
     public String toString()
     {
         return "OMRSAuditLogRecordOriginator{" +
-                "metadataCollectionId='" + metadataCollectionId + '\'' +
-                ", serverName='" + serverName + '\'' +
+                "serverName='" + serverName + '\'' +
                 ", serverType='" + serverType + '\'' +
                 ", organizationName='" + organizationName + '\'' +
+                ", metadataCollectionId='" + metadataCollectionId + '\'' +
                 '}';
     }
 

@@ -2,7 +2,7 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.commonservices.multitenant;
 
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 
 /**
  * AuditableServerServiceInstance caches references to OMRS objects for a specific server.
@@ -10,25 +10,8 @@ import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
  */
 public abstract class AuditableServerServiceInstance extends OMAGServerServiceInstance
 {
-    protected String            localServerUserId = null;
-    private   OMRSAuditLog      auditLog;
-
-    /**
-     * Constructor.
-     *
-     * @param serverName name of this server
-     * @param serviceName name of this service
-     * @param auditLog link to the repository responsible for servicing the REST calls.
-     */
-    @Deprecated
-    public AuditableServerServiceInstance(String                  serverName,
-                                          String                  serviceName,
-                                          OMRSAuditLog            auditLog)
-    {
-        super(serverName, serviceName);
-
-        this.auditLog = auditLog;
-    }
+    protected String   localServerUserId = null;
+    protected AuditLog auditLog;
 
 
     /**
@@ -40,11 +23,11 @@ public abstract class AuditableServerServiceInstance extends OMAGServerServiceIn
      * @param localServerUserId userId used for server initiated actions
      * @param maxPageSize maximum number of results returned on a single call
      */
-    public AuditableServerServiceInstance(String                  serverName,
-                                          String                  serviceName,
-                                          OMRSAuditLog            auditLog,
-                                          String                  localServerUserId,
-                                          int                     maxPageSize)
+    public AuditableServerServiceInstance(String      serverName,
+                                          String      serviceName,
+                                          AuditLog    auditLog,
+                                          String      localServerUserId,
+                                          int         maxPageSize)
     {
         super(serverName, serviceName, maxPageSize);
 
@@ -58,7 +41,7 @@ public abstract class AuditableServerServiceInstance extends OMAGServerServiceIn
      *
      * @return audit log
      */
-    protected OMRSAuditLog getAuditLog()
+    protected AuditLog getAuditLog()
     {
         return auditLog;
     }

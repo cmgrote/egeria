@@ -2,6 +2,8 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.localrepository.repositorycontentmanager;
 
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.search.*;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.utilities.OMRSRepositoryPropertiesUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
@@ -11,11 +13,13 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryValidator;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.*;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 import static org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstancePropertyCategory.ENUM;
 import static org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstancePropertyCategory.PRIMITIVE;
-import static org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.PrimitiveDefCategory.OM_PRIMITIVE_TYPE_STRING;
+import static org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.PrimitiveDefCategory.*;
 
 /**
  * OMRSRepositoryContentValidator provides methods to validate TypeDefs and Instances returned from
@@ -28,7 +32,8 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
     private        OMRSRepositoryContentManager    repositoryContentManager;
 
-    private enum MatchOption {
+    private enum MatchOption
+    {
         RegexFullMatch,
         RegexContainsMatch,
         ExactMatch
@@ -62,6 +67,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeDefs list of TypeDefs.
      * @throws RepositoryErrorException a conflicting or invalid TypeDef has been returned
      */
+    @Override
     public void   validateEnterpriseTypeDefs(String        sourceName,
                                              List<TypeDef> typeDefs,
                                              String        methodName) throws RepositoryErrorException
@@ -83,6 +89,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param attributeTypeDefs list of AttributeTypeDefs.
      * @throws RepositoryErrorException a conflicting or invalid AttributeTypeDef has been returned
      */
+    @Override
     public void   validateEnterpriseAttributeTypeDefs(String                 sourceName,
                                                       List<AttributeTypeDef> attributeTypeDefs,
                                                       String                 methodName) throws RepositoryErrorException
@@ -101,6 +108,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeName unique name of the type
      * @return boolean flag
      */
+    @Override
     public boolean isActiveType(String   sourceName, String typeGUID, String typeName)
     {
         final String  methodName = "isActiveType";
@@ -118,13 +126,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeGUID unique identifier of the type
      * @return boolean flag
      */
+    @Override
     public boolean isActiveTypeId(String   sourceName, String typeGUID)
     {
         final String  methodName = "isActiveTypeId";
 
         validateRepositoryContentManager(methodName);
 
-        return repositoryContentManager.isActiveTypeId(sourceName, typeGUID);
+        return repositoryContentManager.isActiveTypeId(typeGUID);
     }
 
 
@@ -136,6 +145,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeName unique name of the type
      * @return boolean flag
      */
+    @Override
     public boolean isOpenType(String   sourceName, String typeGUID, String typeName)
     {
         final String  methodName = "isOpenType";
@@ -153,13 +163,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeGUID unique identifier of the type
      * @return boolean flag
      */
+    @Override
     public boolean isOpenTypeId(String   sourceName, String typeGUID)
     {
         final String  methodName = "isOpenTypeId";
 
         validateRepositoryContentManager(methodName);
 
-        return repositoryContentManager.isOpenTypeId(sourceName, typeGUID);
+        return repositoryContentManager.isOpenTypeId(typeGUID);
     }
 
 
@@ -171,6 +182,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeName unique name of the type
      * @return boolean flag
      */
+    @Override
     public boolean isKnownType(String   sourceName, String typeGUID, String typeName)
     {
         final String  methodName = "isKnownType";
@@ -188,13 +200,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeGUID unique identifier of the type
      * @return boolean flag
      */
+    @Override
     public boolean isKnownTypeId(String   sourceName, String typeGUID)
     {
         final String  methodName = "isKnownTypeId";
 
         validateRepositoryContentManager(methodName);
 
-        return repositoryContentManager.isKnownTypeId(sourceName, typeGUID);
+        return repositoryContentManager.isKnownTypeId(typeGUID);
     }
 
 
@@ -206,7 +219,8 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeName unique name of the TypeDef
      * @return boolean result
      */
-    public boolean validTypeId(String          sourceName,
+    @Override
+    public boolean validTypeId(String sourceName,
                                String typeGUID,
                                String typeName)
     {
@@ -227,6 +241,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param category category for the TypeDef
      * @return boolean result
      */
+    @Override
     public boolean validTypeDefId(String          sourceName,
                                   String          typeDefGUID,
                                   String          typeDefName,
@@ -239,6 +254,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         return repositoryContentManager.validTypeDefId(sourceName, typeDefGUID, typeDefName, category);
     }
 
+
     /**
      * Return boolean indicating whether the AttributeTypeDef identifiers are from a single known type or not.
      *
@@ -248,6 +264,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param category category for the AttributeTypeDef
      * @return boolean result
      */
+    @Override
     public boolean validAttributeTypeDefId(String                   sourceName,
                                            String                   attributeTypeDefGUID,
                                            String                   attributeTypeDefName,
@@ -275,10 +292,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param category category for the TypeDef
      * @return boolean result
      */
+    @Override
     public boolean validTypeDefId(String          sourceName,
                                   String          typeDefGUID,
                                   String          typeDefName,
-                                  long            typeDefVersion,
+                                  String          typeDefVersion,
                                   TypeDefCategory category)
     {
         final String  methodName = "validTypeDefId";
@@ -303,10 +321,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param category category for the TypeDef
      * @return boolean result
      */
+    @Override
     public boolean validAttributeTypeDefId(String                   sourceName,
                                            String                   attributeTypeDefGUID,
                                            String                   attributeTypeDefName,
-                                           long                     attributeTypeDefVersion,
+                                           String                   attributeTypeDefVersion,
                                            AttributeTypeDefCategory category)
     {
         final String  methodName = "validAttributeTypeDefId";
@@ -321,6 +340,38 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     }
 
 
+    /**
+     * Validate that the supplied type is a valid active type.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param typeParameterName the name of the parameter that passed the type
+     * @param typeDefSummary the type to test
+     * @param category the expected category of the type
+     * @param methodName the name of the method that supplied the type
+     * @throws InvalidParameterException the type is null or contains invalid values
+     * @throws TypeErrorException the type is not active
+     */
+    @Override
+    public void validateActiveType(String           sourceName,
+                                   String           typeParameterName,
+                                   TypeDefSummary   typeDefSummary,
+                                   TypeDefCategory  category,
+                                   String           methodName) throws TypeErrorException, InvalidParameterException
+    {
+        if (! this.isActiveType(sourceName, typeDefSummary.getGUID(), typeDefSummary.getName()))
+        {
+            throw new TypeErrorException(OMRSErrorCode.TYPEDEF_NOT_KNOWN.getMessageDefinition(typeDefSummary.getName(),
+                                                                                              typeDefSummary.getGUID(),
+                                                                                              typeParameterName,
+                                                                                              methodName,
+                                                                                              sourceName),
+                                         this.getClass().getName(),
+                                         methodName);
+        }
+
+        // todo check category
+    }
+
 
     /**
      * Return boolean indicating whether the supplied TypeDef is valid or not.
@@ -329,6 +380,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeDef TypeDef to test
      * @return boolean result
      */
+    @Override
     public boolean validTypeDef(String         sourceName,
                                 TypeDef        typeDef)
     {
@@ -347,6 +399,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param attributeTypeDef TypeDef to test
      * @return boolean result
      */
+    @Override
     public boolean validAttributeTypeDef(String           sourceName,
                                          AttributeTypeDef attributeTypeDef)
     {
@@ -365,6 +418,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param typeDefSummary TypeDefSummary to test.
      * @return boolean result.
      */
+    @Override
     public boolean validTypeDefSummary(String         sourceName,
                                        TypeDefSummary typeDefSummary)
     {
@@ -383,34 +437,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param entity entity to test
      * @return boolean result
      */
+    @Override
     public boolean validEntity(String        sourceName,
                                EntitySummary entity)
     {
-        if (entity == null)
-        {
-            log.error("Null entity from " + sourceName);
-            return false;
-        }
+        final String methodName = "validEntity";
 
-        InstanceType instanceType = entity.getType();
-
-        if (instanceType == null)
-        {
-            log.error("Null instance type in entity from " + sourceName);
-            return false;
-        }
-
-        if (! validInstanceId(sourceName,
-                              instanceType.getTypeDefGUID(),
-                              instanceType.getTypeDefName(),
-                              instanceType.getTypeDefCategory(),
-                              entity.getGUID()))
-        {
-            log.error("Null entity guid from " + sourceName);
-            return false;
-        }
-
-        return true;
+        return validInstance(sourceName, entity, methodName, false);
     }
 
 
@@ -421,6 +454,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param entity entity to test
      * @return boolean result
      */
+    @Override
     public boolean validEntity(String      sourceName,
                                EntityProxy entity)
     {
@@ -435,6 +469,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param entity entity to test
      * @return boolean result
      */
+    @Override
     public boolean validEntity(String       sourceName,
                                EntityDetail entity)
     {
@@ -449,20 +484,48 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param relationship relationship to test
      * @return boolean result
      */
+    @Override
     public boolean validRelationship(String       sourceName,
                                      Relationship relationship)
     {
-        if (relationship == null)
+        final String methodName    = "validRelationship";
+        // 1. Validate the instance
+        boolean valid = validInstance(sourceName, relationship, methodName, false);
+        // 2. Validate the ends of the relationship
+        if (relationship.getEntityOneProxy() == null || relationship.getEntityTwoProxy() == null)
         {
-            log.error("Null relationship from " + sourceName);
+            valid = false;
+            repositoryContentManager.logNullInstance(sourceName, methodName);
+        }
+        return valid;
+    }
+
+
+    /**
+     * Test that the supplied instance is valid.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param instance instance to test
+     * @param methodName calling method
+     * @param fromStore is the entity from the store?
+     * @return boolean result
+     */
+    private boolean validInstance(String         sourceName,
+                                  InstanceHeader instance,
+                                  String         methodName,
+                                  boolean        fromStore)
+    {
+        if (instance == null)
+        {
+            repositoryContentManager.logNullInstance(sourceName, methodName);
             return false;
         }
 
-        InstanceType instanceType = relationship.getType();
+        InstanceType instanceType = instance.getType();
 
         if (instanceType == null)
         {
-            log.error("Null instance type in relationship from " + sourceName);
+            repositoryContentManager.logNullType(sourceName, methodName);
             return false;
         }
 
@@ -470,18 +533,28 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                               instanceType.getTypeDefGUID(),
                               instanceType.getTypeDefName(),
                               instanceType.getTypeDefCategory(),
-                              relationship.getGUID()))
+                              instance.getGUID()))
         {
-            log.error("Null relationship guid from " + sourceName);
+            /*
+             * Error already logged
+             */
             return false;
         }
 
-        String          homeMetadataCollectionId = relationship.getMetadataCollectionId();
-
-        if (homeMetadataCollectionId == null)
+        if (! fromStore)
         {
-            log.error("Null home metadata collection id for relationship " + relationship.getGUID() + " from " + sourceName);
-            return false;
+            String homeMetadataCollectionId = instance.getMetadataCollectionId();
+
+            if (homeMetadataCollectionId == null)
+            {
+                repositoryContentManager.logNullMetadataCollectionId(sourceName,
+                                                                     instanceType.getTypeDefGUID(),
+                                                                     instanceType.getTypeDefName(),
+                                                                     instanceType.getTypeDefCategory().getName(),
+                                                                     instance.getGUID(),
+                                                                     methodName);
+                return false;
+            }
         }
 
         return true;
@@ -498,17 +571,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instanceGUID unique identifier for the instance.
      * @return boolean indicating whether the identifiers are ok.
      */
+    @Override
     public boolean validInstanceId(String           sourceName,
                                    String           typeDefGUID,
                                    String           typeDefName,
                                    TypeDefCategory  category,
                                    String           instanceGUID)
     {
-        if (instanceGUID == null)
-        {
-            log.error("Null instance guid from " + sourceName);
-            return false;
-        }
 
         if (! validTypeDefId(sourceName,
                              typeDefGUID,
@@ -518,6 +587,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
             /*
              * Error messages already logged
              */
+            return false;
+        }
+
+        if (instanceGUID == null)
+        {
+            repositoryContentManager.logNullInstanceGUID(sourceName, typeDefGUID, typeDefName, category);
             return false;
         }
 
@@ -539,22 +614,19 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of method requesting the validation.
      * @throws InvalidParameterException the userId is invalid
      */
+    @Override
     public  void validateUserId(String  sourceName,
                                 String  userId,
                                 String  methodName) throws InvalidParameterException
     {
-        if ("".equals(userId))
-        {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_USER_ID;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage("userId", methodName, sourceName);
+        final String userIdParameterName = "userId";
 
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
-                                                 this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+        if ((userId == null) || (userId.length() == 0))
+        {
+            throw new InvalidParameterException(OMRSErrorCode.NULL_USER_ID.getMessageDefinition(userIdParameterName, methodName, sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                userIdParameterName);
         }
     }
 
@@ -570,6 +642,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateTypeDefIds(String sourceName,
                                     String guidParameterName,
                                     String nameParameterName,
@@ -579,33 +652,54 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER.getMessageDefinition(guidParameterName,
+                                                                                                           methodName,
+                                                                                                           sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                guidParameterName);
         }
         else if (name == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_TYPEDEF_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(nameParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_TYPEDEF_NAME.getMessageDefinition(nameParameterName,
+                                                                                                   methodName,
+                                                                                                   sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                nameParameterName);
+        }
+    }
+
+
+    /**
+     * Validate that a TypeDef's identifiers are not null and return the type.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param guidParameterName name of the parameter that passed the guid.
+     * @param nameParameterName name of the parameter that passed the name.
+     * @param guid unique identifier for a type or an instance passed on the request
+     * @param name name of TypeDef.
+     * @param methodName method receiving the call
+     * @return  typeDef
+     * @throws InvalidParameterException no guid provided
+     */
+    @Override
+    public  TypeDef getValidTypeDefFromIds(String sourceName,
+                                           String guidParameterName,
+                                           String nameParameterName,
+                                           String guid,
+                                           String name,
+                                           String methodName) throws InvalidParameterException
+    {
+        this.validateTypeDefIds(sourceName, guidParameterName, nameParameterName, guid, name, methodName);
+
+        try
+        {
+            return repositoryContentManager.getTypeDef(sourceName, guidParameterName, guid, methodName);
+        }
+        catch (TypeErrorException error)
+        {
+            throw new InvalidParameterException(error, guidParameterName + " or " + nameParameterName);
         }
     }
 
@@ -621,42 +715,64 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid, or name provided
      */
+    @Override
     public  void validateAttributeTypeDefIds(String sourceName,
-                                             String guidParameterName,
-                                             String nameParameterName,
-                                             String guid,
-                                             String name,
-                                             String methodName) throws InvalidParameterException
+                                                         String guidParameterName,
+                                                         String nameParameterName,
+                                                         String guid,
+                                                         String name,
+                                                         String methodName) throws InvalidParameterException
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_ATTRIBUTE_TYPEDEF_IDENTIFIER;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_ATTRIBUTE_TYPEDEF_IDENTIFIER.getMessageDefinition(guidParameterName,
+                                                                                                                     methodName,
+                                                                                                                     sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                guidParameterName);
         }
         else if (name == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_ATTRIBUTE_TYPEDEF_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(nameParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_ATTRIBUTE_TYPEDEF_NAME.getMessageDefinition(nameParameterName,
+                                                                                                             methodName,
+                                                                                                             sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                nameParameterName);
+        }
+    }
+
+
+    /**
+     * Validate that an AttributeTypeDef's identifiers are not null and are recognized.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param guidParameterName name of the parameter that passed the guid.
+     * @param nameParameterName name of the parameter that passed the name.
+     * @param guid unique identifier for a type or an instance passed on the request
+     * @param name name of TypeDef.
+     * @param methodName method receiving the call
+     * @return retrieved type definition
+     * @throws InvalidParameterException no guid, or name provided
+     */
+    @Override
+    public  AttributeTypeDef getValidAttributeTypeDefFromIds(String sourceName,
+                                                             String guidParameterName,
+                                                             String nameParameterName,
+                                                             String guid,
+                                                             String name,
+                                                             String methodName) throws InvalidParameterException
+    {
+        this.validateAttributeTypeDefIds(sourceName, guidParameterName, nameParameterName, guid, name, methodName);
+
+        try
+        {
+            return repositoryContentManager.getAttributeTypeDef(sourceName, guidParameterName, guid, methodName);
+        }
+        catch (TypeErrorException error)
+        {
+            throw new InvalidParameterException(error, guidParameterName + " or " + nameParameterName);
         }
     }
 
@@ -671,6 +787,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws InvalidParameterException no guid provided
      * @throws TypeErrorException guid is not for a recognized type
      */
+    @Override
     public  void validateTypeGUID(String sourceName,
                                   String guidParameterName,
                                   String guid,
@@ -679,18 +796,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER.getMessageDefinition(guidParameterName,
+                                                                                                           methodName,
+                                                                                                           sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                guidParameterName);
         }
 
         validateOptionalTypeGUID(sourceName, guidParameterName, guid, methodName);
@@ -706,6 +817,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws TypeErrorException unknown type guid
      */
+    @Override
     public  void validateOptionalTypeGUID(String sourceName,
                                           String guidParameterName,
                                           String guid,
@@ -715,50 +827,86 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (! isKnownTypeId(sourceName, guid))
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.TYPEDEF_ID_NOT_KNOWN;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(guid,
-                                                                                guidParameterName,
-                                                                                methodName,
-                                                                                sourceName);
-
-                throw new TypeErrorException(errorCode.getHTTPErrorCode(),
+                throw new TypeErrorException(OMRSErrorCode.TYPEDEF_ID_NOT_KNOWN.getMessageDefinition(guid,
+                                                                                                     guidParameterName,
+                                                                                                     methodName,
+                                                                                                     sourceName),
                                              this.getClass().getName(),
-                                             methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction());
+                                             methodName);
             }
         }
     }
 
 
     /**
-     * Verify that a TypeDefPatch is not null.
+     * {@inheritDoc}
+     */
+    @Override
+    public  void validateOptionalTypeGUIDs(String sourceName,
+                                           String guidParameterName,
+                                           String guid,
+                                           String subtypeParameterName,
+                                           List<String> subtypeGuids,
+                                           String methodName) throws TypeErrorException
+    {
+        validateOptionalTypeGUID(sourceName, guidParameterName, guid, methodName);
+        if (subtypeGuids != null)
+        {
+            List<String> invalidSubtypes = new ArrayList<>();
+            for (String subtype : subtypeGuids)
+            {
+                if (! isKnownTypeId(sourceName, subtype))
+                {
+                    throw new TypeErrorException(OMRSErrorCode.TYPEDEF_ID_NOT_KNOWN.getMessageDefinition(subtype,
+                                                                                                         subtypeParameterName,
+                                                                                                         methodName,
+                                                                                                         sourceName),
+                                                 this.getClass().getName(),
+                                                 methodName);
+                }
+                else
+                {
+                    validateRepositoryContentManager(methodName);
+                    TypeDef subtypeDef = repositoryContentManager.getTypeDef(sourceName, subtypeParameterName, subtype, methodName);
+                    if (! repositoryContentManager.isTypeOfByGUID(sourceName, subtype, subtypeDef.getName(), guid))
+                    {
+                        invalidSubtypes.add(subtype);
+                    }
+                }
+            }
+            if (! invalidSubtypes.isEmpty())
+            {
+                throw new TypeErrorException(OMRSErrorCode.TYPEDEF_NOT_SUBTYPE.getMessageDefinition(invalidSubtypes.toString(), guid),
+                                             this.getClass().getName(),
+                                             methodName);
+            }
+        }
+    }
+
+
+    /**
+     * Verify that a TypeDefPatch is not null and is for a recognized type.
      *
      * @param sourceName source of the request (used for logging)
      * @param patch patch to test
      * @param methodName calling method
+     * @return current value of the type
      * @throws InvalidParameterException the patch is null
+     * @throws TypeDefNotKnownException the type is not known
      * @throws PatchErrorException the patch is invalid
      */
-    public void validateTypeDefPatch(String       sourceName,
-                                     TypeDefPatch patch,
-                                     String       methodName) throws InvalidParameterException, PatchErrorException
+    @Override
+    public TypeDef validateTypeDefPatch(String       sourceName,
+                                        TypeDefPatch patch,
+                                        String       methodName) throws InvalidParameterException,
+                                                                        TypeDefNotKnownException,
+                                                                        PatchErrorException
     {
-        if (patch == null)
-        {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF_PATCH;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                            sourceName);
+        OMRSRepositoryPropertiesUtilities utilities = new OMRSRepositoryPropertiesUtilities();
 
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
-                                                this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
-        }
+        utilities.validateTypeDefPatch(sourceName, patch, methodName);
+
+        return repositoryContentManager.getTypeDefByName(patch.getTypeDefName());
     }
 
 
@@ -771,6 +919,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws TypeErrorException invalid provided
      */
+    @Override
     public  void validateInstanceTypeGUID(String sourceName,
                                           String guidParameterName,
                                           String guid,
@@ -778,18 +927,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.BAD_TYPEDEF_ID_FOR_INSTANCE;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new TypeErrorException(errorCode.getHTTPErrorCode(),
-                                                this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+            throw new TypeErrorException(OMRSErrorCode.BAD_TYPEDEF_ID_FOR_INSTANCE.getMessageDefinition(guidParameterName,
+                                                                                                        methodName,
+                                                                                                        sourceName),
+                                         this.getClass().getName(),
+                                         methodName);
         }
     }
 
@@ -803,6 +945,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no name provided
      */
+    @Override
     public  void validateTypeName(String sourceName,
                                   String nameParameterName,
                                   String name,
@@ -810,18 +953,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (name == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_TYPEDEF_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(nameParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_TYPEDEF_NAME.getMessageDefinition(nameParameterName,
+                                                                                                   methodName,
+                                                                                                   sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                nameParameterName);
         }
     }
 
@@ -835,6 +972,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no name provided
      */
+    @Override
     public  void validateTypeDefCategory(String          sourceName,
                                          String          nameParameterName,
                                          TypeDefCategory category,
@@ -842,18 +980,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (category == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_TYPEDEF_CATEGORY;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(nameParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_TYPEDEF_CATEGORY.getMessageDefinition(nameParameterName,
+                                                                                                       methodName,
+                                                                                                       sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                nameParameterName);
         }
     }
 
@@ -867,6 +999,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no name provided
      */
+    @Override
     public  void validateAttributeTypeDefCategory(String                   sourceName,
                                                   String                   nameParameterName,
                                                   AttributeTypeDefCategory category,
@@ -874,18 +1007,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (category == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_ATTRIBUTE_TYPEDEF_CATEGORY;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(nameParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_ATTRIBUTE_TYPEDEF_CATEGORY.getMessageDefinition(nameParameterName,
+                                                                                                                 methodName,
+                                                                                                                 sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                nameParameterName);
         }
     }
 
@@ -900,6 +1027,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws InvalidParameterException no typeDef provided
      * @throws InvalidTypeDefException invalid typeDef provided
      */
+    @Override
     public  void validateTypeDef(String  sourceName,
                                  String  parameterName,
                                  TypeDef typeDef,
@@ -907,18 +1035,23 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (typeDef == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF.getMessageDefinition(parameterName,
+                                                                                                methodName,
+                                                                                                sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
+        }
+
+        if (typeDef.getHeaderVersion() > TypeDefElementHeader.CURRENT_TYPE_DEF_HEADER_VERSION)
+        {
+            throw new InvalidTypeDefException(OMRSErrorCode.UNSUPPORTED_TYPE_HEADER_VERSION.getMessageDefinition(methodName,
+                                                                                                                 sourceName,
+                                                                                                                 typeDef.getName(),
+                                                                                                                 Long.toString(typeDef.getHeaderVersion()),
+                                                                                                                 Long.toString(typeDef.getHeaderVersion())),
+                                              this.getClass().getName(),
+                                              methodName);
         }
 
         validateTypeDefIds(sourceName,
@@ -946,6 +1079,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws TypeDefNotKnownException no recognized typeDef provided
      */
+    @Override
     public  void validateKnownTypeDef(String  sourceName,
                                       String  parameterName,
                                       TypeDef typeDef,
@@ -957,20 +1091,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
         if (! repositoryContentManager.isKnownType(sourceName, typeDef.getGUID(), typeDef.getName()))
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.TYPEDEF_NOT_KNOWN;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(typeDef.getName(),
-                                                                            typeDef.getGUID(),
-                                                                            parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new TypeDefNotKnownException(errorCode.getHTTPErrorCode(),
+            throw new TypeDefNotKnownException(OMRSErrorCode.TYPEDEF_NOT_KNOWN.getMessageDefinition(typeDef.getName(),
+                                                                                                    typeDef.getGUID(),
+                                                                                                    parameterName,
+                                                                                                    methodName,
+                                                                                                    sourceName),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
 
         }
     }
@@ -986,6 +1113,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws TypeDefKnownException the TypeDef is already defined
      * @throws TypeDefConflictException the TypeDef is already defined but differently
      */
+    @Override
     public  void validateUnknownTypeDef(String  sourceName,
                                         String  parameterName,
                                         TypeDef typeDef,
@@ -1000,17 +1128,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             // todo validate that the existing typeDef matches the new one.
 
-            OMRSErrorCode errorCode = OMRSErrorCode.TYPEDEF_ALREADY_DEFINED;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(typeDef.getName(),
-                                                                                                     typeDef.getGUID(),
-                                                                                                     sourceName);
-
-            throw new TypeDefKnownException(errorCode.getHTTPErrorCode(),
+            throw new TypeDefKnownException(OMRSErrorCode.TYPEDEF_ALREADY_DEFINED.getMessageDefinition(typeDef.getName(),
+                                                                                                       typeDef.getGUID(),
+                                                                                                       sourceName),
                                             this.getClass().getName(),
-                                            methodName,
-                                            errorMessage,
-                                            errorCode.getSystemAction(),
-                                            errorCode.getUserAction());
+                                            methodName);
 
         }
     }
@@ -1026,6 +1148,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws TypeDefKnownException the TypeDef is already defined
      * @throws TypeDefConflictException the TypeDef is already defined but differently
      */
+    @Override
     public  void validateUnknownAttributeTypeDef(String           sourceName,
                                                  String           parameterName,
                                                  AttributeTypeDef attributeTypeDef,
@@ -1040,20 +1163,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                                  attributeTypeDef.getGUID(),
                                                  attributeTypeDef.getName()))
         {
-            // todo validate that the existing typeDef matches the new one.
-
-            OMRSErrorCode errorCode = OMRSErrorCode.ATTRIBUTE_TYPEDEF_ALREADY_DEFINED;
-            String errorMessage = errorCode.getErrorMessageId()
-                    + errorCode.getFormattedErrorMessage(attributeTypeDef.getName(),
-                                                         attributeTypeDef.getGUID(),
-                                                         sourceName);
-
-            throw new TypeDefKnownException(errorCode.getHTTPErrorCode(),
+            throw new TypeDefKnownException(OMRSErrorCode.ATTRIBUTE_TYPEDEF_ALREADY_DEFINED.getMessageDefinition(attributeTypeDef.getName(),
+                                                                                                                 attributeTypeDef.getGUID(),
+                                                                                                                 sourceName),
                                             this.getClass().getName(),
-                                            methodName,
-                                            errorMessage,
-                                            errorCode.getSystemAction(),
-                                            errorCode.getUserAction());
+                                            methodName);
 
         }
     }
@@ -1069,26 +1183,22 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws TypeErrorException no typeDef provided
      * @throws RepositoryErrorException the TypeDef from the repository is in error.
      */
+    @Override
     public  void validateTypeDefForInstance(String  sourceName,
                                             String  parameterName,
                                             TypeDef typeDef,
                                             String  methodName) throws TypeErrorException,
                                                                        RepositoryErrorException
     {
+        final String thisMethodName = "validateTypeDefForInstance";
+
         if (typeDef == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new TypeErrorException(errorCode.getHTTPErrorCode(),
-                                                this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+            throw new TypeErrorException(OMRSErrorCode.NULL_TYPEDEF.getMessageDefinition(parameterName,
+                                                                                         methodName,
+                                                                                         sourceName),
+                                         this.getClass().getName(),
+                                         methodName);
         }
 
         try
@@ -1105,20 +1215,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                     typeDef.getCategory(),
                                     methodName);
         }
-        catch (Throwable    error)
+        catch (Exception    error)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.BAD_TYPEDEF;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+           throw new RepositoryErrorException(OMRSErrorCode.BAD_TYPEDEF.getMessageDefinition(thisMethodName,
+                                                                                              typeDef.getName(),
+                                                                                              sourceName,
+                                                                                              methodName),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
         }
     }
 
@@ -1134,6 +1238,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws InvalidParameterException incompatibility detected between the TypeDef and the instance's type
      * @throws RepositoryErrorException the instance from the repository is in error.
      */
+    @Override
     public  void validateTypeForInstanceDelete(String         sourceName,
                                                String         typeDefGUID,
                                                String         typeDefName,
@@ -1141,33 +1246,51 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                                String         methodName) throws InvalidParameterException,
                                                                                  RepositoryErrorException
     {
+        final String localMethodName = "validateTypeForInstanceDelete";
+
         /*
          * Just make sure the instance has a type :)
          */
         this.validateInstanceType(sourceName, instance);
 
-
         /*
          * Both the GUID and the name must match
          */
-        if ((! typeDefGUID.equals(instance.getType().getTypeDefGUID())) ||
-            (! typeDefName.equals(instance.getType().getTypeDefName())))
+        TypeDef knownType = repositoryContentManager.getTypeDefByName(typeDefName);
+
+        if (knownType == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.BAD_TYPEDEF_IDS_FOR_DELETE;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(typeDefName,
-                                                                            typeDefGUID,
-                                                                            methodName,
-                                                                            instance.getGUID(),
-                                                                            sourceName);
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.BAD_TYPEDEF_IDS_FOR_DELETE.getMessageDefinition(typeDefName,
+                                                                                                              typeDefGUID,
+                                                                                                              methodName,
+                                                                                                              instance.getGUID(),
+                                                                                                              sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                "typeDefName");
         }
-
+        else if (! typeDefGUID.equals(knownType.getGUID()))
+        {
+            throw new InvalidParameterException(OMRSErrorCode.BAD_TYPEDEF_IDS_FOR_DELETE.getMessageDefinition(typeDefName,
+                                                                                                              typeDefGUID,
+                                                                                                              methodName,
+                                                                                                              instance.getGUID(),
+                                                                                                              sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "typeDefGUID");
+        }
+        else if (! this.isATypeOf(sourceName, instance, typeDefName, localMethodName))
+        {
+            throw new InvalidParameterException(OMRSErrorCode.BAD_TYPEDEF_IDS_FOR_DELETE.getMessageDefinition(typeDefName,
+                                                                                                              typeDefGUID,
+                                                                                                              methodName,
+                                                                                                              instance.getGUID(),
+                                                                                                              sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "type");
+        }
     }
 
 
@@ -1181,6 +1304,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws InvalidParameterException no attributeTypeDef provided
      * @throws InvalidTypeDefException bad attributeTypeDef provided
      */
+    @Override
     public  void validateAttributeTypeDef(String           sourceName,
                                           String           parameterName,
                                           AttributeTypeDef attributeTypeDef,
@@ -1189,19 +1313,25 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (attributeTypeDef == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_ATTRIBUTE_TYPEDEF;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_ATTRIBUTE_TYPEDEF.getMessageDefinition(parameterName,
+                                                                                                          methodName,
+                                                                                                          sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
+
+        if (attributeTypeDef.getHeaderVersion() > TypeDefElementHeader.CURRENT_TYPE_DEF_HEADER_VERSION)
+        {
+            throw new InvalidTypeDefException(OMRSErrorCode.UNSUPPORTED_TYPE_HEADER_VERSION.getMessageDefinition(methodName,
+                                                                                                                 sourceName,
+                                                                                                                 attributeTypeDef.getName(),
+                                                                                                                 Long.toString(attributeTypeDef.getHeaderVersion()),
+                                                                                                                 Long.toString(attributeTypeDef.getHeaderVersion())),
+                                              this.getClass().getName(),
+                                              methodName);
+        }
+
 
         validateAttributeTypeDefIds(sourceName,
                                     parameterName + ".getGUID",
@@ -1226,6 +1356,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no name provided
      */
+    @Override
     public  void validateTypeDefGallery(String         sourceName,
                                         String         parameterName,
                                         TypeDefGallery gallery,
@@ -1233,18 +1364,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (gallery == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_TYPEDEF_GALLERY;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF_GALLERY.getMessageDefinition(parameterName,
+                                                                                                        methodName,
+                                                                                                        sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
     }
 
@@ -1259,6 +1384,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no name provided
      */
+    @Override
     public  void validateExternalId(String sourceName,
                                     String standard,
                                     String organization,
@@ -1267,17 +1393,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if ((standard == null) && (organization == null) && (identifier == null))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NO_EXTERNAL_ID;
-
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                     sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_EXTERNAL_ID.getMessageDefinition(methodName,
+                                                                                                  sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                "externalId");
         }
     }
 
@@ -1291,6 +1411,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateGUID(String sourceName,
                               String guidParameterName,
                               String guid,
@@ -1298,18 +1419,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_GUID;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_GUID.getMessageDefinition(guidParameterName,
+                                                                                           methodName,
+                                                                                           sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                guidParameterName);
         }
     }
 
@@ -1323,6 +1438,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateHomeMetadataGUID(String sourceName,
                                           String guidParameterName,
                                           String guid,
@@ -1330,18 +1446,44 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (guid == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_HOME_METADATA_COLLECTION_ID;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(guidParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_HOME_METADATA_COLLECTION_ID.getMessageDefinition(guidParameterName,
+                                                                                                                    methodName,
+                                                                                                                    sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                guidParameterName);
+        }
+    }
+
+
+    /**
+     * Validate that a home metadata collection identifier in an classification is not null.
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param classification classification to test.
+     * @param methodName method receiving the call
+     * @throws RepositoryErrorException no guid provided
+     */
+    @Override
+    public  void validateHomeMetadataGUID(String           sourceName,
+                                          Classification   classification,
+                                          String           methodName) throws RepositoryErrorException
+    {
+        final String  thisMethodName = "validateHomeMetadataGUID";
+
+        if (classification == null)
+        {
+            this.throwValidatorLogicError(sourceName, methodName, thisMethodName);
+        }
+
+        if (classification.getMetadataCollectionId() == null)
+        {
+            throw new RepositoryErrorException(OMRSErrorCode.NULL_INSTANCE_METADATA_COLLECTION_ID.getMessageDefinition(classification.getName(),
+                                                                                                                       sourceName,
+                                                                                                                       methodName,
+                                                                                                                       classification.toString()),
+                                               this.getClass().getName(),
+                                               methodName);
         }
     }
 
@@ -1355,6 +1497,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws RepositoryErrorException no guid provided
      */
+    @Override
     public  void validateHomeMetadataGUID(String           sourceName,
                                           InstanceHeader   instance,
                                           String           methodName) throws RepositoryErrorException
@@ -1368,18 +1511,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
         if (instance.getMetadataCollectionId() == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_INSTANCE_METADATA_COLLECTION_ID;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(instance.getGUID(),
-                                                                                                     sourceName,
-                                                                                                     methodName,
-                                                                                                     instance.toString());
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+            throw new RepositoryErrorException(OMRSErrorCode.NULL_INSTANCE_METADATA_COLLECTION_ID.getMessageDefinition(instance.getGUID(),
+                                                                                                                       sourceName,
+                                                                                                                       methodName,
+                                                                                                                       instance.toString()),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
         }
     }
 
@@ -1393,6 +1530,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException asOfTime is for the future
      */
+    @Override
     public  void validateAsOfTime(String sourceName,
                                   String parameterName,
                                   Date   asOfTime,
@@ -1404,19 +1542,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
             if (asOfTime.after(now))
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.REPOSITORY_NOT_CRYSTAL_BALL;
-                String errorMessage = errorCode.getErrorMessageId()
-                        + errorCode.getFormattedErrorMessage(asOfTime.toString(),
-                                                             parameterName,
-                                                             methodName,
-                                                             sourceName);
-
-                throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                throw new InvalidParameterException(OMRSErrorCode.REPOSITORY_NOT_CRYSTAL_BALL.getMessageDefinition(asOfTime.toString(),
+                                                                                                                   parameterName,
+                                                                                                                   methodName,
+                                                                                                                   sourceName),
                                                     this.getClass().getName(),
                                                     methodName,
-                                                    errorMessage,
-                                                    errorCode.getSystemAction(),
-                                                    errorCode.getUserAction());
+                                                    parameterName);
             }
         }
     }
@@ -1431,6 +1563,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException asOfTime is for the future
      */
+    @Override
     public  void validateAsOfTimeNotNull(String sourceName,
                                          String parameterName,
                                          Date   asOfTime,
@@ -1438,22 +1571,58 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (asOfTime == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_AS_OF_TIME;
-            String errorMessage = errorCode.getErrorMessageId()
-                    + errorCode.getFormattedErrorMessage(methodName,
-                                                         parameterName,
-                                                         sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_AS_OF_TIME.getMessageDefinition(methodName,
+                                                                                                   parameterName,
+                                                                                                   sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
         else
         {
             this.validateAsOfTime(sourceName, parameterName, asOfTime, methodName);
+        }
+    }
+
+
+    /**
+     * Validate that the time parameters are not inverted ('from' later than 'to').
+     *
+     * @param sourceName source of the request (used for logging)
+     * @param parameterName name of the parameter that passed the guid.
+     * @param fromTime the earliest point in time from which to retrieve historical versions of the instance (inclusive)
+     * @param toTime the latest point in time from which to retrieve historical versions of the instance (exclusive)
+     * @param methodName method receiving the call
+     * @throws InvalidParameterException 'fromTime' is later than 'toTime', or either is some point in the future
+     */
+    @Override
+    public  void validateDateRange(String sourceName,
+                                   String parameterName,
+                                   Date   fromTime,
+                                   Date   toTime,
+                                   String methodName) throws InvalidParameterException
+    {
+        // If either (or both) are null, then this is valid: simply extend forwards or backwards (or both) as far as we can
+        if (fromTime != null && toTime != null)
+        {
+            if (fromTime.compareTo(toTime) > 0)
+            {
+                throw new InvalidParameterException(OMRSErrorCode.INVALID_TIME_RANGE.getMessageDefinition(methodName,
+                                                                                                          fromTime.toString(),
+                                                                                                          toTime.toString()),
+                                                    this.getClass().getName(),
+                                                    methodName,
+                                                    parameterName);
+            }
+        }
+        // Regardless, validate any non-null date is not in the future
+        if (fromTime != null)
+        {
+            this.validateAsOfTime(sourceName, "fromTime", fromTime, methodName);
+        }
+        if (toTime != null)
+        {
+            this.validateAsOfTime(sourceName, "toTime", toTime, methodName);
         }
     }
 
@@ -1467,6 +1636,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws PagingErrorException pageSize is negative
      */
+    @Override
     public  void validatePageSize(String sourceName,
                                   String parameterName,
                                   int    pageSize,
@@ -1474,19 +1644,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (pageSize < 0)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NEGATIVE_PAGE_SIZE;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(Integer.toString(pageSize),
-                                                                     parameterName,
-                                                                     methodName,
-                                                                     sourceName);
-
-            throw new PagingErrorException(errorCode.getHTTPErrorCode(),
+            throw new PagingErrorException(OMRSErrorCode.NEGATIVE_PAGE_SIZE.getMessageDefinition(Integer.toString(pageSize),
+                                                                                                 parameterName,
+                                                                                                 methodName,
+                                                                                                 sourceName),
                                            this.getClass().getName(),
-                                           methodName,
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
 
         }
     }
@@ -1502,6 +1665,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @return type definition for the classification
      * @throws InvalidParameterException  classification name is null or invalid
      */
+    @Override
     public  TypeDef validateClassificationName(String sourceName,
                                                String parameterName,
                                                String classificationName,
@@ -1509,35 +1673,23 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (classificationName == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_CLASSIFICATION_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_CLASSIFICATION_NAME.getMessageDefinition(parameterName,
+                                                                                                            methodName,
+                                                                                                            sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
 
-        TypeDef typeDef = repositoryContentManager.getTypeDefByName(sourceName, classificationName);
+        TypeDef typeDef = repositoryContentManager.getTypeDefByName(classificationName);
 
         if (typeDef == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.UNKNOWN_CLASSIFICATION;
-
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(classificationName,
-                                                                                                     sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+           throw new InvalidParameterException(OMRSErrorCode.UNKNOWN_CLASSIFICATION.getMessageDefinition(classificationName,
+                                                                                                          sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
 
         return typeDef;
@@ -1554,6 +1706,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws PropertyErrorException classification name is null
      */
+    @Override
     public  void validateClassificationProperties(String             sourceName,
                                                   String             classificationName,
                                                   String             propertiesParameterName,
@@ -1562,7 +1715,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         validateRepositoryContentManager(methodName);
 
-        TypeDef   classificationTypeDef = repositoryContentManager.getTypeDefByName(sourceName, classificationName);
+        TypeDef   classificationTypeDef = repositoryContentManager.getTypeDefByName(classificationName);
 
         if (classificationTypeDef != null)
         {
@@ -1591,6 +1744,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws InvalidParameterException classification name is null
      * @throws ClassificationErrorException the classification is invalid for this entity
      */
+    @Override
     public  void validateClassification(String             sourceName,
                                         String             classificationParameterName,
                                         String             classificationName,
@@ -1609,18 +1763,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                                                          entityTypeName,
                                                                          methodName))
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.INVALID_CLASSIFICATION_FOR_ENTITY;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(sourceName,
-                                                                                classificationName,
-                                                                                entityTypeName);
-
-                throw new ClassificationErrorException(errorCode.getHTTPErrorCode(),
+                throw new ClassificationErrorException(OMRSErrorCode.INVALID_CLASSIFICATION_FOR_ENTITY.getMessageDefinition(sourceName,
+                                                                                                                            classificationName,
+                                                                                                                            entityTypeName),
                                                        this.getClass().getName(),
-                                                       methodName,
-                                                       errorMessage,
-                                                       errorCode.getSystemAction(),
-                                                       errorCode.getUserAction());
+                                                       methodName);
             }
         }
     }
@@ -1639,6 +1786,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws PropertyErrorException the classification's properties are invalid for its type
      * @throws TypeErrorException the classification's type is invalid
      */
+    @Override
     public  void validateClassificationList(String               sourceName,
                                             String               parameterName,
                                             List<Classification> classifications,
@@ -1666,25 +1814,18 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
                     this.validatePropertiesForType(sourceName,
                                                    parameterName,
-                                                   repositoryContentManager.getTypeDefByName(sourceName,
-                                                                                             classification.getName()),
+                                                   repositoryContentManager.getTypeDefByName(classification.getName()),
                                                    classification.getProperties(),
                                                    methodName);
                 }
                 else
                 {
-                    OMRSErrorCode errorCode    = OMRSErrorCode.NULL_CLASSIFICATION_NAME;
-                    String        errorMessage = errorCode.getErrorMessageId()
-                                               + errorCode.getFormattedErrorMessage(parameterName,
-                                                                                    methodName,
-                                                                                    sourceName);
-
-                    throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                    throw new InvalidParameterException(OMRSErrorCode.NULL_CLASSIFICATION_NAME.getMessageDefinition(parameterName,
+                                                                                                                    methodName,
+                                                                                                                    sourceName),
                                                         this.getClass().getName(),
                                                         methodName,
-                                                        errorMessage,
-                                                        errorCode.getSystemAction(),
-                                                        errorCode.getUserAction());
+                                                        parameterName);
                 }
             }
         }
@@ -1700,6 +1841,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateMatchCriteria(String            sourceName,
                                        String            parameterName,
                                        TypeDefProperties matchCriteria,
@@ -1707,18 +1849,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (matchCriteria == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_MATCH_CRITERIA;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_MATCH_CRITERIA.getMessageDefinition(parameterName,
+                                                                                                     methodName,
+                                                                                                     sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
         }
     }
 
@@ -1735,6 +1871,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateMatchCriteria(String             sourceName,
                                        String             matchCriteriaParameterName,
                                        String             matchPropertiesParameterName,
@@ -1749,34 +1886,22 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
         if (matchCriteria == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_MATCH_CRITERIA;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(matchCriteriaParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_MATCH_CRITERIA.getMessageDefinition(matchCriteriaParameterName,
+                                                                                                     methodName,
+                                                                                                     sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                matchCriteriaParameterName);
         }
 
         if (matchProperties == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_MATCH_CRITERIA;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(matchPropertiesParameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_MATCH_CRITERIA.getMessageDefinition(matchPropertiesParameterName,
+                                                                                                     methodName,
+                                                                                                     sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                matchPropertiesParameterName);
         }
     }
 
@@ -1790,25 +1915,176 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws InvalidParameterException no guid provided
      */
+    @Override
     public  void validateSearchCriteria(String sourceName,
                                         String parameterName,
                                         String searchCriteria,
                                         String methodName) throws InvalidParameterException
     {
-        if ((searchCriteria == null) || ("".equals(searchCriteria)))
+        if ((searchCriteria == null) || (searchCriteria.length() == 0))
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_SEARCH_CRITERIA;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(parameterName,
-                                                                            methodName,
-                                                                            sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NO_SEARCH_CRITERIA.getMessageDefinition(parameterName,
+                                                                                                      methodName,
+                                                                                                      sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                parameterName);
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSearchProperties(String sourceName,
+                                         String parameterName,
+                                         SearchProperties matchProperties,
+                                         String methodName) throws InvalidParameterException
+    {
+        if (matchProperties == null)
+        {
+            return;
+        }
+        for (PropertyCondition condition : matchProperties.getConditions())
+        {
+            SearchProperties nestedConditions = condition.getNestedConditions();
+            String propertyName = condition.getProperty();
+            PropertyComparisonOperator operator = condition.getOperator();
+            InstancePropertyValue value = condition.getValue();
+            if (nestedConditions == null)
+            {
+                // If there are no nested conditions, there must be at least property and operator
+                if (propertyName == null || operator == null)
+                {
+                    throw new InvalidParameterException(OMRSErrorCode.INVALID_PROPERTY_SEARCH.getMessageDefinition(),
+                                                        this.getClass().getName(),
+                                                        methodName,
+                                                        parameterName);
+                }
+                else if (value == null)
+                {
+                    // ... and if the operator is not a null-oriented operator, there must also be a value
+                    if (!operator.equals(PropertyComparisonOperator.IS_NULL) && !operator.equals(PropertyComparisonOperator.NOT_NULL))
+                    {
+                        throw new InvalidParameterException(OMRSErrorCode.INVALID_PROPERTY_SEARCH.getMessageDefinition(),
+                                                            this.getClass().getName(),
+                                                            methodName,
+                                                            parameterName);
+                    }
+                }
+                else
+                {
+                    // If these are all present, ensure that the types are as expected:
+                    switch(operator)
+                    {
+                        case IN:
+                            // For the IN operator, only an ArrayPropertyValue is allowed
+                            if (!(value instanceof ArrayPropertyValue))
+                            {
+                                throw new InvalidParameterException(OMRSErrorCode.INVALID_LIST_CONDITION.getMessageDefinition(),
+                                                                    this.getClass().getName(),
+                                                                    methodName,
+                                                                    parameterName);
+                            }
+                            break;
+                        case LIKE:
+                            // For the LIKE operator, only a PrimitivePropertyValue of type string is allowed
+                            if (value instanceof PrimitivePropertyValue)
+                            {
+                                PrimitivePropertyValue ppv = (PrimitivePropertyValue) value;
+                                if (!ppv.getPrimitiveDefCategory().equals(OM_PRIMITIVE_TYPE_STRING))
+                                {
+                                    throw new InvalidParameterException(OMRSErrorCode.INVALID_LIKE_CONDITION.getMessageDefinition(),
+                                                                        this.getClass().getName(),
+                                                                        methodName,
+                                                                        parameterName);
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidParameterException(OMRSErrorCode.INVALID_LIKE_CONDITION.getMessageDefinition(),
+                                                                    this.getClass().getName(),
+                                                                    methodName,
+                                                                    parameterName);
+                            }
+                            break;
+                        case LT:
+                        case LTE:
+                        case GT:
+                        case GTE:
+                            // For the <, <=, >=, > operators, only numeric or date types are allowed
+                            if (value instanceof PrimitivePropertyValue)
+                            {
+                                PrimitivePropertyValue ppv = (PrimitivePropertyValue) value;
+                                PrimitiveDefCategory pdc = ppv.getPrimitiveDefCategory();
+                                if (! (pdc.equals(OM_PRIMITIVE_TYPE_DATE)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_SHORT)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_INT)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_LONG)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_FLOAT)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_DOUBLE)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_BIGINTEGER)
+                                        || pdc.equals(OM_PRIMITIVE_TYPE_BIGDECIMAL)))
+                                {
+                                    throw new InvalidParameterException(OMRSErrorCode.INVALID_NUMERIC_CONDITION.getMessageDefinition(operator.getName()),
+                                                                        this.getClass().getName(),
+                                                                        methodName,
+                                                                        parameterName);
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidParameterException(OMRSErrorCode.INVALID_NUMERIC_CONDITION.getMessageDefinition(operator.getName()),
+                                                                    this.getClass().getName(),
+                                                                    methodName,
+                                                                    parameterName);
+                            }
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                // If nestedConditions is present, there cannot be any property, operator or value
+                if (propertyName != null || operator != null || value != null)
+                {
+                    throw new InvalidParameterException(OMRSErrorCode.INVALID_PROPERTY_SEARCH.getMessageDefinition(),
+                                                        this.getClass().getName(),
+                                                        methodName,
+                                                        parameterName);
+                }
+                // Recurse on the nested properties
+                validateSearchProperties(sourceName, parameterName, nestedConditions, methodName);
+            }
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSearchClassifications(String sourceName,
+                                              String parameterName,
+                                              SearchClassifications matchClassifications,
+                                              String methodName) throws InvalidParameterException
+    {
+        if (matchClassifications == null)
+        {
+            return;
+        }
+        for (ClassificationCondition condition : matchClassifications.getConditions())
+        {
+            String classificationName = condition.getName();
+            if (classificationName == null || classificationName.equals(""))
+            {
+                throw new InvalidParameterException(OMRSErrorCode.INVALID_CLASSIFICATION_SEARCH.getMessageDefinition(),
+                                                    this.getClass().getName(),
+                                                    methodName,
+                                                    parameterName);
+            }
+            validateSearchProperties(sourceName, parameterName, condition.getMatchProperties(), methodName);
         }
     }
 
@@ -1823,6 +2099,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call.
      * @throws PropertyErrorException invalid property
      */
+    @Override
     public  void validatePropertiesForType(String             sourceName,
                                            String             parameterName,
                                            TypeDef            typeDef,
@@ -1864,25 +2141,18 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
             /*
              * Error is thrown because properties is not null so properties have been provided for this instance.
              */
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_PROPERTIES_FOR_TYPE;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage(typeDefCategoryName,
-                                                                            typeDefName,
-                                                                            sourceName);
-
-            throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+            throw new PropertyErrorException(OMRSErrorCode.NO_PROPERTIES_FOR_TYPE.getMessageDefinition(typeDefCategoryName,
+                                                                                                       typeDefName,
+                                                                                                       sourceName),
                                              this.getClass().getName(),
-                                             methodName,
-                                             errorMessage,
-                                             errorCode.getSystemAction(),
-                                             errorCode.getUserAction());
+                                             methodName);
         }
 
         /*
          * Need to step through each of the proposed properties and validate that the name and value are
          * present and they match the typeDef
          */
-        Iterator    propertyList = properties.getPropertyNames();
+        Iterator<?>    propertyList = properties.getPropertyNames();
 
         while (propertyList.hasNext())
         {
@@ -1890,21 +2160,15 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
             if (propertyName == null)
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.NULL_PROPERTY_NAME_FOR_INSTANCE;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(parameterName,
-                                                                                methodName,
-                                                                                sourceName);
-
-                throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+                throw new PropertyErrorException(OMRSErrorCode.NULL_PROPERTY_NAME_FOR_INSTANCE.getMessageDefinition(parameterName,
+                                                                                                                    methodName,
+                                                                                                                    sourceName),
                                                  this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+                                                 methodName);
             }
 
             AttributeTypeDefCategory  propertyDefinitionType = null;
+            AttributeTypeDef          attributeTypeDef = null;
             boolean                   recognizedProperty = false;
 
             for (TypeDefAttribute typeDefAttribute : typeDefAttributes)
@@ -1915,10 +2179,10 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                     {
                         recognizedProperty = true;
 
-                        AttributeTypeDef  attributeTypeDef = typeDefAttribute.getAttributeType();
+                        attributeTypeDef = typeDefAttribute.getAttributeType();
                         if (attributeTypeDef == null)
                         {
-                            propertyDefinitionType = AttributeTypeDefCategory.PRIMITIVE;
+                            propertyDefinitionType = AttributeTypeDefCategory.UNKNOWN_DEF;
                         }
                         else
                         {
@@ -1930,65 +2194,69 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
             if (! recognizedProperty)
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.BAD_PROPERTY_FOR_TYPE;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(propertyName,
-                                                                                typeDefCategoryName,
-                                                                                typeDefName,
-                                                                                sourceName);
-
-                throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+                throw new PropertyErrorException(OMRSErrorCode.BAD_PROPERTY_FOR_TYPE.getMessageDefinition(propertyName,
+                                                                                                          typeDefCategoryName,
+                                                                                                          typeDefName,
+                                                                                                          sourceName),
                                                  this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+                                                 methodName);
             }
 
             InstancePropertyValue propertyValue = properties.getPropertyValue(propertyName);
 
             if (propertyValue == null)
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.NULL_PROPERTY_VALUE_FOR_INSTANCE;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(parameterName,
-                                                                                methodName,
-                                                                                sourceName);
-
-                throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+                throw new PropertyErrorException(OMRSErrorCode.NULL_PROPERTY_VALUE_FOR_INSTANCE.getMessageDefinition(parameterName,
+                                                                                                                     methodName,
+                                                                                                                     sourceName),
                                                  this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+                                                 methodName);
             }
 
             InstancePropertyCategory propertyType = propertyValue.getInstancePropertyCategory();
 
             if (propertyType == null)
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.NULL_PROPERTY_TYPE_FOR_INSTANCE;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(parameterName,
-                                                                                methodName,
-                                                                                sourceName);
-
-                throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+                throw new PropertyErrorException(OMRSErrorCode.NULL_PROPERTY_TYPE_FOR_INSTANCE.getMessageDefinition(parameterName,
+                                                                                                                    methodName,
+                                                                                                                    sourceName),
                                                  this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+                                                 methodName);
             }
 
             boolean  validPropertyType = false;
-            String   validPropertyTypeName = propertyType.getName();
+            String   actualPropertyTypeName = propertyType.getName();
+            String   validPropertyTypeName  = propertyDefinitionType.getName();
 
             switch (propertyType)
             {
                 case PRIMITIVE:
                     if (propertyDefinitionType == AttributeTypeDefCategory.PRIMITIVE)
                     {
+                        /*
+                         * Ensure that primitive definition category is a perfect match...
+                         */
+                        PrimitivePropertyValue primPropertyValue    = (PrimitivePropertyValue)propertyValue;
+                        PrimitiveDefCategory   primPropertyCategory = primPropertyValue.getPrimitiveDefCategory();
+                        PrimitiveDef           expectedAttributeDef = (PrimitiveDef) attributeTypeDef;
+                        PrimitiveDefCategory   expectedAttributeDefCategory = expectedAttributeDef.getPrimitiveDefCategory();
+                        if (primPropertyCategory == expectedAttributeDefCategory)
+                        {
+                            validPropertyType = true;
+                        }
+                        else
+                        {
+                            actualPropertyTypeName = primPropertyCategory.getName();
+                            validPropertyTypeName  = expectedAttributeDefCategory.getName();
+                        }
+                    }
+                    else if (propertyDefinitionType == AttributeTypeDefCategory.UNKNOWN_DEF)
+                    {
+                        /*
+                         * This property definition type may have been adopted above due to the
+                         * attributeTypeDef being null. Permit primitive definition category to
+                         * be a sloppy match...
+                         */
                         validPropertyType = true;
                     }
                     break;
@@ -2001,20 +2269,10 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                     break;
 
                 case MAP:
-                    if (propertyDefinitionType == AttributeTypeDefCategory.COLLECTION)
-                    {
-                        validPropertyType = true;
-                    }
-                    break;
-
-                case ARRAY:
-                    if (propertyDefinitionType == AttributeTypeDefCategory.COLLECTION)
-                    {
-                        validPropertyType = true;
-                    }
-                    break;
 
                 case STRUCT:
+
+                case ARRAY:
                     if (propertyDefinitionType == AttributeTypeDefCategory.COLLECTION)
                     {
                         validPropertyType = true;
@@ -2024,21 +2282,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
             if (! validPropertyType)
             {
-                OMRSErrorCode errorCode    = OMRSErrorCode.BAD_PROPERTY_TYPE;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(propertyName,
-                                                                                propertyType.getName(),
-                                                                                typeDefCategoryName,
-                                                                                typeDefName,
-                                                                                validPropertyTypeName,
-                                                                                sourceName);
-
-                throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+                throw new PropertyErrorException(OMRSErrorCode.BAD_PROPERTY_TYPE.getMessageDefinition(propertyName,
+                                                                                                      actualPropertyTypeName,
+                                                                                                      typeDefCategoryName,
+                                                                                                      typeDefName,
+                                                                                                      validPropertyTypeName,
+                                                                                                      sourceName),
                                                  this.getClass().getName(),
-                                                 methodName,
-                                                 errorMessage,
-                                                 errorCode.getSystemAction(),
-                                                 errorCode.getUserAction());
+                                                 methodName);
             }
         }
     }
@@ -2055,6 +2306,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws TypeErrorException no typeDef provided
      * @throws PropertyErrorException invalid property
      */
+    @Override
     public  void validatePropertiesForType(String             sourceName,
                                            String             parameterName,
                                            TypeDefSummary     typeDefSummary,
@@ -2095,6 +2347,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method receiving the call
      * @throws PropertyErrorException invalid property
      */
+    @Override
     public  void validateNewPropertiesForType(String             sourceName,
                                               String             parameterName,
                                               TypeDef            typeDef,
@@ -2107,17 +2360,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         }
         else
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NO_NEW_PROPERTIES;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(parameterName,
-                                                                                                     methodName,
-                                                                                                     sourceName);
-
-            throw new PropertyErrorException(errorCode.getHTTPErrorCode(),
+            throw new PropertyErrorException(OMRSErrorCode.NO_NEW_PROPERTIES.getMessageDefinition(parameterName,
+                                                                                                  methodName,
+                                                                                                  sourceName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
     }
 
@@ -2131,6 +2378,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instance instance to test.
      * @return boolean
      */
+    @Override
     public boolean verifyInstanceType(String           sourceName,
                                       String           instanceTypeGUID,
                                       InstanceHeader   instance)
@@ -2166,6 +2414,37 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean verifyInstanceType(String         sourceName,
+                                      String         instanceTypeGUID,
+                                      List<String>   subtypeGUIDs,
+                                      InstanceHeader instance)
+    {
+        boolean soFar = verifyInstanceType(sourceName, instanceTypeGUID, instance);
+        if (soFar)
+        {
+            if (subtypeGUIDs != null)
+            {
+                boolean matchesASubtype = false;
+                for (String subtype : subtypeGUIDs)
+                {
+                    matchesASubtype = verifyInstanceType(sourceName, subtype, instance);
+                    if (matchesASubtype)
+                    {
+                        // Short-circuit out if we found a subtype match
+                        break;
+                    }
+                }
+                soFar = matchesASubtype;
+            }
+        }
+        return soFar;
+    }
+
+
+    /**
      * Verify that an entity has been successfully retrieved from the repository and has valid contents.
      *
      * @param sourceName source of the request (used for logging)
@@ -2175,6 +2454,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws EntityNotKnownException No entity found
      * @throws RepositoryErrorException logic error in the repository corrupted instance
      */
+    @Override
     public void validateEntityFromStore(String           sourceName,
                                         String           guid,
                                         EntitySummary    entity,
@@ -2183,33 +2463,21 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (entity == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.ENTITY_NOT_KNOWN;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
-                                                                                                            methodName,
-                                                                                                            sourceName);
-
-            throw new EntityNotKnownException(errorCode.getHTTPErrorCode(),
+            throw new EntityNotKnownException(OMRSErrorCode.ENTITY_NOT_KNOWN.getMessageDefinition(guid,
+                                                                                                  methodName,
+                                                                                                  sourceName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
-        if (! validEntity(sourceName, entity))
+        if (! validInstance(sourceName, entity, methodName, true))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.INVALID_ENTITY_FROM_STORE;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
+            throw new RepositoryErrorException(OMRSErrorCode.INVALID_ENTITY_FROM_STORE.getMessageDefinition(guid,
                                                                                                             sourceName,
                                                                                                             methodName,
-                                                                                                            entity.toString());
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                                                                                                            entity.toString()),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
         }
     }
 
@@ -2224,6 +2492,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws EntityNotKnownException No entity found
      * @throws RepositoryErrorException logic error in the repository corrupted instance
      */
+    @Override
     public void validateEntityFromStore(String           sourceName,
                                         String           guid,
                                         EntityDetail     entity,
@@ -2232,33 +2501,21 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (entity == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.ENTITY_NOT_KNOWN;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
-                                                                                                            methodName,
-                                                                                                            sourceName);
-
-            throw new EntityNotKnownException(errorCode.getHTTPErrorCode(),
+            throw new EntityNotKnownException(OMRSErrorCode.ENTITY_NOT_KNOWN.getMessageDefinition(guid,
+                                                                                                  methodName,
+                                                                                                  sourceName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         if (! validEntity(sourceName, entity))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.INVALID_ENTITY_FROM_STORE;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
+            throw new RepositoryErrorException(OMRSErrorCode.INVALID_ENTITY_FROM_STORE.getMessageDefinition(guid,
                                                                                                             sourceName,
                                                                                                             methodName,
-                                                                                                            entity.toString());
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                                                                                                            entity.toString()),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
         }
     }
 
@@ -2273,6 +2530,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws RelationshipNotKnownException No relationship found
      * @throws RepositoryErrorException logic error in the repository corrupted instance
      */
+    @Override
     public void validateRelationshipFromStore(String       sourceName,
                                               String       guid,
                                               Relationship relationship,
@@ -2281,34 +2539,22 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (relationship == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.RELATIONSHIP_NOT_KNOWN;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
-                                                                                                            methodName,
-                                                                                                            sourceName);
-
-            throw new RelationshipNotKnownException(errorCode.getHTTPErrorCode(),
+            throw new RelationshipNotKnownException(OMRSErrorCode.RELATIONSHIP_NOT_FOUND.getMessageDefinition(guid,
+                                                                                                              methodName,
+                                                                                                              sourceName),
                                                     this.getClass().getName(),
-                                                    methodName,
-                                                    errorMessage,
-                                                    errorCode.getSystemAction(),
-                                                    errorCode.getUserAction());
+                                                    methodName);
         }
 
 
         if (! validRelationship(sourceName, relationship))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.INVALID_RELATIONSHIP_FROM_STORE;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(guid,
-                                                                                                            sourceName,
-                                                                                                            methodName,
-                                                                                                            relationship.toString());
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+            throw new RepositoryErrorException(OMRSErrorCode.INVALID_RELATIONSHIP_FROM_STORE.getMessageDefinition(guid,
+                                                                                                                  sourceName,
+                                                                                                                  methodName,
+                                                                                                                  relationship.toString()),
                                                this.getClass().getName(),
-                                               methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction());
+                                               methodName);
         }
     }
 
@@ -2319,6 +2565,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instance the retrieved instance
      * @throws RepositoryErrorException logic error in the repository corrupted instance
      */
+    @Override
     public void validateInstanceType(String           sourceName,
                                      InstanceHeader   instance) throws RepositoryErrorException
     {
@@ -2336,33 +2583,20 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 }
                 else
                 {
-                    OMRSErrorCode errorCode = OMRSErrorCode.INACTIVE_INSTANCE_TYPE;
-                    String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                             sourceName,
-                                                                                                             instance.getGUID(),
-                                                                                                             instanceType.getTypeDefName(),
-                                                                                                             instanceType.getTypeDefGUID());
-
-                    throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                    throw new RepositoryErrorException(OMRSErrorCode.INACTIVE_INSTANCE_TYPE.getMessageDefinition(methodName,
+                                                                                                                 sourceName,
+                                                                                                                 instance.getGUID(),
+                                                                                                                 instanceType.getTypeDefName(),
+                                                                                                                 instanceType.getTypeDefGUID()),
                                                        this.getClass().getName(),
-                                                       methodName,
-                                                       errorMessage,
-                                                       errorCode.getSystemAction(),
-                                                       errorCode.getUserAction());
+                                                       methodName);
                 }
             }
             else
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.NULL_INSTANCE_TYPE;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                         sourceName);
-
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                throw new RepositoryErrorException(OMRSErrorCode.NULL_INSTANCE_TYPE.getMessageDefinition(methodName, sourceName),
                                                    this.getClass().getName(),
-                                                   methodName,
-                                                   errorMessage,
-                                                   errorCode.getSystemAction(),
-                                                   errorCode.getUserAction());
+                                                   methodName);
             }
         }
         else
@@ -2374,43 +2608,6 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
             throwValidatorLogicError(sourceName, methodName, thisMethodName);
         }
-    }
-
-    /**
-     * Validate that the supplied type is a valid active type.
-     *
-     * @param sourceName source of the request (used for logging)
-     * @param typeParameterName the name of the parameter that passed the type
-     * @param typeDefSummary the type to test
-     * @param category the expected category of the type
-     * @param methodName the name of the method that supplied the type
-     * @throws InvalidParameterException the type is null or contains invalid values
-     * @throws TypeErrorException the type is not active
-     */
-    public void validateType(String           sourceName,
-                             String           typeParameterName,
-                             TypeDefSummary   typeDefSummary,
-                             TypeDefCategory  category,
-                             String           methodName) throws TypeErrorException, InvalidParameterException
-    {
-        if (! this.isActiveType(sourceName, typeDefSummary.getGUID(), typeDefSummary.getName()))
-        {
-            OMRSErrorCode errorCode = OMRSErrorCode.TYPEDEF_NOT_KNOWN;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(typeDefSummary.getName(),
-                                                                                                     typeDefSummary.getGUID(),
-                                                                                                     typeParameterName,
-                                                                                                     methodName,
-                                                                                                     sourceName);
-
-            throw new TypeErrorException(errorCode.getHTTPErrorCode(),
-                                         this.getClass().getName(),
-                                         methodName,
-                                         errorMessage,
-                                         errorCode.getSystemAction(),
-                                         errorCode.getUserAction());
-        }
-
-        // todo check category
     }
 
 
@@ -2428,6 +2625,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws TypeErrorException problem with type
      * @throws InvalidParameterException invalid parameter
      */
+    @Override
     public void validateInstanceType(String           sourceName,
                                      InstanceHeader   instance,
                                      String           typeGUIDParameterName,
@@ -2443,58 +2641,50 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
         if (expectedTypeGUID == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(typeGUIDParameterName,
-                                                                                                     methodName,
-                                                                                                     sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+           throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF_IDENTIFIER.getMessageDefinition(typeGUIDParameterName,
+                                                                                                           methodName,
+                                                                                                           sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                typeGUIDParameterName);
         }
 
         if (expectedTypeName == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_TYPEDEF_NAME;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(typeNameParameterName,
+            throw new InvalidParameterException(OMRSErrorCode.NULL_TYPEDEF_NAME.getMessageDefinition(typeNameParameterName,
                                                                                                      methodName,
-                                                                                                     sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                                                                                                     sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                typeNameParameterName);
         }
 
 
     }
 
+
     /**
-     * Verify that the supplied instance is in one of the supplied statuses.
+     * Verify that the supplied instance is in one of the supplied statuses. Note that if the supplied statuses are
+     * null, then only statuses that are not DELETE are considered valid.
      *
      * @param validStatuses list of statuses the instance should be in any one of them
      * @param instance instance to test
      * @return boolean result
      */
+    @Override
     public boolean verifyInstanceHasRightStatus(List<InstanceStatus>      validStatuses,
                                                 InstanceHeader            instance)
     {
-        if ((instance != null) && (validStatuses != null))
+        if (instance != null)
         {
-            for (InstanceStatus status : validStatuses)
+            if (validStatuses == null)
             {
-                if (status == instance.getStatus())
-                {
-                    return true;
-                }
+                return instance.getStatus() != InstanceStatus.DELETED;
             }
-
-            return false;
+            else
+            {
+                return validStatuses.contains(instance.getStatus());
+            }
         }
 
         return true;
@@ -2511,6 +2701,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName method called
      * @throws StatusNotSupportedException the initial status is invalid for this type
      */
+    @Override
     public void validateInstanceStatus(String         sourceName,
                                        String         instanceStatusParameterName,
                                        InstanceStatus instanceStatus,
@@ -2519,20 +2710,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (instanceStatus == InstanceStatus.DELETED)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.BAD_DELETE_INSTANCE_STATUS;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(instanceStatus.getName(),
-                                                                     instanceStatusParameterName,
-                                                                     methodName,
-                                                                     sourceName,
-                                                                     typeDef.getName());
-
-            throw new StatusNotSupportedException(errorCode.getHTTPErrorCode(),
+            throw new StatusNotSupportedException(OMRSErrorCode.BAD_DELETE_INSTANCE_STATUS.getMessageDefinition(instanceStatus.getName(),
+                                                                                                                instanceStatusParameterName,
+                                                                                                                methodName,
+                                                                                                                sourceName),
                                                   this.getClass().getName(),
-                                                  methodName,
-                                                  errorMessage,
-                                                  errorCode.getSystemAction(),
-                                                  errorCode.getUserAction());
+                                                  methodName);
         }
         else if (instanceStatus != null)
         {
@@ -2548,35 +2731,21 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                     }
                 }
 
-                OMRSErrorCode errorCode = OMRSErrorCode.BAD_INSTANCE_STATUS;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(instanceStatus.getName(),
-                                                                         instanceStatusParameterName,
-                                                                         methodName,
-                                                                         sourceName,
-                                                                         typeDef.getName());
-
-                throw new StatusNotSupportedException(errorCode.getHTTPErrorCode(),
+                throw new StatusNotSupportedException(OMRSErrorCode.BAD_INSTANCE_STATUS.getMessageDefinition(instanceStatus.getName(),
+                                                                                                             instanceStatusParameterName,
+                                                                                                             methodName,
+                                                                                                             sourceName,
+                                                                                                             typeDef.getName()),
                                                       this.getClass().getName(),
-                                                      methodName,
-                                                      errorMessage,
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      methodName);
             }
             else
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.NULL_TYPEDEF;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage("typeDef",
-                                                                         methodName,
-                                                                         sourceName);
-
-                throw new StatusNotSupportedException(errorCode.getHTTPErrorCode(),
+                throw new StatusNotSupportedException(OMRSErrorCode.NULL_TYPEDEF.getMessageDefinition("typeDef",
+                                                                                                      methodName,
+                                                                                                      sourceName),
                                                       this.getClass().getName(),
-                                                      methodName,
-                                                      errorMessage,
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction());
+                                                      methodName);
             }
         }
     }
@@ -2593,6 +2762,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws StatusNotSupportedException the initial status is invalid for this type
      * @throws InvalidParameterException invalid parameter
      */
+    @Override
     public void validateNewStatus(String         sourceName,
                                   String         instanceStatusParameterName,
                                   InstanceStatus instanceStatus,
@@ -2606,18 +2776,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         }
         else
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_INSTANCE_STATUS;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(instanceStatusParameterName,
-                                                                     methodName,
-                                                                     sourceName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_INSTANCE_STATUS.getMessageDefinition(instanceStatusParameterName,
+                                                                                                        methodName,
+                                                                                                        sourceName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                instanceStatusParameterName);
         }
     }
 
@@ -2631,6 +2795,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of method called
      * @throws InvalidParameterException the instance is already deleted
      */
+    @Override
     public void validateInstanceStatusForDelete(String         sourceName,
                                                 InstanceHeader instance,
                                                 String         methodName) throws InvalidParameterException
@@ -2642,18 +2807,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 /*
                  * Instance is already deleted
                  */
-                OMRSErrorCode errorCode = OMRSErrorCode.INSTANCE_ALREADY_DELETED;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(methodName,
-                                                                         sourceName,
-                                                                         instance.getGUID());
-
-                throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                throw new InvalidParameterException(OMRSErrorCode.INSTANCE_ALREADY_DELETED.getMessageDefinition(methodName,
+                                                                                                                sourceName,
+                                                                                                                instance.getGUID()),
                                                     this.getClass().getName(),
                                                     methodName,
-                                                    errorMessage,
-                                                    errorCode.getSystemAction(),
-                                                    errorCode.getUserAction());
+                                                    "instance");
             }
         }
         else
@@ -2669,6 +2828,26 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * Simple method used to extract the type name of an instance.  It is used in error messages and audit log messages.
+     *
+     * @param instanceHeader instance header.
+     * @return type name or "nullType"
+     */
+    private String getTypeNameForMessage(InstanceHeader  instanceHeader)
+    {
+        String       typeName = "<nullType>";
+        InstanceType type = instanceHeader.getType();
+
+        if ((type != null) && (type.getTypeDefName() != null))
+        {
+            typeName = type.getTypeDefName();
+        }
+
+        return typeName;
+    }
+
+
+    /**
      * Verify the status of an entity to check if it has been deleted.
      *
      * @param sourceName source of the request (used for logging)
@@ -2676,6 +2855,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of calling method
      * @throws EntityNotKnownException the entity is in deleted status
      */
+    @Override
     public void validateEntityIsNotDeleted(String         sourceName,
                                            InstanceHeader instance,
                                            String         methodName) throws EntityNotKnownException
@@ -2684,17 +2864,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (instance.getStatus() == InstanceStatus.DELETED)
             {
-
-                OMRSErrorCode errorCode = OMRSErrorCode.ENTITY_NOT_KNOWN;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(instance.getGUID(), methodName, sourceName);
-
-                throw new EntityNotKnownException(errorCode.getHTTPErrorCode(),
+                throw new EntityNotKnownException(OMRSErrorCode.ENTITY_SOFT_DELETED.getMessageDefinition(this.getTypeNameForMessage(instance),
+                                                                                                         instance.getGUID(),
+                                                                                                         methodName,
+                                                                                                         sourceName),
                                                   this.getClass().getName(),
-                                                  methodName,
-                                                  errorMessage,
-                                                  errorCode.getSystemAction(),
-                                                  errorCode.getUserAction());
+                                                  methodName);
             }
         }
         else
@@ -2718,6 +2893,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of calling method
      * @throws EntityNotDeletedException the entity is not in deleted status
      */
+    @Override
     public void validateEntityIsDeleted(String         sourceName,
                                         InstanceHeader instance,
                                         String         methodName) throws EntityNotDeletedException
@@ -2726,18 +2902,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (instance.getStatus() != InstanceStatus.DELETED)
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.INSTANCE_NOT_DELETED;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(methodName,
-                                                                         sourceName,
-                                                                         instance.getGUID());
-
-                throw new EntityNotDeletedException(errorCode.getHTTPErrorCode(),
+                throw new EntityNotDeletedException(OMRSErrorCode.INSTANCE_NOT_DELETED.getMessageDefinition(methodName,
+                                                                                                            sourceName,
+                                                                                                            instance.getGUID()),
                                                     this.getClass().getName(),
-                                                    methodName,
-                                                    errorMessage,
-                                                    errorCode.getSystemAction(),
-                                                    errorCode.getUserAction());
+                                                    methodName);
             }
         }
         else
@@ -2753,6 +2922,162 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * Verify that an entity instance can be updated by the metadataCollection. This method is used
+     * when the metadataCollection is called to update the status properties or classification of an
+     * entity instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    @Override
+    public void validateEntityCanBeUpdated(String         sourceName,
+                                           String         metadataCollectionId,
+                                           InstanceHeader instance,
+                                           String         methodName) throws InvalidParameterException
+
+    {
+        /*
+         * Check that it is legal to update the entity.
+         * The caller can update the entity provided:
+         * The entity is locally mastered
+         * OR
+         * The entity has instanceProvenanceType set to external and replicatedBy is set to the local metadataColelctionId.
+         * Any other combination suggest that this is either a reference copy of an instance from the local cohort or a reference
+         * copy of an external entity (and something else is responsible for replication).
+         *
+         * If not throw an InvalidParameterException.
+         */
+
+        /*
+         * Assume it is OK to update the entity, then inspect the conditions below
+         */
+        boolean updateAllowed = true;
+
+        InstanceProvenanceType instanceProvenance = instance.getInstanceProvenanceType();
+        switch (instanceProvenance)
+        {
+            case LOCAL_COHORT:
+                String entityHome = instance.getMetadataCollectionId();
+                if (entityHome != null && !entityHome.equals(metadataCollectionId))
+                {
+                    updateAllowed = false;
+                }
+                break;
+
+            case EXTERNAL_SOURCE:
+                String replicatedBy = instance.getReplicatedBy();
+                if (replicatedBy != null && !replicatedBy.equals(metadataCollectionId))
+                {
+                    updateAllowed = false;
+                }
+                break;
+
+            default:
+                /*
+                 * For any other instance provenance value do not allow update
+                 */
+                updateAllowed = false;
+                break;
+        }
+
+        if (!updateAllowed)
+        {
+            /*
+             * The instance should not be updated - throw InvalidParameterException
+             */
+            throw new InvalidParameterException(OMRSErrorCode.INSTANCE_HOME_NOT_LOCAL.getMessageDefinition(instance.getMetadataCollectionId(),
+                                                                                                           methodName,
+                                                                                                           instance.getGUID(),
+                                                                                                           metadataCollectionId,
+                                                                                                           sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "instance");
+        }
+    }
+
+
+    /**
+     * Verify that an entity instance can be rehomed by the metadataCollection. This method is used
+     * when the metadataCollection is called to rehome an entity instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    @Override
+    public void validateEntityCanBeRehomed(String         sourceName,
+                                           String         metadataCollectionId,
+                                           InstanceHeader instance,
+                                           String         methodName) throws InvalidParameterException
+    {
+        /*
+         * Check that it is legal to rehome the entity.
+         * The caller can rehome the entity provided:
+         * The entity originates from the local cohort and is NOT locally mastered
+         * OR
+         * The entity has instanceProvenanceType set to external and replicatedBy is NOT the local metadataColelctionId.
+         * Any other combination suggests that this is NOT a reference copy (of either an instance from the local cohort or
+         * an external entity) and consequently cannot be rehomed.
+         *
+         * If not rehomable throw an InvalidParameterException.
+         */
+
+        /*
+         * Assume it is NOT OK to rehome the entity, then inspect the conditions below
+         */
+        boolean updateAllowed = false;
+
+        InstanceProvenanceType instanceProvenance = instance.getInstanceProvenanceType();
+        switch (instanceProvenance)
+        {
+            case LOCAL_COHORT:
+                String entityHome = instance.getMetadataCollectionId();
+                if (entityHome != null && !entityHome.equals(metadataCollectionId))
+                {
+                    updateAllowed = true;
+                }
+                break;
+
+            case EXTERNAL_SOURCE:
+                String replicatedBy = instance.getReplicatedBy();
+                if (replicatedBy != null && !replicatedBy.equals(metadataCollectionId))
+                {
+                    updateAllowed = true;
+                }
+                break;
+
+            default:
+                /*
+                 * For any other instance provenance value do not allow update
+                 */
+                updateAllowed = false;
+                break;
+        }
+
+        if (!updateAllowed)
+        {
+            /*
+             * The instance should not be updated - throw InvalidParameterException
+             */
+            throw new InvalidParameterException(OMRSErrorCode.INSTANCE_HOME_NOT_LOCAL.getMessageDefinition(instance.getMetadataCollectionId(),
+                                                                                                           methodName,
+                                                                                                           instance.getGUID(),
+                                                                                                           metadataCollectionId,
+                                                                                                           sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "instance");
+        }
+    }
+
+
+    /**
      * Verify the status of a relationship to check it has been deleted.
      *
      * @param sourceName source of the request (used for logging)
@@ -2760,6 +3085,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of calling method
      * @throws RelationshipNotKnownException the relationship is in deleted status
      */
+    @Override
     public void validateRelationshipIsNotDeleted(String         sourceName,
                                                  InstanceHeader instance,
                                                  String         methodName) throws RelationshipNotKnownException
@@ -2768,18 +3094,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (instance.getStatus() == InstanceStatus.DELETED)
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.RELATIONSHIP_NOT_KNOWN;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(instance.getGUID(),
-                                                                         methodName,
-                                                                         sourceName);
-
-                throw new RelationshipNotKnownException(errorCode.getHTTPErrorCode(),
-                                                          this.getClass().getName(),
-                                                          methodName,
-                                                          errorMessage,
-                                                          errorCode.getSystemAction(),
-                                                          errorCode.getUserAction());
+                 throw new RelationshipNotKnownException(OMRSErrorCode.RELATIONSHIP_SOFT_DELETED.getMessageDefinition(this.getTypeNameForMessage(instance),
+                                                                                                                     instance.getGUID(),
+                                                                                                                     methodName,
+                                                                                                                     sourceName),
+                                                         this.getClass().getName(),
+                                                         methodName);
             }
         }
         else
@@ -2802,6 +3122,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of calling method
      * @throws RelationshipNotDeletedException the relationship is not in deleted status
      */
+    @Override
     public void validateRelationshipIsDeleted(String         sourceName,
                                               InstanceHeader instance,
                                               String         methodName) throws RelationshipNotDeletedException
@@ -2810,18 +3131,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (instance.getStatus() != InstanceStatus.DELETED)
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.INSTANCE_NOT_DELETED;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(methodName,
-                                                                         sourceName,
-                                                                         instance.getGUID());
-
-                throw new RelationshipNotDeletedException(errorCode.getHTTPErrorCode(),
+                throw new RelationshipNotDeletedException(OMRSErrorCode.INSTANCE_NOT_DELETED.getMessageDefinition(methodName,
+                                                                                                                  sourceName,
+                                                                                                                  instance.getGUID()),
                                                           this.getClass().getName(),
-                                                          methodName,
-                                                          errorMessage,
-                                                          errorCode.getSystemAction(),
-                                                          errorCode.getUserAction());
+                                                          methodName);
             }
         }
         else
@@ -2837,6 +3151,161 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * Verify that a relationship instance can be updated by the metadataCollection. This method is used
+     * when the metadataCollection is called to update the status or properties of a relationship instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    @Override
+    public void validateRelationshipCanBeUpdated(String         sourceName,
+                                                 String         metadataCollectionId,
+                                                 InstanceHeader instance,
+                                                 String         methodName) throws InvalidParameterException
+    {
+
+        /*
+         * Check that it is legal to update the relationship.
+         * The caller can update the relationship provided:
+         * The relationship is locally mastered
+         * OR
+         * The relationship has instanceProvenanceType set to external and replicatedBy is set to the local metadataColelctionId.
+         * Any other combination suggest that this is either a reference copy of an instance from the local cohort or a reference
+         * copy of an external relationship (and something else is responsible for replication).
+         *
+         * If not throw an InvalidParameterException.
+         */
+
+        /*
+         * Assume it is OK to update the relationship, then inspect the conditions below
+         */
+        boolean updateAllowed = true;
+
+        InstanceProvenanceType instanceProvenance = instance.getInstanceProvenanceType();
+        switch (instanceProvenance)
+        {
+            case LOCAL_COHORT:
+                String relationshipHome = instance.getMetadataCollectionId();
+                if (relationshipHome != null && !relationshipHome.equals(metadataCollectionId))
+                {
+                    updateAllowed = false;
+                }
+                break;
+
+            case EXTERNAL_SOURCE:
+                String replicatedBy = instance.getReplicatedBy();
+                if (replicatedBy != null && !replicatedBy.equals(metadataCollectionId))
+                {
+                    updateAllowed = false;
+                }
+                break;
+
+            default:
+                /*
+                 * For any other instance provenance value do not allow update
+                 */
+                updateAllowed = false;
+                break;
+        }
+
+        if (!updateAllowed)
+        {
+            /*
+             * The instance should not be updated - throw InvalidParameterException
+             */
+            throw new InvalidParameterException(OMRSErrorCode.INSTANCE_HOME_NOT_LOCAL.getMessageDefinition(instance.getMetadataCollectionId(),
+                                                                                                           methodName,
+                                                                                                           instance.getGUID(),
+                                                                                                           metadataCollectionId,
+                                                                                                           sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "instance");
+        }
+
+    }
+
+    /**
+     * Verify that a relationship instance can be rehomed by the metadataCollection. This method is used
+     * when the metadataCollection is called to rehome a relationship instance.
+     *
+     * @param sourceName  source of the request (used for logging)
+     * @param metadataCollectionId unique identifier for the metadata collection
+     * @param instance  instance to validate
+     * @param methodName  name of calling method
+     * @throws InvalidParameterException  the entity is in deleted status
+     */
+    @Override
+    public void validateRelationshipCanBeRehomed(String         sourceName,
+                                                 String         metadataCollectionId,
+                                                 InstanceHeader instance,
+                                                 String         methodName) throws InvalidParameterException
+    {
+
+        /*
+         * Check that it is legal to rehome the relationship.
+         * The caller can rehome the relationship provided:
+         * The relationship originates from the local cohort and is NOT locally mastered
+         * OR
+         * The relationship has instanceProvenanceType set to external and replicatedBy is NOT the local metadataColelctionId.
+         * Any other combination suggests that this is NOT a reference copy (of either an instance from the local cohort or
+         * an external relationship) and consequently cannot be rehomed.
+         *
+         * If not rehomable throw an InvalidParameterException.
+         */
+
+        /*
+         * Assume it is NOT OK to rehome the entity, then inspect the conditions below
+         */
+        boolean updateAllowed = false;
+
+        InstanceProvenanceType instanceProvenance = instance.getInstanceProvenanceType();
+        switch (instanceProvenance)
+        {
+            case LOCAL_COHORT:
+                String relationshipHome = instance.getMetadataCollectionId();
+                if (relationshipHome != null && !relationshipHome.equals(metadataCollectionId))
+                {
+                    updateAllowed = true;
+                }
+                break;
+
+            case EXTERNAL_SOURCE:
+                String replicatedBy = instance.getReplicatedBy();
+                if (replicatedBy != null && !replicatedBy.equals(metadataCollectionId))
+                {
+                    updateAllowed = true;
+                }
+                break;
+
+            default:
+                /*
+                 * For any other instance provenance value do not allow update
+                 */
+                updateAllowed = false;
+                break;
+        }
+
+        if (!updateAllowed)
+        {
+            /*
+             * The instance should not be updated - throw InvalidParameterException
+             */
+            throw new InvalidParameterException(OMRSErrorCode.INSTANCE_HOME_NOT_LOCAL.getMessageDefinition(instance.getMetadataCollectionId(),
+                                                                                                           methodName,
+                                                                                                           instance.getGUID(),
+                                                                                                           metadataCollectionId,
+                                                                                                           sourceName),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                "instance");
+        }
+    }
+
+    /**
      * Validate that the types of the two ends of a relationship match the relationship's TypeDef.
      *
      * @param sourceName source of the request (used for logging)
@@ -2846,6 +3315,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of the method making the request
      * @throws InvalidParameterException types do not align
      */
+    @Override
     public void validateRelationshipEnds(String        sourceName,
                                          EntityProxy   entityOneProxy,
                                          EntityProxy   entityTwoProxy,
@@ -2870,13 +3340,9 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 String             entityOneTypeName    = null;
                 String             entityTwoTypeName    = null;
 
-
-                if (relationshipDef != null)
-                {
-                    entityOneEndDef = relationshipDef.getEndDef1();
-                    entityTwoEndDef = relationshipDef.getEndDef2();
-                    log.debug("Got EndDefs");
-                }
+                entityOneEndDef = relationshipDef.getEndDef1();
+                entityTwoEndDef = relationshipDef.getEndDef2();
+                log.debug("Got EndDefs");
 
                 if ((entityOneEndDef != null) && (entityTwoEndDef != null))
                 {
@@ -2897,13 +3363,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                  * At this point we know what the expected types of
                  * the ends should be.  Now look at the relationship instance.
                  */
-                if ((entityOneProxy != null) && (entityTwoProxy != null))
-                {
-                    entityOneType = entityOneProxy.getType();
-                    entityTwoType = entityTwoProxy.getType();
 
-                    log.debug("Got Proxy Types of One: " + entityOneType + " and Two: " + entityOneType);
-                }
+                entityOneType = entityOneProxy.getType();
+                entityTwoType = entityTwoProxy.getType();
+
+                log.debug("Got Proxy Types of One: " + entityOneType + " and Two: " + entityOneType);
+
 
                 if ((entityOneType != null) && (entityTwoType != null))
                 {
@@ -2917,27 +3382,24 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                     return;
                 }
 
-
-                OMRSErrorCode errorCode = OMRSErrorCode.INVALID_RELATIONSHIP_ENDS;
-                String errorMessage = errorCode.getErrorMessageId()
-                                    + errorCode.getFormattedErrorMessage(methodName,
-                                                                         sourceName,
-                                                                         typeDef.toString(),
-                                                                         entityOneProxy.toString(),
-                                                                         entityTwoProxy.toString());
-
-                throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                throw new InvalidParameterException(OMRSErrorCode.INVALID_RELATIONSHIP_ENDS.getMessageDefinition(methodName,
+                                                                                                                 sourceName,
+                                                                                                                 typeDef.getName(),
+                                                                                                                 entityOneProxy.getGUID(),
+                                                                                                                 entityOneTypeName,
+                                                                                                                 entityOneTypeDefName,
+                                                                                                                 entityTwoProxy.getGUID(),
+                                                                                                                 entityTwoTypeName,
+                                                                                                                 entityTwoTypeDefName),
                                                     this.getClass().getName(),
                                                     methodName,
-                                                    errorMessage,
-                                                    errorCode.getSystemAction(),
-                                                    errorCode.getUserAction());
+                                                    "relationship.End");
             }
             catch (InvalidParameterException error)
             {
                 throw error;
             }
-            catch (Throwable error)
+            catch (Exception error)
             {
                 /*
                  * Logic error as the instance should be valid
@@ -2955,6 +3417,42 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * Return a boolean indicating whether the supplied entity is classified with the supplied classification.
+     *
+     * @param requiredClassification required classification; null means that there are no specific
+     *                               classification requirements and so results in a true response.
+     * @param entity entity to test.
+     * @return boolean result
+     */
+    private boolean verifyEntityIsClassified(String        requiredClassification,
+                                             EntitySummary entity)
+    {
+        if (requiredClassification != null)
+        {
+            List<Classification> entityClassifications = entity.getClassifications();
+            if (entityClassifications != null)
+            {
+                for (Classification entityClassification : entityClassifications)
+                {
+                    if (entityClassification != null)
+                    {
+                        if (requiredClassification.equals(entityClassification.getName()))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
      * Return a boolean indicating whether the supplied entity is classified with one or more of the supplied
      * classifications.
      *
@@ -2963,6 +3461,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param entity entity to test.
      * @return boolean result
      */
+    @Override
     public boolean verifyEntityIsClassified(List<String> requiredClassifications,
                                             EntitySummary entity)
     {
@@ -2989,7 +3488,9 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             return true;
         }
         return false;
@@ -3003,6 +3504,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instanceProperties value to extract the string from
      * @return extracted string value.
      */
+    @Override
     public String getStringValuesFromInstancePropertiesAsArray(InstanceProperties   instanceProperties)
     {
         final String  stringStart = "{ ";
@@ -3041,6 +3543,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instanceProperties value to extract the string from
      * @return extracted string value.
      */
+    @Override
     public String getStringValuesFromInstancePropertiesAsMap(InstanceProperties   instanceProperties)
     {
         final String  stringStart = "{ ";
@@ -3080,6 +3583,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instanceProperties value to extract the string from
      * @return extracted string value.
      */
+    @Override
     public String getStringValuesFromInstancePropertiesAsStruct(InstanceProperties   instanceProperties)
     {
         final String  stringStart = "{ ";
@@ -3119,6 +3623,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instancePropertyValue value to extract the string from
      * @return extracted string value.
      */
+    @Override
     public String getStringFromPropertyValue(InstancePropertyValue   instancePropertyValue)
     {
         if (instancePropertyValue != null)
@@ -3172,11 +3677,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @return integer count of the matching properties.
      * @throws InvalidParameterException invalid search criteria
      */
+    @Override
     public int countMatchingPropertyValues(InstanceProperties       matchProperties,
                                            InstanceProperties       instanceProperties) throws InvalidParameterException
     {
         final String  methodName = "countMatchingPropertyValues";
-        int       matchingProperties = 0;
+        int           matchingProperties = 0;
 
         if ((matchProperties != null) && (instanceProperties != null))
         {
@@ -3219,7 +3725,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                          * Primitives:
                                          *   ** String        - the match value is used as a full regex.
                                          *   ** Non-String    - the match value must be an exact match (.equals() not regex)
-                                         * Non-primitves:
+                                         * Non-primitives:
                                          *   ** Array         - flattened to "{ value, ... }" and matched using contains regex
                                          *   ** Map           - flattened to "{ key -> value, ... }" and matched using contains regex
                                          *   ** Struct        - flattened to "{ key : value, ... }" and matched using contains regex
@@ -3272,7 +3778,8 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                         /*
                                          *  Perform the appropriate comparison
                                          */
-                                        switch (matchOption) {
+                                        switch (matchOption)
+                                        {
                                             case ExactMatch:
                                                 if (instancePropertyValue.equals(matchPropertyValue))
                                                 {
@@ -3301,21 +3808,17 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                                             matchingProperties++;
                                                         }
                                                     }
-                                                    catch (Throwable error)
+                                                    catch (Exception error)
                                                     {
-                                                        OMRSErrorCode errorCode = OMRSErrorCode.INVALID_SEARCH_CRITERIA;
-                                                        String errorMessage =
-                                                                errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(
-                                                                        error.getClass().getName(), matchPropertyValueString,
-                                                                        instancePropertyValueString, error.getMessage(),
-                                                                        methodName);
-
-                                                        throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+                                                        throw new InvalidParameterException(
+                                                                OMRSErrorCode.INVALID_SEARCH_CRITERIA.getMessageDefinition(error.getClass().getName(),
+                                                                                                                           matchPropertyValueString,
+                                                                                                                           instancePropertyValueString,
+                                                                                                                           error.getMessage(),
+                                                                                                                           methodName),
                                                                 this.getClass().getName(),
                                                                 methodName,
-                                                                errorMessage,
-                                                                errorCode.getSystemAction(),
-                                                                errorCode.getUserAction());
+                                                                "instanceProperties");
                                                     }
                                                 }
                                                 break;
@@ -3359,13 +3862,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
                     if (matchValue != null)
                     {
-                        if (matchValue.matches(expectedValue))
+                        if (expectedValue.matches(matchValue))
                         {
                             result = true;
                         }
                     }
                 }
-                catch (Throwable   exc)
+                catch (Exception   exc)
                 {
                     /*
                      * Ignore property
@@ -3400,17 +3903,18 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 try
                 {
                     PrimitivePropertyValue primitivePropertyValue = (PrimitivePropertyValue)instancePropertyValue;
-                    Date                   matchValue = (Date)primitivePropertyValue.getPrimitiveValue();
+                    Long timestamp = (Long)primitivePropertyValue.getPrimitiveValue();
 
-                    if (matchValue != null)
+                    if (timestamp != null)
                     {
+                        Date matchValue = new Date(timestamp);
                         if (matchValue.equals(expectedValue))
                         {
                             result = true;
                         }
                     }
                 }
-                catch (Throwable   exc)
+                catch (Exception   exc)
                 {
                     /*
                      * Ignore property
@@ -3431,6 +3935,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param instanceProperties  the effectivity dates.
      * @return integer count of the matching properties.
      */
+    @Override
     public int countMatchingHeaderPropertyValues(InstanceProperties       matchProperties,
                                                  InstanceAuditHeader      instanceHeader,
                                                  InstanceProperties       instanceProperties)
@@ -3486,13 +3991,15 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 {
                     matchingProperties ++;
                 }
-                if (this.checkDatePropertyValue(propertyMap, effectiveFromPropertyName, instanceProperties.getEffectiveFromTime()))
-                {
-                    matchingProperties ++;
-                }
-                if (this.checkDatePropertyValue(propertyMap, effectiveToPropertyName, instanceProperties.getEffectiveToTime()))
-                {
-                    matchingProperties ++;
+                if (instanceProperties != null) {
+
+                    if (this.checkDatePropertyValue(propertyMap, effectiveFromPropertyName, instanceProperties.getEffectiveFromTime())) {
+                        matchingProperties++;
+                    }
+                    if (this.checkDatePropertyValue(propertyMap, effectiveToPropertyName, instanceProperties.getEffectiveToTime())) {
+                        matchingProperties++;
+                    }
+
                 }
             }
         }
@@ -3511,12 +4018,13 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @return boolean flag indicating whether the two sets of properties match
      * @throws InvalidParameterException invalid search criteria
      */
+    @Override
     public boolean verifyMatchingInstancePropertyValues(InstanceProperties   matchProperties,
                                                         InstanceAuditHeader  instanceHeader,
                                                         InstanceProperties   instanceProperties,
                                                         MatchCriteria        matchCriteria) throws InvalidParameterException
     {
-        if (matchProperties != null)
+        if (matchProperties != null && matchProperties.getInstanceProperties() != null)
         {
             int matchingProperties = this.countMatchingPropertyValues(matchProperties, instanceProperties) +
                                      this.countMatchingHeaderPropertyValues(matchProperties, instanceHeader, instanceProperties);
@@ -3555,6 +4063,273 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BigDecimal getNumericRepresentation(InstancePropertyValue value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        InstancePropertyCategory category = value.getInstancePropertyCategory();
+        if (category.equals(PRIMITIVE))
+        {
+            PrimitivePropertyValue ppv = (PrimitivePropertyValue) value;
+            switch (ppv.getPrimitiveDefCategory())
+            {
+                case OM_PRIMITIVE_TYPE_DATE:
+                case OM_PRIMITIVE_TYPE_LONG:
+                    return BigDecimal.valueOf((Long)ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_SHORT:
+                    return BigDecimal.valueOf((Short)ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_INT:
+                    return BigDecimal.valueOf((Integer)ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_FLOAT:
+                    return BigDecimal.valueOf((Float) ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_DOUBLE:
+                    return BigDecimal.valueOf((Double) ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_BIGINTEGER:
+                    return new BigDecimal((BigInteger)ppv.getPrimitiveValue());
+                case OM_PRIMITIVE_TYPE_BIGDECIMAL:
+                    return (BigDecimal) ppv.getPrimitiveValue();
+                default:
+                    return null;
+            }
+        }
+        return null;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean verifyMatchingInstancePropertyValues(SearchProperties    matchProperties,
+                                                        InstanceAuditHeader instanceHeader,
+                                                        InstanceProperties  instanceProperties) throws InvalidParameterException
+    {
+        final String methodName = "verifyMatchingInstancePropertyValues";
+        if (matchProperties == null)
+        {
+            return true;
+        }
+        List<PropertyCondition> conditions = matchProperties.getConditions();
+        int conditionMatchCount = 0;
+        for (PropertyCondition condition : conditions)
+        {
+            // Simplest way: this will also short-circuit to true immediately if nested conditions is null
+            boolean matchesNested = verifyMatchingInstancePropertyValues(condition.getNestedConditions(), instanceHeader, instanceProperties);
+            String propertyName = condition.getProperty();
+            InstancePropertyValue testValue = condition.getValue();
+            InstancePropertyValue actualValue = null;
+            if (instanceProperties != null)
+            {
+                actualValue = instanceProperties.getPropertyValue(propertyName);
+            }
+            boolean matchesProperties = true;
+            BigDecimal testBD = getNumericRepresentation(testValue);
+            BigDecimal actualBD = getNumericRepresentation(actualValue);
+            PropertyComparisonOperator operator = condition.getOperator();
+
+            /*
+             * When the nested branch is complete, operator will be null (along
+             * with propertyName, testValue, etc). All that remains for this
+             * (nested) property condition is to contribute its result
+             * (matchesNested && matchesProperties) into the current level of
+             * property condition combination.
+             *
+             * Do not attempt to use null operator in switch statement, it will NPE
+             */
+
+            if (operator != null)
+            {
+                switch (condition.getOperator())
+                {
+                    case EQ:
+                        matchesProperties = Objects.equals(actualValue, testValue);
+                        break;
+                    case NEQ:
+                        matchesProperties = !Objects.equals(actualValue, testValue);
+                        break;
+                    case LT:
+                        // Should only apply to numbers and dates
+                        matchesProperties = (actualBD != null && testBD != null && actualBD.compareTo(testBD) < 0);
+                        break;
+                    case LTE:
+                        // Should only apply to numbers and dates
+                        matchesProperties = (actualBD != null && testBD != null && actualBD.compareTo(testBD) <= 0);
+                        break;
+                    case GT:
+                        // Should only apply to numbers and dates
+                        matchesProperties = (actualBD != null && testBD != null && actualBD.compareTo(testBD) > 0);
+                        break;
+                    case GTE:
+                        // Should only apply to numbers and dates
+                        matchesProperties = (actualBD != null && testBD != null && actualBD.compareTo(testBD) >= 0);
+                        break;
+                    case IN:
+                        // The value to test against must be a list (ArrayPropertyValue)
+                        if (testValue instanceof ArrayPropertyValue)
+                        {
+                            ArrayPropertyValue apv = (ArrayPropertyValue) testValue;
+                            InstanceProperties values = apv.getArrayValues();
+                            if (values == null)
+                            {
+                                // Impossible to match against an empty list, so always return false
+                                matchesProperties = false;
+                            }
+                            else
+                            {
+                                Iterator<String> names = values.getPropertyNames();
+                                matchesProperties = false;
+                                while (names.hasNext() && !matchesProperties)
+                                {
+                                    String index = names.next();
+                                    InstancePropertyValue oneTestValue = values.getPropertyValue(index);
+                                    if (oneTestValue != null)
+                                    {
+                                        matchesProperties = oneTestValue.equals(actualValue);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidParameterException(OMRSErrorCode.INVALID_LIST_CONDITION.getMessageDefinition(),
+                                                                this.getClass().getName(),
+                                                                methodName,
+                                                                "matchProperties");
+                        }
+                        break;
+                    case IS_NULL:
+                        matchesProperties = (actualValue == null);
+                        break;
+                    case NOT_NULL:
+                        matchesProperties = (actualValue != null);
+                        break;
+                    case LIKE:
+                        // Should only apply to strings
+                        if (testValue instanceof PrimitivePropertyValue && ((PrimitivePropertyValue) testValue).getPrimitiveDefCategory().equals(OM_PRIMITIVE_TYPE_STRING))
+                        {
+                            String test = testValue.valueAsString();
+                            if (actualValue == null)
+                            {
+                                matchesProperties = false;
+                            }
+                            else
+                            {
+                                String actual = actualValue.valueAsString();
+                                matchesProperties = actual.matches(test);
+                            }
+                        }
+                        else
+                        {
+                            throw new InvalidParameterException(OMRSErrorCode.INVALID_LIKE_CONDITION.getMessageDefinition(),
+                                                                this.getClass().getName(),
+                                                                methodName,
+                                                                "matchProperties");
+                        }
+                        break;
+                    default:
+                        matchesProperties = true;
+                        break;
+                }
+            }
+            conditionMatchCount += (matchesNested && matchesProperties) ? 1 : 0;
+        }
+        // TODO: we may want to move this into the loop above to short-circuit (for performance)
+        switch (matchProperties.getMatchCriteria())
+        {
+            case ALL:
+                if (conditionMatchCount == conditions.size())
+                {
+                    return true;
+                }
+                break;
+            case ANY:
+                if (conditionMatchCount > 0)
+                {
+                    return true;
+                }
+                break;
+            case NONE:
+                if (conditionMatchCount == 0)
+                {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean verifyMatchingClassifications(SearchClassifications matchClassifications,
+                                                 EntitySummary         entity) throws InvalidParameterException
+    {
+        if (matchClassifications == null)
+        {
+            return true;
+        }
+        List<ClassificationCondition> conditions = matchClassifications.getConditions();
+        if (conditions == null)
+        {
+            return true;
+        }
+        int matchingClassificationCount = 0;
+        List<Classification> classifications = entity.getClassifications();
+        for (ClassificationCondition condition : conditions)
+        {
+            String classificationName = condition.getName();
+            if (classificationName != null)
+            {
+                // Only attempt to match if a classification name has been provided: if not, we cannot match against
+                // the requested classification (as no definition of a classification has been provided that we should
+                // attempt to match against)
+                boolean isClassified = verifyEntityIsClassified(classificationName, entity);
+                SearchProperties properties = condition.getMatchProperties();
+                boolean classificationMatches = false;
+                for (Classification classification : classifications)
+                {
+                    if (classificationName.equals(classification.getName()))
+                    {
+                        classificationMatches = verifyMatchingInstancePropertyValues(properties, entity, classification.getProperties());
+                    }
+                }
+                matchingClassificationCount += (isClassified && classificationMatches) ? 1 : 0;
+            }
+        }
+        // TODO: we may want to move this into the loop above to short-circuit (for performance)
+        switch (matchClassifications.getMatchCriteria())
+        {
+            case ALL:
+                if (matchingClassificationCount == conditions.size())
+                {
+                    return true;
+                }
+                break;
+            case ANY:
+                if (matchingClassificationCount > 0)
+                {
+                    return true;
+                }
+                break;
+            case NONE:
+                if (matchingClassificationCount == 0)
+                {
+                    return true;
+                }
+                break;
+        }
+        return false;
+    }
+
+
+    /**
      * Validates that an instance has the correct header for it to be a reference copy.
      *
      * @param sourceName source of the request (used for logging)
@@ -3565,6 +4340,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @throws RepositoryErrorException problem with repository
      * @throws InvalidParameterException the instance is null or linked to local metadata repository
      */
+    @Override
     public void validateReferenceInstanceHeader(String         sourceName,
                                                 String         localMetadataCollectionId,
                                                 String         instanceParameterName,
@@ -3574,16 +4350,10 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (instance == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_REFERENCE_INSTANCE;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(sourceName, methodName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_REFERENCE_INSTANCE.getMessageDefinition(sourceName, methodName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                instanceParameterName);
         }
 
         this.validateInstanceType(sourceName, instance);
@@ -3592,16 +4362,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
 
         if (localMetadataCollectionId.equals(instance.getMetadataCollectionId()))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.LOCAL_REFERENCE_INSTANCE;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(sourceName, methodName, instanceParameterName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.LOCAL_REFERENCE_INSTANCE.getMessageDefinition(sourceName,
+                                                                                                            methodName,
+                                                                                                            instanceParameterName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                instanceParameterName);
         }
     }
 
@@ -3616,6 +4382,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param methodName name of the method that adds the proxy
      * @throws InvalidParameterException the entity proxy is null or for an entity homed in this repository
      */
+    @Override
     public void validateEntityProxy (String         sourceName,
                                      String         localMetadataCollectionId,
                                      String         proxyParameterName,
@@ -3624,32 +4391,34 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (entityProxy == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_ENTITY_PROXY;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(sourceName, proxyParameterName, methodName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.NULL_ENTITY_PROXY.getMessageDefinition(sourceName, proxyParameterName, methodName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                proxyParameterName);
         }
 
         this.validateHomeMetadataGUID(sourceName, proxyParameterName, entityProxy.getMetadataCollectionId(), methodName);
 
         if (localMetadataCollectionId.equals(entityProxy.getMetadataCollectionId()))
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.LOCAL_ENTITY_PROXY;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(sourceName, proxyParameterName, methodName);
-
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
+            throw new InvalidParameterException(OMRSErrorCode.LOCAL_ENTITY_PROXY.getMessageDefinition(sourceName, proxyParameterName, methodName),
                                                 this.getClass().getName(),
                                                 methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+                                                proxyParameterName);
+        }
+
+        if (entityProxy.getHeaderVersion() > InstanceAuditHeader.CURRENT_AUDIT_HEADER_VERSION)
+        {
+            throw new InvalidParameterException(OMRSErrorCode.UNSUPPORTED_INSTANCE_HEADER_VERSION.getMessageDefinition(methodName,
+                                                                                                                       "EntityProxy",
+                                                                                                                       sourceName,
+                                                                                                                       entityProxy.getGUID(),
+                                                                                                                       entityProxy.getType().getTypeDefName(),
+                                                                                                                       Long.toString(entityProxy.getHeaderVersion()),
+                                                                                                                       Long.toString(InstanceAuditHeader.CURRENT_AUDIT_HEADER_VERSION)),
+                                                this.getClass().getName(),
+                                                methodName,
+                                                proxyParameterName);
         }
     }
 
@@ -3664,6 +4433,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @return boolean indicating whether the search criteria is located in any of the string parameter values.
      * @throws RepositoryErrorException the properties are not properly set up in the instance
      */
+    @Override
     public boolean verifyInstancePropertiesMatchSearchCriteria(String              sourceName,
                                                                InstanceProperties  properties,
                                                                String              searchCriteria,
@@ -3751,21 +4521,14 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 }
             }
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             /*
              * Probably a class cast error which should never occur.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.BAD_PROPERTY_FOR_INSTANCE;
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(sourceName, methodName);
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+            throw new RepositoryErrorException(OMRSErrorCode.BAD_PROPERTY_FOR_INSTANCE.getMessageDefinition(sourceName, methodName),
                                                this.getClass().getName(),
                                                methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction(),
                                                error);
         }
 
@@ -3783,6 +4546,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @return boolean indicating whether the search criteria is located in any of the string parameter values.
      * @throws RepositoryErrorException the properties are not properly set up in the instance
      */
+    @Override
     public boolean verifyInstancePropertiesMatchPropertyValue(String              sourceName,
                                                               InstanceProperties  properties,
                                                               String              searchPropertyValue,
@@ -3873,33 +4637,19 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                 }
             }
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             /*
              * Probably a class cast error which should never occur.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.BAD_PROPERTY_FOR_INSTANCE;
-            String errorMessage = errorCode.getErrorMessageId()
-                    + errorCode.getFormattedErrorMessage(sourceName, methodName);
-
-            throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+            throw new RepositoryErrorException(OMRSErrorCode.BAD_PROPERTY_FOR_INSTANCE.getMessageDefinition(sourceName, methodName),
                                                this.getClass().getName(),
                                                methodName,
-                                               errorMessage,
-                                               errorCode.getSystemAction(),
-                                               errorCode.getUserAction(),
                                                error);
         }
 
         return false;
     }
-
-
-    /*
-     * ======================
-     * Private Methods
-     * ======================
-     */
 
 
     /**
@@ -3913,15 +4663,9 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
     {
         if (repositoryContentManager == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.LOCAL_REPOSITORY_CONFIGURATION_ERROR;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.LOCAL_REPOSITORY_CONFIGURATION_ERROR.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
     }
 
@@ -3938,17 +4682,11 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
                                           String     originatingMethodName,
                                           String     localMethodName)
     {
-        OMRSErrorCode errorCode = OMRSErrorCode.VALIDATION_LOGIC_ERROR;
-        String errorMessage     = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(sourceName,
-                                                                                                     localMethodName,
-                                                                                                     originatingMethodName);
-
-        throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+       throw new OMRSLogicErrorException(OMRSErrorCode.VALIDATION_LOGIC_ERROR.getMessageDefinition(sourceName,
+                                                                                                    localMethodName,
+                                                                                                    originatingMethodName),
                                           this.getClass().getName(),
-                                          localMethodName,
-                                          errorMessage,
-                                          errorCode.getSystemAction(),
-                                          errorCode.getUserAction());
+                                          localMethodName);
     }
 
 
@@ -3962,6 +4700,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param localMethodName local method that deleted the error
      * @return boolean
      */
+    @Override
     public boolean isATypeOf(String               sourceName,
                              InstanceAuditHeader  instance,
                              String               typeName,
@@ -4020,6 +4759,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param serviceName service that requested the entities.
      * @param methodName calling method.
      */
+    @Override
     public void validateAtMostOneEntityResult(List<EntityDetail>   findResults,
                                               String               typeName,
                                               String               serviceName,
@@ -4029,19 +4769,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (findResults.size() > 1)
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.MULTIPLE_ENTITIES_FOUND;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(typeName,
-                                                                                serviceName,
-                                                                                methodName,
-                                                                                findResults.toString());
-
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                throw new RepositoryErrorException(OMRSErrorCode.MULTIPLE_ENTITIES_FOUND.getMessageDefinition(typeName,
+                                                                                                              serviceName,
+                                                                                                              methodName,
+                                                                                                              findResults.toString()),
                                                    this.getClass().getName(),
-                                                   methodName,
-                                                   errorMessage,
-                                                   errorCode.getSystemAction(),
-                                                   errorCode.getUserAction());
+                                                   methodName);
             }
         }
     }
@@ -4056,6 +4789,7 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
      * @param serviceName service that requested the relationships.
      * @param methodName calling method.
      */
+    @Override
     public void validateAtMostOneRelationshipResult(List<Relationship>   findResults,
                                                     String               typeName,
                                                     String               serviceName,
@@ -4065,19 +4799,12 @@ public class OMRSRepositoryContentValidator implements OMRSRepositoryValidator
         {
             if (findResults.size() > 1)
             {
-                OMRSErrorCode errorCode = OMRSErrorCode.MULTIPLE_RELATIONSHIPS_FOUND;
-                String        errorMessage = errorCode.getErrorMessageId()
-                                           + errorCode.getFormattedErrorMessage(typeName,
-                                                                                serviceName,
-                                                                                methodName,
-                                                                                findResults.toString());
-
-                throw new RepositoryErrorException(errorCode.getHTTPErrorCode(),
+                throw new RepositoryErrorException(OMRSErrorCode.MULTIPLE_RELATIONSHIPS_FOUND.getMessageDefinition(typeName,
+                                                                                                                   serviceName,
+                                                                                                                   methodName,
+                                                                                                                   findResults.toString()),
                                                    this.getClass().getName(),
-                                                   methodName,
-                                                   errorMessage,
-                                                   errorCode.getSystemAction(),
-                                                   errorCode.getUserAction());
+                                                   methodName);
             }
         }
     }

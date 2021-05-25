@@ -5,9 +5,9 @@ package org.odpi.openmetadata.openconnectors.governancedaemonconnectors.security
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
-import org.odpi.openmetadata.accessservices.governanceengine.api.objects.Context;
-import org.odpi.openmetadata.accessservices.governanceengine.api.objects.GovernanceClassification;
-import org.odpi.openmetadata.accessservices.governanceengine.api.objects.GovernedAsset;
+import org.odpi.openmetadata.accessservices.securityofficer.api.model.Context;
+import org.odpi.openmetadata.accessservices.securityofficer.api.model.GovernanceClassification;
+import org.odpi.openmetadata.accessservices.securityofficer.api.model.GovernedAsset;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
 import org.odpi.openmetadata.openconnectors.governancedaemonconnectors.securitysync.rangerconnector.model.RangerPolicyResource;
@@ -223,13 +223,14 @@ public class RangerSecurityServiceConnector extends ConnectorBase implements Sec
 
     @Override
     public void deleteAssociationResourceToSecurityTag(ResourceTagMapper resourceTagMapper) {
-        String deleteAssociationURL = getRangerURL(TAG_RESOURCE_ASSOCIATION, resourceTagMapper.getId());
+        String rangerBaseURL = connection.getEndpoint().getAddress();
+        String deleteAssociationURL = MessageFormat.format(TAG_RESOURCE_ASSOCIATION, rangerBaseURL, resourceTagMapper.getId());
 
         Boolean isDeleted = doDelete(deleteAssociationURL);
         if (isDeleted) {
-            log.debug("The association with id {} between tag {} and resource {} has been removed", resourceTagMapper.getId(), resourceTagMapper.getTagId(), resourceTagMapper.getResourceId());
+            log.info("The association with id {} between tag {} and resource {} has been removed", resourceTagMapper.getId(), resourceTagMapper.getTagId(), resourceTagMapper.getResourceId());
         } else {
-            log.debug("Unable to delete the association with id = {} between tag {} and resource {}", resourceTagMapper.getId(), resourceTagMapper.getTagId(), resourceTagMapper.getResourceId());
+            log.info("Unable to delete the association with id = {} between tag {} and resource {}", resourceTagMapper.getId(), resourceTagMapper.getTagId(), resourceTagMapper.getResourceId());
         }
     }
 
@@ -362,7 +363,7 @@ public class RangerSecurityServiceConnector extends ConnectorBase implements Sec
         return resourceValue;
     }
 
-    private List<RangerServiceResource> getExistingResources() {
+    public List<RangerServiceResource> getExistingResources() {
         String createAssociation = getRangerURL(SERVICE_TAGS_RESOURCES);
 
         RestTemplate restTemplate = new RestTemplate();
@@ -438,7 +439,7 @@ public class RangerSecurityServiceConnector extends ConnectorBase implements Sec
     }
 
     private void syncResources(List<RangerServiceResource> resources, List<RangerServiceResource> existingResources) {
-        Collection<RangerServiceResource> newResources = CollectionUtils.intersection(resources, existingResources);
+        Collection<RangerServiceResource> newResources = CollectionUtils.subtract(resources, existingResources);
         newResources.forEach(this::createRangerServiceResource);
     }
 

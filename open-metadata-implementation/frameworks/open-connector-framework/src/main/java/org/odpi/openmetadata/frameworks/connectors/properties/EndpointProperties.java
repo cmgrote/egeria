@@ -58,6 +58,8 @@ import java.util.Objects;
  */
 public class EndpointProperties extends AssetReferenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Endpoint  endpointBean;
 
 
@@ -234,7 +236,7 @@ public class EndpointProperties extends AssetReferenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof EndpointProperties))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -243,6 +245,18 @@ public class EndpointProperties extends AssetReferenceable
             return false;
         }
         EndpointProperties that = (EndpointProperties) objectToCompare;
-        return Objects.equals(getEndpointBean(), that.getEndpointBean());
+        return Objects.equals(endpointBean, that.endpointBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), endpointBean);
     }
 }

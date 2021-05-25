@@ -5,7 +5,7 @@
 
 The [OMAG server platform](../../../open-metadata-publication/website/omag-server)
 provides a software platform for running
-[OMAG Servers](../../../open-metadata-implementation/governance-servers/admin-services/docs/concepts/logical-omag-server.md).
+[OMAG Servers](../../../open-metadata-implementation/admin-services/docs/concepts/omag-server.md).
 
 Each OMAG Server supports selected open metadata and governance services based on its
 configuration. 
@@ -17,12 +17,12 @@ However there are three sets of Administration Service APIs active.
 * **Server Origin** - for discovering the source of the OMAG server platform.  
 (This was used in the previous [task](task-starting-the-omag-server-platform.md).)
 * **Configuration Services** - for creating configuration documents.
-* **Operational Services** - for starting and stopping [logical OMAG Servers](../../../open-metadata-implementation/governance-servers/admin-services/docs/concepts/logical-omag-server.md)
+* **Operational Services** - for starting and stopping [OMAG Servers](../../../open-metadata-implementation/admin-services/docs/concepts/omag-server.md)
 in the OMAG server platform using the configuration documents.
 
 ## What is a configuration document?
 
-A [configuration document](../../../open-metadata-implementation/governance-servers/admin-services/docs/concepts/configuration-document.md)
+A [configuration document](../../../open-metadata-implementation/admin-services/docs/concepts/configuration-document.md)
 provides the configuration properties for an OMAG server.
 
 It includes:
@@ -40,8 +40,7 @@ against the OMAG server platform.
 
 There is also a postman collection located at:
 
-[https://github.com/odpi/egeria/blob/master/open-metadata-resources/open-metadata-tutorials/omag-server-tutorial/resources/omag-server-platform-tutorial.postman_collection.json](https://github.com/odpi/egeria/blob/master/open-metadata-resources/open-metadata-tutorials/omag-server-tutorial/resources/omag-server-platform-tutorial.postman_collection.json)
-
+[https://raw.githubusercontent.com/odpi/egeria/master/open-metadata-resources/open-metadata-tutorials/omag-server-tutorial/resources/omag-server-platform-tutorial.postman_collection.json](https://raw.githubusercontent.com/odpi/egeria/master/open-metadata-resources/open-metadata-tutorials/omag-server-tutorial/resources/omag-server-platform-tutorial.postman_collection.json)
 
 It can be downloaded and imported into postman to support this tutorial.
 (see **Import** button top left of the Postman user interface).
@@ -55,28 +54,24 @@ as well as refer to the pre-canned calls in the postman collection.
 Before there is a configuration document, requesting the server configuration
 creates and returns a default document.  The command is:
 
-```text
-
-GET {serverURLRoot}/open-metadata/admin-services/users/{adminUserId}/servers/{serverName}/configuration
-
 ```
+GET {serverURLRoot}/open-metadata/admin-services/users/{adminUserId}/servers/{serverName}/configuration
+```
+
 where:
-* {serverURLRoot} is the host name and port number of the OMAG server platform (eg http://localhost:8080).
-* {adminUserId} is the user id of the administrator making the calls.
-* {serverName} is the name of the OMAG server that is being configured.
+* `{serverURLRoot}` is the host name and port number of the OMAG server platform (eg https://localhost:9443).
+* `{adminUserId}` is the user id of the administrator making the calls.
+* `{serverName}` is the name of the OMAG server that is being configured.
 
 Try the following command (this is request **2.** in Postman): 
 
 ```
-
-GET http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/configuration
-
+GET https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/configuration
 ```
 
 The response is in JSON format and contains the following information:
 
 ```json
-
 {
     "class":"OMAGServerConfigResponse",
     "relatedHTTPCode":200,
@@ -86,12 +81,11 @@ The response is in JSON format and contains the following information:
        "localServerId":"28aeb916-5029-4d6a-aa96-392196859916",
        "localServerName":"cocoMDS1",
        "localServerType":"Open Metadata and Governance Server",
-       "localServerURL":"http://localhost:8080",
+       "localServerURL":"https://localhost:9443",
        "localServerUserId":"OMAGServer",
        "maxPageSize":1000
     }
 }
-
 ```
 
 The **localServerId** property is a unique identifier given to the server and is used
@@ -104,16 +98,13 @@ are set to their default values and can be changed.
 
 For example, try the following command (this is request **3.** in Postman):
 
-```text
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/server-type?typeName="Standalone Metadata Repository"
-
+```
+POST https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/server-type?typeName="Standalone Metadata Repository"
 ```
 
 Then query the configuration again (this is request **4.** in Postman):
 
 ```json
-
 {
     "class": "OMAGServerConfigResponse",
     "relatedHTTPCode": 200,
@@ -122,7 +113,7 @@ Then query the configuration again (this is request **4.** in Postman):
         "localServerId": "2a73902e-e691-43cc-b422-23b6b42992e2",
         "localServerName": "cocoMDS1",
         "localServerType": "Standalone Metadata Repository",
-        "localServerURL": "http://localhost:8080",
+        "localServerURL": "https://localhost:9443",
         "localServerUserId": "OMAGServer",
         "maxPageSize": 1000,
         "auditTrail": [
@@ -130,7 +121,6 @@ Then query the configuration again (this is request **4.** in Postman):
         ]
     }
 }
-
 ```
 
 Notice that the localServerType has changed and an audit trail has also appeared.  This allows you to keep track of
@@ -139,17 +129,14 @@ the changes being made to the configuration document.
 The next command configures in type of metadata repository (this is request **5.** in Postman).  In this example, we are using a simple in-memory repository
 which is useful for testing.
 
-```text
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/mode/in-memory-repository
-
+```
+POST https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/local-repository/mode/in-memory-repository
 ```
 
 This has added the configuration for the local repository using default values.
 If you query the configuration again (this is request **6.** in Postman) you see:
 
 ```json
-
 {
     "class": "OMAGServerConfigResponse",
     "relatedHTTPCode": 200,
@@ -158,7 +145,7 @@ If you query the configuration again (this is request **6.** in Postman) you see
         "localServerId": "2a73902e-e691-43cc-b422-23b6b42992e2",
         "localServerName": "cocoMDS1",
         "localServerType": "Standalone Metadata Repository",
-        "localServerURL": "http://localhost:8080",
+        "localServerURL": "https://localhost:9443",
         "localServerUserId": "OMAGServer",
         "maxPageSize": 1000,
         "repositoryServicesConfig": {
@@ -290,7 +277,7 @@ If you query the configuration again (this is request **6.** in Postman) you see
                         "qualifiedName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "displayName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "description": "OMRS default repository REST API endpoint.",
-                        "address": "http://localhost:8080/servers/cocoMDS1"
+                        "address": "https://localhost:9443/servers/cocoMDS1"
                     }
                 },
                 "eventsToSaveRule": "ALL",
@@ -303,7 +290,6 @@ If you query the configuration again (this is request **6.** in Postman) you see
         ]
     }
 }
-
 ```
 
 Finally in this exercise, use the following command to enable the
@@ -315,16 +301,13 @@ As such they need information about an event bus.
 The command below (this is request **7.** in Postman) sets up configuration properties about the event bus.  These properties are
 embedded in the configuration for each access service.
 
-```text
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/event-bus?topicURLRoot=egeriaTopics
-
+```
+POST https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/event-bus?topicURLRoot=egeriaTopics
 ```
 
 When the configuration is next queried (this is request **8.** in Postman), the event bus details are stored in the configuration document.
 
 ```json
-
 {
     "class": "OMAGServerConfigResponse",
     "relatedHTTPCode": 200,
@@ -333,7 +316,7 @@ When the configuration is next queried (this is request **8.** in Postman), the 
         "localServerId": "2a73902e-e691-43cc-b422-23b6b42992e2",
         "localServerName": "cocoMDS1",
         "localServerType": "Standalone Metadata Repository",
-        "localServerURL": "http://localhost:8080",
+        "localServerURL": "https://localhost:9443",
         "localServerUserId": "OMAGServer",
         "maxPageSize": 1000,
         "eventBusConfig": {
@@ -469,7 +452,7 @@ When the configuration is next queried (this is request **8.** in Postman), the 
                         "qualifiedName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "displayName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "description": "OMRS default repository REST API endpoint.",
-                        "address": "http://localhost:8080/servers/cocoMDS1"
+                        "address": "https://localhost:9443/servers/cocoMDS1"
                     }
                 },
                 "eventsToSaveRule": "ALL",
@@ -483,21 +466,17 @@ When the configuration is next queried (this is request **8.** in Postman), the 
         ]
     }
 }
-
 ```
 
 The last command creates the configuration for the access services (this is request **9.** in Postman):
 
-```text
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/access-services
-
+```
+POST https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/access-services
 ```
 
 which results in the final configuration (this is request **10.** in Postman).
 
 ```json
-
 {
     "class": "OMAGServerConfigResponse",
     "relatedHTTPCode": 200,
@@ -506,7 +485,7 @@ which results in the final configuration (this is request **10.** in Postman).
         "localServerId": "2a73902e-e691-43cc-b422-23b6b42992e2",
         "localServerName": "cocoMDS1",
         "localServerType": "Standalone Metadata Repository",
-        "localServerURL": "http://localhost:8080",
+        "localServerURL": "https://localhost:9443",
         "localServerUserId": "OMAGServer",
         "maxPageSize": 1000,
         "eventBusConfig": {
@@ -520,7 +499,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.dataengine.server.admin.DataEngineAdmin",
                 "accessServiceName": "Data Engine",
                 "accessServiceDescription": "Create processes for lineage",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/data-engine/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/data-engine/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -639,7 +618,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.subjectarea.admin.SubjectAreaAdmin",
                 "accessServiceName": "Subject Area",
                 "accessServiceDescription": "Document knowledge about a subject area",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/subject-area/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/subject-area/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -755,10 +734,10 @@ which results in the final configuration (this is request **10.** in Postman).
             {
                 "class": "AccessServiceConfig",
                 "accessServiceId": 1008,
-                "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.governanceengine.server.admin.GovernanceEngineAdmin",
+                "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.governanceengine.admin.GovernanceEngineAdmin",
                 "accessServiceName": "Governance Engine",
                 "accessServiceDescription": "Set up an operational governance engine",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/governance-engine/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/governance-engine/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -877,7 +856,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.governanceprogram.admin.GovernanceProgramAdmin",
                 "accessServiceName": "Governance Program",
                 "accessServiceDescription": "Manage the governance program",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/governance-program/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/governance-program/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -996,7 +975,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.informationview.admin.InformationViewAdmin",
                 "accessServiceName": "Information View",
                 "accessServiceDescription": "Support information virtualization and data set definitions",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/information-view/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/information-view/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -1115,7 +1094,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.assetconsumer.admin.AssetConsumerAdmin",
                 "accessServiceName": "Asset Consumer",
                 "accessServiceDescription": "Access assets through connectors",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/asset-consumer/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/asset-consumer/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -1234,7 +1213,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservices.connectedasset.admin.ConnectedAssetAdmin",
                 "accessServiceName": "Connected Asset",
                 "accessServiceDescription": "Understand an asset",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/connected-asset/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/connected-asset/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -1353,7 +1332,7 @@ which results in the final configuration (this is request **10.** in Postman).
                 "accessServiceAdminClass": "org.odpi.openmetadata.accessservice.assetcatalog.admin.AssetCatalogAdmin",
                 "accessServiceName": "Asset Catalog",
                 "accessServiceDescription": "Search and understand your assets",
-                "accessServiceWiki": "https://odpi.github.io/egeria/open-metadata-implementation/access-services/asset-catalog/",
+                "accessServiceWiki": "https://egeria.odpi.org/open-metadata-implementation/access-services/asset-catalog/",
                 "accessServiceOperationalStatus": "ENABLED",
                 "accessServiceInTopic": {
                     "class": "Connection",
@@ -1596,7 +1575,7 @@ which results in the final configuration (this is request **10.** in Postman).
                         "qualifiedName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "displayName": "DefaultRepositoryRESTAPI.Endpoint.cocoMDS1",
                         "description": "OMRS default repository REST API endpoint.",
-                        "address": "http://localhost:8080/servers/cocoMDS1"
+                        "address": "https://localhost:9443/servers/cocoMDS1"
                     }
                 },
                 "eventsToSaveRule": "ALL",
@@ -1705,7 +1684,6 @@ which results in the final configuration (this is request **10.** in Postman).
         ]
     }
 }
-
 ```
 
 You have probably noticed how quickly the configuration document grew into a complex structure.
@@ -1718,12 +1696,12 @@ adapt it to specific environment.  However, the defaults provide a good starting
 The contents of this tutorial cover a very simple OMAG server configuration.
 For guidance on configuring more complex OMAG servers see:
 
-* [Administration Services User Guide](../../../open-metadata-implementation/governance-servers/admin-services/docs/user)
+* [Administration Services User Guide](../../../open-metadata-implementation/admin-services/docs/user)
 
 For instructions on how to set up two OMAG Servers using in memory repositories that are exchanging metadata
 over [Apache Kafka](http://kafka.apache.org/), see:
 
-* [In Memory Repository Demo](../../open-metadata-demos/in-memory-repository-demo)
+* [In Memory Repository Demo](https://github.com/odpi/egeria-samples/tree/master/demos/in-memory-repository)
 
 ## Next steps
 

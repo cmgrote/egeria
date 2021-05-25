@@ -11,6 +11,8 @@ import java.util.Objects;
  */
 public class AssetExternalReference extends AssetReferenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     protected ExternalReference   externalReferenceBean;
 
     /**
@@ -155,6 +157,7 @@ public class AssetExternalReference extends AssetReferenceable
     }
 
 
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -168,7 +171,7 @@ public class AssetExternalReference extends AssetReferenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetExternalReference))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -177,6 +180,18 @@ public class AssetExternalReference extends AssetReferenceable
             return false;
         }
         AssetExternalReference that = (AssetExternalReference) objectToCompare;
-        return Objects.equals(getExternalReferenceBean(), that.getExternalReferenceBean());
+        return Objects.equals(externalReferenceBean, that.externalReferenceBean);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), externalReferenceBean);
     }
 }

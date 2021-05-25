@@ -2,15 +2,15 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.communityprofile.admin;
 
-import org.odpi.openmetadata.accessservices.communityprofile.auditlog.CommunityProfileAuditCode;
+import org.odpi.openmetadata.accessservices.communityprofile.ffdc.CommunityProfileAuditCode;
 import org.odpi.openmetadata.accessservices.communityprofile.intopic.CommunityProfileInTopicProcessor;
 import org.odpi.openmetadata.accessservices.communityprofile.omrstopic.CommunityProfileOMRSTopicProcessor;
 import org.odpi.openmetadata.accessservices.communityprofile.server.CommunityProfileServicesInstance;
 import org.odpi.openmetadata.adminservices.configuration.properties.AccessServiceConfig;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceAdmin;
-import org.odpi.openmetadata.adminservices.ffdc.OMAGAdminErrorCode;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditingComponent;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicListener;
@@ -19,7 +19,7 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
 
 public class CommunityProfileAdmin extends AccessServiceAdmin
 {
-    private OMRSAuditLog                       auditLog            = null;
+    private AuditLog                           auditLog            = null;
     private CommunityProfileServicesInstance   instance            = null;
     private String                             serverName          = null;
     private CommunityProfileInTopicProcessor   inTopicProcessor    = null;
@@ -43,23 +43,16 @@ public class CommunityProfileAdmin extends AccessServiceAdmin
      * @param serverUserName  user id to use on OMRS calls where there is no end user.
      * @throws OMAGConfigurationErrorException invalid parameters in the configuration properties.
      */
+    @Override
     public void initialize(AccessServiceConfig     accessServiceConfig,
                            OMRSTopicConnector      omrsTopicConnector,
                            OMRSRepositoryConnector repositoryConnector,
-                           OMRSAuditLog            auditLog,
+                           AuditLog                auditLog,
                            String                  serverUserName) throws OMAGConfigurationErrorException
     {
         final String              actionDescription = "initialize";
-        CommunityProfileAuditCode auditCode;
 
-        auditCode = CommunityProfileAuditCode.SERVICE_INITIALIZING;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, CommunityProfileAuditCode.SERVICE_INITIALIZING.getMessageDefinition());
 
         try
         {
@@ -76,85 +69,58 @@ public class CommunityProfileAdmin extends AccessServiceAdmin
                                                                                                 auditLog));
             this.serverName = instance.getServerName();
 
+            OpenMetadataTopicConnector outTopicConnector = null;
 
-            if (omrsTopicConnector != null)
+            if (accessServiceConfig.getAccessServiceOutTopic() != null)
             {
-                auditCode = CommunityProfileAuditCode.SERVICE_REGISTERED_WITH_ENTERPRISE_TOPIC;
-                auditLog.logRecord(actionDescription,
-                                   auditCode.getLogMessageId(),
-                                   auditCode.getSeverity(),
-                                   auditCode.getFormattedLogMessage(serverName),
-                                   null,
-                                   auditCode.getSystemAction(),
-                                   auditCode.getUserAction());
-
-                OpenMetadataTopicConnector outTopicConnector = null;
-
-                if (accessServiceConfig.getAccessServiceOutTopic() != null)
-                {
-                    outTopicConnector = super.getOutTopicConnector(accessServiceConfig.getAccessServiceOutTopic(),
-                                                                   accessServiceConfig.getAccessServiceName(),
-                                                                   auditLog);
-                }
-
-                OMRSTopicListener omrsTopicProcessor = new CommunityProfileOMRSTopicProcessor(outTopicConnector,
-                                                                                              super.extractKarmaPointIncrement(accessServiceConfig.getAccessServiceOptions(),
-                                                                                                                               accessServiceConfig.getAccessServiceName(),
-                                                                                                                               auditLog),
-                                                                                              accessServiceConfig.getAccessServiceName(),
-                                                                                              serverUserName,
-                                                                                              auditLog.createNewAuditLog(OMRSAuditingComponent.ENTERPRISE_TOPIC_LISTENER),
-                                                                                              repositoryConnector.getRepositoryHelper(),
-                                                                                              instance);
-
-                omrsTopicConnector.registerListener(omrsTopicProcessor);
+                outTopicConnector = super.getOutTopicEventBusConnector(accessServiceConfig.getAccessServiceOutTopic(),
+                                                                       AccessServiceDescription.COMMUNITY_PROFILE_OMAS.getAccessServiceFullName(),
+                                                                       auditLog);
             }
+
+            OMRSTopicListener omrsTopicProcessor = new CommunityProfileOMRSTopicProcessor(outTopicConnector,
+                                                                                          super.extractKarmaPointIncrement(accessServiceConfig.getAccessServiceOptions(),
+                                                                                                                           accessServiceConfig.getAccessServiceName(),
+                                                                                                                           auditLog),
+                                                                                          AccessServiceDescription.COMMUNITY_PROFILE_OMAS.getAccessServiceFullName(),
+                                                                                          serverUserName,
+                                                                                          auditLog.createNewAuditLog(OMRSAuditingComponent.ENTERPRISE_TOPIC_LISTENER),
+                                                                                          repositoryConnector.getRepositoryHelper(),
+                                                                                          instance);
+
+            super.registerWithEnterpriseTopic(accessServiceConfig.getAccessServiceName(),
+                                              serverName,
+                                              omrsTopicConnector,
+                                              omrsTopicProcessor,
+                                              auditLog);
+
 
 
             if (accessServiceConfig.getAccessServiceInTopic() != null)
             {
-                inTopicProcessor = new CommunityProfileInTopicProcessor(super.getInTopicConnector(accessServiceConfig.getAccessServiceInTopic(),
-                                                                                                  accessServiceConfig.getAccessServiceName(),
-                                                                                                  auditLog),
+                inTopicProcessor = new CommunityProfileInTopicProcessor(super.getInTopicEventBusConnector(accessServiceConfig.getAccessServiceInTopic(),
+                                                                                                          AccessServiceDescription.COMMUNITY_PROFILE_OMAS.getAccessServiceFullName(),
+                                                                                                          auditLog),
                                                                         instance);
             }
 
             this.auditLog = auditLog;
 
-            auditCode = CommunityProfileAuditCode.SERVICE_INITIALIZED;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription, CommunityProfileAuditCode.SERVICE_INITIALIZED.getMessageDefinition(serverName));
         }
         catch (OMAGConfigurationErrorException error)
         {
             throw error;
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            auditCode = CommunityProfileAuditCode.SERVICE_INSTANCE_FAILURE;
+            auditLog.logException(actionDescription,
+                                  CommunityProfileAuditCode.SERVICE_INSTANCE_FAILURE.getMessageDefinition(error.getMessage()),
+                                  error);
 
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
-
-            OMAGAdminErrorCode errorCode = OMAGAdminErrorCode.UNEXPECTED_EXCEPTION;
-
-            throw new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
-                                                      this.getClass().getName(),
-                                                      actionDescription,
-                                                      error.getMessage(),
-                                                      errorCode.getSystemAction(),
-                                                      errorCode.getUserAction(),
-                                                      error);
+            super.throwUnexpectedInitializationException(actionDescription,
+                                                         AccessServiceDescription.COMMUNITY_PROFILE_OMAS.getAccessServiceFullName(),
+                                                         error);
         }
     }
 
@@ -162,10 +128,10 @@ public class CommunityProfileAdmin extends AccessServiceAdmin
     /**
      * Shutdown the access service.
      */
+    @Override
     public void shutdown()
     {
         final String              actionDescription = "shutdown";
-        CommunityProfileAuditCode auditCode;
 
         if (inTopicProcessor != null)
         {
@@ -177,13 +143,6 @@ public class CommunityProfileAdmin extends AccessServiceAdmin
             this.instance.shutdown();
         }
 
-        auditCode = CommunityProfileAuditCode.SERVICE_SHUTDOWN;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(serverName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, CommunityProfileAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(serverName));
     }
 }

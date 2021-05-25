@@ -8,14 +8,17 @@ import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGInvalidParameterEx
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGNotAuthorizedException;
 import org.odpi.openmetadata.commonservices.ffdc.RESTExceptionHandler;
 import org.odpi.openmetadata.commonservices.ffdc.rest.FFDCResponseBase;
-import org.odpi.openmetadata.frameworks.connectors.ffdc.OCFCheckedExceptionBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * OMAGServerExceptionHandler provides common error handling routines for the admin services
  */
-class OMAGServerExceptionHandler extends RESTExceptionHandler
+public class OMAGServerExceptionHandler extends RESTExceptionHandler
 {
+    private static final Logger log = LoggerFactory.getLogger(RESTExceptionHandler.class);
+
     /**
      * Default constructor
      */
@@ -32,27 +35,25 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      * @param response  REST Response
      * @param runtimeException returned error.
      */
-    void captureRuntimeException(String            serverName,
-                                 String            methodName,
-                                 FFDCResponseBase  response,
-                                 Throwable         runtimeException)
+    public void capturePlatformRuntimeException(String           serverName,
+                                                String           methodName,
+                                                FFDCResponseBase response,
+                                                Throwable        runtimeException)
     {
-        OMAGAdminErrorCode errorCode = OMAGAdminErrorCode.UNEXPECTED_EXCEPTION;
-        String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(serverName,
-                                                                                                        methodName,
-                                                                                                        runtimeException.getClass().getName(),
-                                                                                                        runtimeException.getMessage());
+        log.error("Unexpected exception", runtimeException);
 
-        OMAGConfigurationErrorException error =  new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
+        OMAGConfigurationErrorException error =  new OMAGConfigurationErrorException(OMAGAdminErrorCode.UNEXPECTED_EXCEPTION.getMessageDefinition(serverName,
+                                                                                                                                                  methodName,
+                                                                                                                                                  runtimeException.getClass().getName(),
+                                                                                                                                                  runtimeException.getMessage()),
                                                                                      this.getClass().getName(),
                                                                                      methodName,
-                                                                                     errorMessage,
-                                                                                     errorCode.getSystemAction(),
-                                                                                     errorCode.getUserAction(),
                                                                                      runtimeException);
+
+        log.error("Returning sanitized exception", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
-
 
 
     /**
@@ -62,22 +63,21 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      * @param response  REST Response
      * @param runtimeException returned error.
      */
-    void captureRuntimeException(String            methodName,
-                                 FFDCResponseBase  response,
-                                 Throwable         runtimeException)
+    public void capturePlatformRuntimeException(String           methodName,
+                                                FFDCResponseBase response,
+                                                Throwable        runtimeException)
     {
-        OMAGAdminErrorCode errorCode = OMAGAdminErrorCode.UNEXPECTED_PLATFORM_EXCEPTION;
-        String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName,
-                                                                                                        runtimeException.getClass().getName(),
-                                                                                                        runtimeException.getMessage());
+        log.error("Unexpected platform exception", runtimeException);
 
-        OMAGConfigurationErrorException error =  new OMAGConfigurationErrorException(errorCode.getHTTPErrorCode(),
+        OMAGConfigurationErrorException error =  new OMAGConfigurationErrorException(OMAGAdminErrorCode.UNEXPECTED_PLATFORM_EXCEPTION.getMessageDefinition(methodName,
+                                                                                                                                                           runtimeException.getClass().getName(),
+                                                                                                                                                           runtimeException.getMessage()),
                                                                                      this.getClass().getName(),
                                                                                      methodName,
-                                                                                     errorMessage,
-                                                                                     errorCode.getSystemAction(),
-                                                                                     errorCode.getUserAction(),
                                                                                      runtimeException);
+
+        log.error("Returning sanitized platform exception", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
 
@@ -90,6 +90,8 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      */
     void captureConfigurationErrorException(FFDCResponseBase response, OMAGConfigurationErrorException error)
     {
+        log.error("Configuration error returned", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
 
@@ -102,6 +104,8 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      */
     void captureInvalidParameterException(FFDCResponseBase response, OMAGInvalidParameterException error)
     {
+        log.error("Invalid parameter error returned", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
 
@@ -112,8 +116,10 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      * @param response  REST Response
      * @param error returned response.
      */
-    void captureNotAuthorizedException(FFDCResponseBase response, OMAGNotAuthorizedException error)
+    public void captureNotAuthorizedException(FFDCResponseBase response, OMAGNotAuthorizedException error)
     {
+        log.error("(OMAG) User not authorized error returned", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
 
@@ -126,6 +132,8 @@ class OMAGServerExceptionHandler extends RESTExceptionHandler
      */
     void captureNotAuthorizedException(FFDCResponseBase response, UserNotAuthorizedException error)
     {
+        log.error("User not authorized error returned", error);
+
         captureCheckedException(response, error, error.getClass().getName());
     }
 }

@@ -8,28 +8,25 @@ it is started in the
 [OMAG Server Platform](../../../open-metadata-publication/website/omag-server)
 using the following command (this is request **11.** in Postman).
 
-```text
-
-POST http://localhost:8080/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/instance
-
 ```
+POST https://localhost:9443/open-metadata/admin-services/users/garygeeke/servers/cocoMDS1/instance
+```
+
 The response from the command lists the subsystems that have been activated in the OMAG server:
 
 ```json
-
 {
     "class": "VoidResponse",
     "relatedHTTPCode": 200,
     "successMessage": "Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 is running the following services: [Repository Services, Data Engine OMAS, Subject Area OMAS, Governance Engine OMAS, Governance Program OMAS, Information View OMAS, Asset Consumer OMAS, Connected Asset OMAS, Asset Catalog OMAS]"
 }
-
 ```
+
 The window where your OMAG server platform is running will show the start up
 messages, something like this:
 
 ```text
-
-/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java -Dserver.port=8080 ...
+/Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/bin/java -Dserver.port=9443 ...
     ____   __  ___ ___    ______   _____                                 ____   _         _     ___
    / __ \ /  |/  //   |  / ____/  / ___/ ___   ____ _   __ ___   ____   / _  \ / / __    / /  / _ /__   ____ _  _
   / / / // /|_/ // /| | / / __    \__ \ / _ \ / __/| | / // _ \ / __/  / /_/ // //   |  / _\ / /_ /  | /  _// || |
@@ -38,7 +35,11 @@ messages, something like this:
 
  :: Powered by Spring Boot (v2.1.2.RELEASE) ::
 
-Tue Feb 05 16:14:20 GMT 2019 OMAG server platform ready for configuration
+16:13:18.047 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port(s): 9443 (https)
+16:13:41.688 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 9443 (https) with context path ''
+
+Tue Feb 05 16:14:20 GMT 2019 2020 No OMAG servers listed in startup configuration
+Tue Feb 05 16:14:20 GMT 2019 OMAG server platform ready for more configuration
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0001 The Open Metadata Repository Services (OMRS) is initializing
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0002 Enterprise access through the Enterprise Repository Services is initializing
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0003 The local repository is initializing with metadata collection named cocoMDS1 with an id of ad405dc2-1361-48f8-9ea2-538bd43db1b0
@@ -336,7 +337,7 @@ Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called SoftwareServerDeployment with a unique identifier of d909eb3b-5205-4180-9f63-122a65b30738 and a version number of 1 from ODPi Egeria (OMRS)
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called ServerEndpoint with a unique identifier of 2b8bfab4-8023-4611-9833-82a0dc95f187 and a version number of 1 from ODPi Egeria (OMRS)
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called SoftwareServerSupportedCapability with a unique identifier of 8b7d7da5-0668-4174-a43b-8f8c6c068dd0 and a version number of 1 from ODPi Egeria (OMRS)
-Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called AssetServerUse with a unique identifier of 92b75926-8e9a-46c7-9d98-89009f622397 and a version number of 1 from ODPi Egeria (OMRS)
+Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called ServerAssetUse with a unique identifier of 92b75926-8e9a-46c7-9d98-89009f622397 and a version number of 1 from ODPi Egeria (OMRS)
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called RuntimeForProcess with a unique identifier of f6b5cf4f-7b88-47df-aeb0-d80d28ba1ec1 and a version number of 1 from ODPi Egeria (OMRS)
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called HostNetwork with a unique identifier of f2bd7401-c064-41ac-862c-e5bcdc98fa1e and a version number of 1 from ODPi Egeria (OMRS)
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0301 The local server has added a new type called NetworkGatewayLink with a unique identifier of 5bece460-1fa6-41fb-a29f-fdaf65ec8ce3 and a version number of 1 from ODPi Egeria (OMRS)
@@ -523,10 +524,7 @@ Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMAS-ASSET-CATALOG-0003 The Asset Catalog 
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0019 The OMRS Topic Connector EnterpriseTopicConnector.Server.cocoMDS1 has registered with an event bus connector connected to topic cocoMDS1.open-metadata.repository-services.enterprise.cocoMDS1.OMRSTopic
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0020 The OMRS Topic Connector EnterpriseTopicConnector.Server.cocoMDS1 is ready to send and receive events
 Tue Feb 05 16:14:27 GMT 2019 cocoMDS1 OMRS-AUDIT-0015 The listener thread for an OMRS Topic Connector for topic cocoMDS1.open-metadata.repository-services.enterprise.cocoMDS1.OMRSTopic has started
-
-
 ```
-
 
 ## Further reading
 
@@ -534,7 +532,7 @@ The contents of this tutorial covered a single OMAG server.
 For instructions on how to set up two OMAG Servers using in memory repositories that are exchanging metadata
 over [Apache Kafka](http://kafka.apache.org/), see:
 
-* [In Memory Repository Demo](../../open-metadata-demos/in-memory-repository-demo)
+* [In Memory Repository Demo](http://github.com/odpi/egeria-samples/demos/in-memory-repository)
 
 ## Next steps
 

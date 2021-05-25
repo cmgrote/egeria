@@ -69,15 +69,22 @@ public class TestConsistentTypeDef extends RepositoryConformanceTestCase
         {
             if (metadataCollection != null)
             {
+                long start = System.currentTimeMillis();
                 TypeDef restAPITypeDef = metadataCollection.getTypeDefByGUID(workPad.getLocalServerUserId(),
                                                                              typeDef.getGUID());
+                long elapsedTime = System.currentTimeMillis() - start;
 
-
-                assertCondition((typeDef.equals(restAPITypeDef)),
+                /*
+                 * A full equality test is too strong because the type may be at a different version, in which case numeric version field will differ.
+                 * Test full equality only if the version is identical.
+                 */
+                assertCondition(( (typeDef.getVersion() != restAPITypeDef.getVersion()) || typeDef.equals(restAPITypeDef) ),
                                 getAssertionName(assertion1),
                                 typeDef.getName() + assertionMsg1,
                                 super.defaultProfileId,
-                                super.defaultRequirementId);
+                                super.defaultRequirementId,
+                                "getTypeDefByGUID",
+                                elapsedTime);
 
             }
 

@@ -20,6 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Like extends ElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     protected String     user       = null;
     protected boolean    isPublic   = false;
 
@@ -72,11 +74,11 @@ public class Like extends ElementHeader
 
 
     /**
-     * Return if this like is private ot the creating user.
+     * Return if this like is private to the creating user.
      *
      * @return boolean
      */
-    public boolean isPublic()
+    public boolean getIsPublic()
     {
         return isPublic;
     }
@@ -87,7 +89,7 @@ public class Like extends ElementHeader
      *
      * @param aPublic boolean
      */
-    public void setPublic(boolean aPublic)
+    public void setIsPublic(boolean aPublic)
     {
         isPublic = aPublic;
     }
@@ -125,7 +127,7 @@ public class Like extends ElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof Like))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -134,7 +136,19 @@ public class Like extends ElementHeader
             return false;
         }
         Like like = (Like) objectToCompare;
-        return isPublic() == like.isPublic() &&
-                Objects.equals(getUser(), like.getUser());
+        return isPublic == like.isPublic &&
+                       Objects.equals(getUser(), like.getUser());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getUser(), isPublic);
     }
 }

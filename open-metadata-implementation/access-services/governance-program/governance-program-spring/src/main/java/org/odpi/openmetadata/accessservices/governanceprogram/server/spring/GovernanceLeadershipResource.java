@@ -2,6 +2,8 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.governanceprogram.server.spring;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.accessservices.governanceprogram.rest.*;
 import org.odpi.openmetadata.accessservices.governanceprogram.server.GovernanceProgramRESTServices;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
@@ -9,13 +11,16 @@ import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * The GovernanceProgramOMASGovernanceLeadershipResource provides a Spring based server-side REST API
+ * The GovernanceLeadershipResource provides a Spring based server-side REST API
  * that supports the GovernanceLeadershipInterface.   It delegates each request to the
  * GovernanceProgramRESTServices.  This provides the server-side implementation of the Governance Program Open Metadata
  * Assess Service (OMAS) which is used to manage the full lifecycle of a governance program.
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/governance-program/users/{userId}/leadership")
+
+@Tag(name="Governance Program OMAS", description="The Governance Program OMAS provides APIs and events for tools and applications focused on defining a data strategy, planning support for a regulation and/or developing a governance program for the data landscape." +
+        "\n", externalDocs=@ExternalDocumentation(description="Governance Program Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/governance-program/"))
 
 public class GovernanceLeadershipResource
 {
@@ -40,7 +45,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers")
+    @PostMapping(path = "/governance-officers")
 
     public GUIDResponse createGovernanceOfficer(@PathVariable String                               serverName,
                                                 @PathVariable String                               userId,
@@ -65,7 +70,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers/{governanceOfficerGUID}")
+    @PostMapping(path = "/governance-officers/{governanceOfficerGUID}")
 
     public VoidResponse   updateGovernanceOfficer(@PathVariable String                               serverName,
                                                   @PathVariable String                               userId,
@@ -89,7 +94,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers/{governanceOfficerGUID}/delete")
+    @PostMapping(path = "/governance-officers/{governanceOfficerGUID}/delete")
 
     public VoidResponse   deleteGovernanceOfficer(@PathVariable String                                 serverName,
                                                   @PathVariable String                                 userId,
@@ -111,7 +116,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/governance-officers/{governanceOfficerGUID}")
+    @GetMapping(path = "/governance-officers/{governanceOfficerGUID}")
 
     public GovernanceOfficerResponse getGovernanceOfficerByGUID(@PathVariable String     serverName,
                                                                 @PathVariable String     userId,
@@ -133,7 +138,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/governance-officers/by-appointment-id/{appointmentId}")
+    @GetMapping(path = "/governance-officers/by-appointment-id/{appointmentId}")
 
     public GovernanceOfficerResponse   getGovernanceOfficerByAppointmentId(@PathVariable String     serverName,
                                                                            @PathVariable String     userId,
@@ -152,7 +157,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/governance-officers")
+    @GetMapping(path = "/governance-officers")
 
     public GovernanceOfficerListResponse  getGovernanceOfficers(@PathVariable String     serverName,
                                                                 @PathVariable String     userId)
@@ -170,7 +175,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/governance-officers/active")
+    @GetMapping(path = "/governance-officers/active")
 
     public GovernanceOfficerListResponse  getActiveGovernanceOfficers(@PathVariable String     serverName,
                                                                       @PathVariable String     userId)
@@ -193,7 +198,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers/by-domain")
+    @PostMapping(path = "/governance-officers/by-domain")
 
     public GovernanceOfficerListResponse  getGovernanceOfficersByDomain(@PathVariable String                        serverName,
                                                                         @PathVariable String                        userId,
@@ -215,7 +220,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers/{governanceOfficerGUID}/appoint")
+    @PostMapping(path = "/governance-officers/{governanceOfficerGUID}/appoint")
 
     public VoidResponse appointGovernanceOfficer(@PathVariable String                  serverName,
                                                  @PathVariable String                  userId,
@@ -239,7 +244,7 @@ public class GovernanceLeadershipResource
      * PropertyServerException the server is not available or
      * UserNotAuthorizedException the calling user is not authorized to issue the call.
      */
-    @RequestMapping(method = RequestMethod.POST, path = "/governance-officers/{governanceOfficerGUID}/relieve")
+    @PostMapping(path = "/governance-officers/{governanceOfficerGUID}/relieve")
 
     public VoidResponse relieveGovernanceOfficer(@PathVariable String                  serverName,
                                                  @PathVariable String                  userId,

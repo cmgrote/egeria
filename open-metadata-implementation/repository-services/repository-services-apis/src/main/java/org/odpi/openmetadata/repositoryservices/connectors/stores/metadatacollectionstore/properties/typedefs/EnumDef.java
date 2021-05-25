@@ -23,6 +23,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class EnumDef extends AttributeTypeDef
 {
+    private static final long    serialVersionUID = 1L;
+
     private List<EnumElementDef> elementDefs    = null;
     private EnumElementDef       defaultValue   = null;
 
@@ -47,7 +49,11 @@ public class EnumDef extends AttributeTypeDef
 
         if (template != null)
         {
-            elementDefs = new ArrayList<>(template.getElementDefs());
+            if (template.getElementDefs() != null)
+            {
+                elementDefs = new ArrayList<>(template.getElementDefs());
+            }
+
             defaultValue = template.getDefaultValue();
         }
     }
@@ -72,6 +78,10 @@ public class EnumDef extends AttributeTypeDef
     public List<EnumElementDef> getElementDefs()
     {
         if (elementDefs == null)
+        {
+            return null;
+        }
+        else if (elementDefs.isEmpty())
         {
             return null;
         }
@@ -127,10 +137,10 @@ public class EnumDef extends AttributeTypeDef
 
 
     /**
-     * Verify that supplied object has the same properties.
+     * Validate that an object is equal depending on their stored values.
      *
-     * @param objectToCompare object to test
-     * @return result
+     * @param objectToCompare object
+     * @return boolean result
      */
     @Override
     public boolean equals(Object objectToCompare)
@@ -139,7 +149,7 @@ public class EnumDef extends AttributeTypeDef
         {
             return true;
         }
-        if (!(objectToCompare instanceof EnumDef))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -148,7 +158,19 @@ public class EnumDef extends AttributeTypeDef
             return false;
         }
         EnumDef enumDef = (EnumDef) objectToCompare;
-        return Objects.equals(getElementDefs(), enumDef.getElementDefs()) &&
-                Objects.equals(getDefaultValue(), enumDef.getDefaultValue());
+        return Objects.equals(elementDefs, enumDef.elementDefs) &&
+                       Objects.equals(defaultValue, enumDef.defaultValue);
+    }
+
+
+    /**
+     * Return a hash code based on the values of this object.
+     *
+     * @return in hash code
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), elementDefs, defaultValue);
     }
 }

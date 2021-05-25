@@ -15,7 +15,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
 
 /**
- * OwnerRequestBody provides a structure for passing information about an asset owner as
+ * OriginRequestBody provides a structure for passing information about an asset's origin as
  * a request body over a REST API.
  */
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
@@ -23,6 +23,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class OriginRequestBody extends OCFOMASAPIRequestBody
 {
+    private static final long    serialVersionUID = 1L;
+
     private String              organizationGUID       = null;
     private String              businessCapabilityGUID = null;
     private Map<String, String> otherOriginValues      = null;

@@ -2,20 +2,22 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.governanceservers.dataengineproxy.processor;
 
-import org.odpi.openmetadata.accessservices.dataengine.client.DataEngineImpl;
+import org.odpi.openmetadata.accessservices.dataengine.client.DataEngineClient;
+import org.odpi.openmetadata.accessservices.dataengine.model.*;
+import org.odpi.openmetadata.accessservices.dataengine.model.Process;
 import org.odpi.openmetadata.adminservices.configuration.properties.DataEngineProxyConfig;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.*;
 import org.odpi.openmetadata.governanceservers.dataengineproxy.auditlog.DataEngineProxyAuditCode;
-import org.odpi.openmetadata.openconnectors.governancedaemonconnectors.dataengineproxy.DataEngineConnectorBase;
-import org.odpi.openmetadata.openconnectors.governancedaemonconnectors.dataengineproxy.DataEngineConnectorErrorCode;
-import org.odpi.openmetadata.openconnectors.governancedaemonconnectors.dataengineproxy.model.*;
+import org.odpi.openmetadata.governanceservers.dataengineproxy.auditlog.DataEngineProxyErrorCode;
+import org.odpi.openmetadata.governanceservers.dataengineproxy.connectors.DataEngineConnectorBase;
 import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Class to handle periodically polling a Data Engine for changes, for those data engines that do not
@@ -27,90 +29,57 @@ public class DataEngineProxyChangePoller implements Runnable {
 
     private OMRSAuditLog auditLog;
     private DataEngineProxyConfig dataEngineProxyConfig;
-    private DataEngineImpl dataEngineOMASClient;
+    private DataEngineClient dataEngineOMASClient;
     private DataEngineConnectorBase connector;
-    private String engineGuid;
+    private String userId;
 
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
+    public void start() {
+        Thread worker = new Thread(this);
+        worker.start();
+    }
+
+    public void stop() {
+        running.set(false);
+    }
+
+    /**
+     * Default constructor
+     *
+     * @param connector             Data Engine Connector through which to connect to the data engine to poll
+     * @param userId                the user ID used to poll for changes against the connector
+     * @param dataEngineProxyConfig configuration of the Data Engine (Proxy)
+     * @param dataEngineOMASClient  Data Engine OMAS client through which to push any changes into Egeria
+     * @param auditLog              audit log through which to record activities
+     */
     public DataEngineProxyChangePoller(DataEngineConnectorBase connector,
+                                       String userId,
                                        DataEngineProxyConfig dataEngineProxyConfig,
-                                       DataEngineImpl dataEngineOMASClient,
+                                       DataEngineClient dataEngineOMASClient,
                                        OMRSAuditLog auditLog) {
 
         final String methodName = "DataEngineProxyChangePoller";
 
         this.connector = connector;
+        this.userId = userId;
         this.dataEngineProxyConfig = dataEngineProxyConfig;
         this.dataEngineOMASClient = dataEngineOMASClient;
         this.auditLog = auditLog;
 
-        DataEngineProxyAuditCode auditCode;
+        this.auditLog.logMessage(methodName, DataEngineProxyAuditCode.INIT_POLLING.getMessageDefinition());
 
-        // Start the connector
+        // Retrieve the base information from the connector
         if (connector != null) {
             try {
-                connector.start();
-                DataEngineSoftwareServerCapability dataEngineDetails = connector.getDataEngineDetails();
-                engineGuid = dataEngineOMASClient.createSoftwareServerCapability(dataEngineDetails.getUserId(), dataEngineDetails.getSoftwareServerCapability());
-            } catch (InvalidParameterException | PropertyServerException e) {
-                DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.OMAS_CONNECTION_ERROR;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-                throw new OCFRuntimeException(
-                        errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction(),
-                        e
-                );
+                SoftwareServerCapability dataEngineDetails = connector.getDataEngineDetails();
+                dataEngineOMASClient.createExternalDataEngine(userId, dataEngineDetails);
+                dataEngineOMASClient.setExternalSourceName(dataEngineDetails.getQualifiedName());
+            } catch (InvalidParameterException | PropertyServerException | ConnectorCheckedException e) {
+                this.auditLog.logException(methodName, DataEngineProxyAuditCode.OMAS_CONNECTION_ERROR.getMessageDefinition(), e);
             } catch (UserNotAuthorizedException e) {
-                DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.USER_NOT_AUTHORIZED;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-                throw new OCFRuntimeException(
-                        errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction(),
-                        e
-                );
-            } catch (ConnectorCheckedException e) {
-                log.error("Error in starting the Data Engine Proxy connector.", e);
+                this.auditLog.logMessage(methodName, DataEngineProxyAuditCode.USER_NOT_AUTHORIZED.getMessageDefinition("setup external data engine"));
             }
-        } else {
-            DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.NO_CONFIG;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-            throw new OCFRuntimeException(
-                    errorCode.getHTTPErrorCode(),
-                    this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction()
-            );
-        }
-
-        if (connector != null && connector.isActive()) {
-            auditCode = DataEngineProxyAuditCode.SERVICE_INITIALIZED;
-            this.auditLog.logRecord("Initializing",
-                    auditCode.getLogMessageId(),
-                    auditCode.getSeverity(),
-                    auditCode.getFormattedLogMessage(dataEngineProxyConfig.getDataEngineProxyProvider()),
-                    null,
-                    auditCode.getSystemAction(),
-                    auditCode.getUserAction());
-        } else {
-            DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.NO_CONFIG;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-            throw new OCFRuntimeException(
-                    errorCode.getHTTPErrorCode(),
-                    this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction()
-            );
         }
 
     }
@@ -123,82 +92,146 @@ public class DataEngineProxyChangePoller implements Runnable {
 
         final String methodName = "ProcessPollThread::run";
 
-        while (true) {
+        running.set(true);
+        while (running.get()) {
             try {
+
+                // Start with the last change synchronization date and time
                 Date changesLastSynced = connector.getChangesLastSynced();
+
+                // Then look for the oldest change available in the Data Engine since that time
+                Date oldestSinceSync = connector.getOldestChangeSince(changesLastSynced);
                 Date changesCutoff = new Date();
-                if (log.isInfoEnabled()) { log.info("Polling for changes since: {}", changesLastSynced); }
-                List<DataEngineSchemaType> changedSchemaTypes = connector.getChangedSchemaTypes(changesLastSynced, changesCutoff);
-                if (changedSchemaTypes != null) {
-                    for (DataEngineSchemaType changedSchemaType : changedSchemaTypes) {
-                        dataEngineOMASClient.createSchemaType(changedSchemaType.getUserId(), changedSchemaType.getSchemaType());
-                    }
+                if (oldestSinceSync == null) {
+                    // If there were no changes since the last sync time, default to the last sync time
+                    oldestSinceSync = changesLastSynced;
+                } else {
+                    // If there are any changes since that last sync time, calculate a batch window from that oldest
+                    // change to the maximum amount of time to include in a batch
+                    long window = oldestSinceSync.getTime() + (dataEngineProxyConfig.getBatchWindowInSeconds() * 1000L);
+                    long now = changesCutoff.getTime();
+                    // We will look for changes up to that batch window size or the current moment, whichever is sooner
+                    changesCutoff = new Date(Math.min(window, now));
                 }
-                List<DataEnginePortImplementation> changedPortImplementations = connector.getChangedPortImplementations(changesLastSynced, changesCutoff);
-                if (changedPortImplementations != null) {
-                    for (DataEnginePortImplementation changedPortImplementation : changedPortImplementations) {
-                        dataEngineOMASClient.createPortImplementation(changedPortImplementation.getUserId(), changedPortImplementation.getPortImplementation());
-                    }
-                }
-                List<DataEnginePortAlias> changedPortAliases = connector.getChangedPortAliases(changesLastSynced, changesCutoff);
-                if (changedPortAliases != null) {
-                    for (DataEnginePortAlias changedPortAlias : changedPortAliases) {
-                        dataEngineOMASClient.createPortAlias(changedPortAlias.getUserId(), changedPortAlias.getPortAlias());
-                    }
-                }
-                if (log.isInfoEnabled()) { log.info(" ... getting changed processes."); }
-                List<DataEngineProcess> changedProcesses = connector.getChangedProcesses(changesLastSynced, changesCutoff);
-                if (changedProcesses != null) {
-                    for (DataEngineProcess changedProcess : changedProcesses) {
-                        dataEngineOMASClient.createProcess(changedProcess.getUserId(), changedProcess.getProcess());
-                    }
-                    if (log.isInfoEnabled()) { log.info(" ... completing process changes."); }
-                }
-                if (log.isInfoEnabled()) { log.info(" ... getting changed lineage mappings."); }
-                List<DataEngineLineageMappings> changedLineageMappings = connector.getChangedLineageMappings(changesLastSynced, changesCutoff);
-                if (changedLineageMappings != null) {
-                    for (DataEngineLineageMappings changedLineageMapping : changedLineageMappings) {
-                        dataEngineOMASClient.addLineageMappings(changedLineageMapping.getUserId(), new ArrayList<>(changedLineageMapping.getLineageMappings()));
-                    }
-                }
+
+                ensureSourceNameIsSet();
+
+                this.auditLog.logMessage(methodName,
+                        DataEngineProxyAuditCode.POLLING.getMessageDefinition(
+                                oldestSinceSync == null ? "0" : oldestSinceSync.toString(),
+                                changesCutoff.toString()
+                        ));
+
+                // Send the changes, and ordering here is important
+                upsertSchemaTypes(oldestSinceSync, changesCutoff);
+                upsertProcesses(oldestSinceSync, changesCutoff);
+                upsertProcessHierarchies(oldestSinceSync, changesCutoff);
+                upsertLineageMappings(oldestSinceSync, changesCutoff);
+
+                // Update the timestamp at which changes were last synced
                 connector.setChangesLastSynced(changesCutoff);
-                Thread.sleep(dataEngineProxyConfig.getPollIntervalInSeconds() * 1000);
-            } catch (InterruptedException e) {
-                log.error("Thread was interrupted.", e);
-                break;
-            } catch (InvalidParameterException | PropertyServerException e) {
-                log.error("Exception caught!", e);
-                DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.OMAS_CONNECTION_ERROR;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-                throw new OCFRuntimeException(
-                        errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction(),
-                        e
-                );
+
+                // Sleep for the poll interval before continuing with the next poll
+                Thread.sleep(dataEngineProxyConfig.getPollIntervalInSeconds() * 1000L);
+
+            } catch (InvalidParameterException | PropertyServerException | ConnectorCheckedException e ) {
+                this.auditLog.logException(methodName, DataEngineProxyAuditCode.OMAS_CONNECTION_ERROR.getMessageDefinition(), e);
             } catch (UserNotAuthorizedException e) {
-                log.error("Exception caught!", e);
-                DataEngineConnectorErrorCode errorCode = DataEngineConnectorErrorCode.USER_NOT_AUTHORIZED;
-                String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-                throw new OCFRuntimeException(
-                        errorCode.getHTTPErrorCode(),
-                        this.getClass().getName(),
-                        methodName,
-                        errorMessage,
-                        errorCode.getSystemAction(),
-                        errorCode.getUserAction(),
-                        e
-                );
-            } catch (OCFCheckedExceptionBase e) {
-                log.error("There was a problem updating the last sync time -- will revert to previous sync time at next synchronization.", e);
+                this.auditLog.logMessage(methodName, DataEngineProxyAuditCode.USER_NOT_AUTHORIZED.getMessageDefinition("send changes"));
             } catch (Exception e) {
-                log.error("Fatal error occurred during processing.", e);
+                throw new OCFRuntimeException(DataEngineProxyErrorCode.UNKNOWN_ERROR.getMessageDefinition(), this.getClass().getName(), methodName, e);
             }
         }
 
+    }
+
+    private void ensureSourceNameIsSet() {
+        if (dataEngineOMASClient.getExternalSourceName() == null) {
+            dataEngineOMASClient.setExternalSourceName(connector.getDataEngineDetails().getQualifiedName());
+        }
+    }
+
+    private void upsertSchemaTypes(Date changesLastSynced,
+                                   Date changesCutoff) throws
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+            ConnectorCheckedException {
+        final String methodName = "upsertSchemaTypes";
+        final String type = "SchemaTypes";
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_START.getMessageDefinition(type));
+        List<SchemaType> changedSchemaTypes = connector.getChangedSchemaTypes(changesLastSynced, changesCutoff);
+        if (changedSchemaTypes != null) {
+            for (SchemaType changedSchemaType : changedSchemaTypes) {
+                dataEngineOMASClient.createOrUpdateSchemaType(userId, changedSchemaType);
+            }
+        }
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_FINISH.getMessageDefinition(type));
+    }
+
+    private void upsertProcesses(Date changesLastSynced,
+                                 Date changesCutoff) throws
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+            ConnectorCheckedException {
+        final String methodName = "upsertProcesses";
+        final String type = "Processes";
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_START.getMessageDefinition(type));
+        List<Process> changedProcesses = connector.getChangedProcesses(changesLastSynced, changesCutoff);
+        if (changedProcesses != null && !changedProcesses.isEmpty()) {
+            if (dataEngineProxyConfig.isEventsClientEnabled()) {
+                // If we are using the event-based interface, send the processes one-by-one rather than as an array
+                for (Process changedProcess : changedProcesses) {
+                    dataEngineOMASClient.createOrUpdateProcesses(userId, Collections.singletonList(changedProcess));
+                }
+            } else{
+                dataEngineOMASClient.createOrUpdateProcesses(userId, changedProcesses);
+            }
+        }
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_FINISH.getMessageDefinition(type));
+    }
+
+    private void upsertProcessHierarchies(Date changesLastSynced,
+                                          Date changesCutoff) throws
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+            ConnectorCheckedException {
+        final String methodName = "upsertProcessHierarchies";
+        final String type = "ProcessHierarchies";
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_START.getMessageDefinition(type));
+        List<ProcessHierarchy> changedProcessHierarchies = connector.getChangedProcessHierarchies(changesLastSynced, changesCutoff);
+        if (changedProcessHierarchies != null) {
+            for (ProcessHierarchy changedProcessHierarchy : changedProcessHierarchies) {
+                dataEngineOMASClient.addProcessHierarchy(userId, changedProcessHierarchy);
+            }
+        }
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_FINISH.getMessageDefinition(type));
+    }
+
+    private void upsertLineageMappings(Date changesLastSynced,
+                                       Date changesCutoff) throws
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+            ConnectorCheckedException {
+        final String methodName = "upsertLineageMappings";
+        final String type = "LineageMappings";
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_START.getMessageDefinition(type));
+        List<LineageMapping> changedLineageMappings = connector.getChangedLineageMappings(changesLastSynced, changesCutoff);
+        if (changedLineageMappings != null && changedLineageMappings.size() > 0) {
+            if (dataEngineProxyConfig.isEventsClientEnabled()) {
+                for (LineageMapping changedLineageMapping : changedLineageMappings) {
+                    // If we are using the event-based interface, send the lineage mappings one-by-one rather than as
+                    // an array
+                    dataEngineOMASClient.addLineageMappings(userId, Collections.singletonList(changedLineageMapping));
+                }
+            } else {
+                dataEngineOMASClient.addLineageMappings(userId, changedLineageMappings);
+            }
+        }
+        auditLog.logMessage(methodName, DataEngineProxyAuditCode.POLLING_TYPE_FINISH.getMessageDefinition(type));
     }
 
 }

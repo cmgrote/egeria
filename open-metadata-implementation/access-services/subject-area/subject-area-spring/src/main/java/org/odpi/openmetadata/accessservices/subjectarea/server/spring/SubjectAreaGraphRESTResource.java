@@ -3,18 +3,15 @@
 package org.odpi.openmetadata.accessservices.subjectarea.server.spring;
 
 
-import org.odpi.openmetadata.accessservices.subjectarea.properties.enums.Status;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.enums.StatusFilter;
-import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.graph.LineType;
-import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.graph.NodeType;
+import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.graph.Graph;
 import org.odpi.openmetadata.accessservices.subjectarea.responses.SubjectAreaOMASAPIResponse;
 import org.odpi.openmetadata.accessservices.subjectarea.server.services.SubjectAreaGraphRESTServices;
-import org.odpi.openmetadata.accessservices.subjectarea.server.services.SubjectAreaRESTServicesInstance;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -23,33 +20,33 @@ import java.util.Set;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/access-services/subject-area")
-public class SubjectAreaGraphRESTResource extends SubjectAreaRESTServicesInstance
-{
-    private SubjectAreaGraphRESTServices restAPI = new SubjectAreaGraphRESTServices();
+@Tag(name="Subject Area OMAS", description="The Subject Area OMAS supports subject matter experts who are documenting their knowledge about a particular subject. This includes glossary terms, reference data, validation rules.", externalDocs=@ExternalDocumentation(description="Subject Area Open Metadata Access Service (OMAS)",url="https://egeria.odpi.org/open-metadata-implementation/access-services/subject-area/"))
+public class SubjectAreaGraphRESTResource {
+    private final SubjectAreaGraphRESTServices restAPI = new SubjectAreaGraphRESTServices();
     /**
      * Default constructor
      */
     public SubjectAreaGraphRESTResource() {
-        //SubjectAreaRESTServicesInstance registers this omas.
+
     }
 
     /**
-     * Get the graph of nodes and lines radiating out from a node.
+     * Get the graph of nodes and relationships radiating out from a node.
      *
-     * Return the nodes and lines that radiate out from the supplied node (identified by a GUID).
-     * The results are scoped by types of Lines, types of nodes and classifications as well as level.
+     * Return the nodes and relationships that radiate out from the supplied node (identified by a GUID).
+     * The results are scoped by types of relationships, types of nodes and classifications as well as level.
      *
      * @param serverName         serverName under which this request is performed, this is used in multi tenanting to identify the tenant
      * @param userId  userId under which the request is performed
      * @param guid the starting point of the query.
      * @param nodeFilterStr Comma separated list of node names to include in the query results.  Null means include
      *                          all entities found, irrespective of their type.
-     * @param lineFilterStr comma separated list of line names to include in the query results.  Null means include
-     *                                all lines found, irrespective of their type.
+     * @param relationshipFilterStr comma separated list of relationship names to include in the query results.  Null means include
+     *                                all relationships found, irrespective of their type.
      * @param asOfTime Requests a historical query of the relationships for the entity.  Null means return the
      *                 present values.
      * @param statusFilter By default only active instances are returned. Specify ALL to see all instance in any status.
-     * @param level the number of the lines (relationships) out from the starting node that the query will traverse to
+     * @param level the number of the relationships (relationships) out from the starting node that the query will traverse to
      *              gather results. If not specified then it defaults to 3.
      * @return A graph of nodeTypes.
      *
@@ -61,16 +58,16 @@ public class SubjectAreaGraphRESTResource extends SubjectAreaRESTServicesInstanc
      * <li> FunctionNotSupportedException        Function not supported this indicates that a find was issued but the repository does not implement find functionality in some way.</li>
      * </ul>
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/users/{userId}/nodes/{guid}")
-    public  SubjectAreaOMASAPIResponse getGraph(@PathVariable String serverName,
-                                                @PathVariable String userId,
-                                                @PathVariable String guid,
-                                                @RequestParam(value = "asOfTime", required=false) Date asOfTime,
-                                                @RequestParam(value = "nodeFilter", required=false)String nodeFilterStr,
-                                                @RequestParam(value = "lineFilter", required=false)String lineFilterStr,
-                                                @RequestParam(value = "statusFilter", required=false)StatusFilter statusFilter,   // may need to extend this for controlled terms
-                                                @RequestParam(value = "level", required=false) Integer level ) {
+    @GetMapping( path = "/users/{userId}/nodes/{guid}")
+    public SubjectAreaOMASAPIResponse<Graph> getGraph(@PathVariable String serverName,
+                                                      @PathVariable String userId,
+                                                      @PathVariable String guid,
+                                                      @RequestParam(value = "asOfTime", required=false) Date asOfTime,
+                                                      @RequestParam(value = "nodeFilter", required=false)String nodeFilterStr,
+                                                      @RequestParam(value = "relationshipFilter", required=false)String relationshipFilterStr,
+                                                      @RequestParam(value = "statusFilter", required=false)StatusFilter statusFilter,   // may need to extend this for controlled terms
+                                                      @RequestParam(value = "level", required=false) Integer level ) {
 
-        return restAPI.getGraph(serverName,userId,guid,asOfTime,nodeFilterStr,lineFilterStr,statusFilter,level);
+        return restAPI.getGraph(serverName,userId,guid,asOfTime,nodeFilterStr,relationshipFilterStr,statusFilter,level);
     }
 }

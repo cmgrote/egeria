@@ -1,17 +1,19 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
-# Create port implementation
+# Create processes
 
-Create a Process, with an array of port implementations, port aliases and lineage mappings.
-For each port, it creates the associated schema type and relationships.
+Create a list of Process, with port implementations, port aliases and lineage mappings.
+For each port, it creates the associated schema type and columns.
 
 Check [create-port-implementation](create-port-implementation.md), [create-port-alias](create-port-alias.md) 
 and [create-schema-types](create-schema-type.md) for examples of the more granular payloads.
 
-```
+More examples can be found in the
+[sample collection](../../../docs/samples/collections/DE_endpoints.postman_collection.json)
 
-POST {{omas-url}}/servers/{{server-id-omas}}/open-metadata/access-services/data-engine/users/{{user-id}}/processes
+```
+POST {serverURLRoot}/servers/{serverName}/open-metadata/access-services/data-engine/users/{userId}/processes
 
 {
   "processes": [
@@ -69,13 +71,18 @@ POST {{omas-url}}/servers/{{server-id-omas}}/open-metadata/access-services/data-
         }
       ],
       "portAliases": []
-    }]
+    }],
+    "externalSourceName": "dataEngine"
  }
-
-GUIDListResponse - response containing the list of created processes guids and
-the list of failed processes guids, with status and error message if failing
-
 ```
+
+`externalSourceName` - qualifiedName of the external data engine tool.
+ Note that you need to register the data engine tool with [register-data-engine-tool](register-data-engine-tool.md) 
+ before creating any process.
+`GUIDListResponse` - response containing the list of created processes GUIDs and
+the list of failed processes GUId, with status and error message if failing.
+
+
 ----
 License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
 Copyright Contributors to the ODPi Egeria project.

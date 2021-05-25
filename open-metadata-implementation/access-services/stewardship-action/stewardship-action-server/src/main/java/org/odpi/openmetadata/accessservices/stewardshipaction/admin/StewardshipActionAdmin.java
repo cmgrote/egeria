@@ -2,13 +2,14 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.stewardshipaction.admin;
 
-import org.odpi.openmetadata.accessservices.stewardshipaction.auditlog.StewardshipActionAuditCode;
+import org.odpi.openmetadata.accessservices.stewardshipaction.ffdc.StewardshipActionAuditCode;
 import org.odpi.openmetadata.accessservices.stewardshipaction.listener.StewardshipActionOMRSTopicListener;
 import org.odpi.openmetadata.accessservices.stewardshipaction.server.StewardshipActionServicesInstance;
 import org.odpi.openmetadata.adminservices.configuration.properties.AccessServiceConfig;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceAdmin;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
 import org.odpi.openmetadata.adminservices.ffdc.exception.OMAGConfigurationErrorException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 
@@ -20,9 +21,9 @@ import java.util.List;
  */
 public class StewardshipActionAdmin extends AccessServiceAdmin
 {
-    private OMRSAuditLog                       auditLog            = null;
-    private StewardshipActionServicesInstance  instance            = null;
-    private String                             serverName          = null;
+    private AuditLog                          auditLog   = null;
+    private StewardshipActionServicesInstance instance   = null;
+    private String                            serverName = null;
 
     /**
      * Default constructor
@@ -42,37 +43,30 @@ public class StewardshipActionAdmin extends AccessServiceAdmin
      * @param serverUserName  user id to use on OMRS calls where there is no end user.
      * @throws OMAGConfigurationErrorException invalid parameters in the configuration properties.
      */
+    @Override
     public void initialize(AccessServiceConfig     accessServiceConfig,
                            OMRSTopicConnector      omrsTopicConnector,
                            OMRSRepositoryConnector repositoryConnector,
-                           OMRSAuditLog            auditLog,
+                           AuditLog                auditLog,
                            String                  serverUserName) throws OMAGConfigurationErrorException
     {
-        final String               actionDescription = "initialize";
-        StewardshipActionAuditCode auditCode;
+        final String actionDescription = "initialize";
 
-        auditCode = StewardshipActionAuditCode.SERVICE_INITIALIZING;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, StewardshipActionAuditCode.SERVICE_INITIALIZING.getMessageDefinition());
+
+        this.auditLog = auditLog;
 
         try
         {
-            this.auditLog = auditLog;
-
             List<String>  supportedZones = this.extractSupportedZones(accessServiceConfig.getAccessServiceOptions(),
                                                                       accessServiceConfig.getAccessServiceName(),
                                                                       auditLog);
 
             this.instance = new StewardshipActionServicesInstance(repositoryConnector,
-                                                              supportedZones,
-                                                              auditLog,
-                                                              serverUserName,
-                                                              repositoryConnector.getMaxPageSize());
+                                                                  supportedZones,
+                                                                  auditLog,
+                                                                  serverUserName,
+                                                                  repositoryConnector.getMaxPageSize());
             this.serverName = instance.getServerName();
 
             /*
@@ -95,29 +89,24 @@ public class StewardshipActionAdmin extends AccessServiceAdmin
                                                   auditLog);
             }
 
-            auditCode = StewardshipActionAuditCode.SERVICE_INITIALIZED;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(serverName),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(actionDescription,
+                                StewardshipActionAuditCode.SERVICE_INITIALIZED.getMessageDefinition(serverName),
+                                accessServiceConfig.toString());
         }
         catch (OMAGConfigurationErrorException error)
         {
             throw error;
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            auditCode = StewardshipActionAuditCode.SERVICE_INSTANCE_FAILURE;
-            auditLog.logRecord(actionDescription,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(error.getMessage()),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logException(actionDescription,
+                                  StewardshipActionAuditCode.SERVICE_INSTANCE_FAILURE.getMessageDefinition(error.getMessage()),
+                                  accessServiceConfig.toString(),
+                                  error);
+
+            super.throwUnexpectedInitializationException(actionDescription,
+                                                         AccessServiceDescription.STEWARDSHIP_ACTION_OMAS.getAccessServiceFullName(),
+                                                         error);
         }
     }
 
@@ -125,23 +114,16 @@ public class StewardshipActionAdmin extends AccessServiceAdmin
     /**
      * Shutdown the access service.
      */
+    @Override
     public void shutdown()
     {
-        final String            actionDescription = "shutdown";
-        StewardshipActionAuditCode  auditCode;
+        final String actionDescription = "shutdown";
 
         if (instance != null)
         {
             this.instance.shutdown();
         }
 
-        auditCode = StewardshipActionAuditCode.SERVICE_SHUTDOWN;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(serverName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, StewardshipActionAuditCode.SERVICE_SHUTDOWN.getMessageDefinition(serverName));
     }
 }

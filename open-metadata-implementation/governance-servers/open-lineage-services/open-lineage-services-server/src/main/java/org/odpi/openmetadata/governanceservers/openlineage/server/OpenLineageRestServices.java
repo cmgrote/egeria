@@ -2,13 +2,14 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.governanceservers.openlineage.server;
 
-
+import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
+import org.odpi.openmetadata.governanceservers.openlineage.ffdc.OpenLineageException;
+import org.odpi.openmetadata.governanceservers.openlineage.handlers.OpenLineageHandler;
 import org.odpi.openmetadata.governanceservers.openlineage.model.Scope;
-import org.odpi.openmetadata.governanceservers.openlineage.model.View;
-import org.odpi.openmetadata.governanceservers.openlineage.services.GraphServices;
-import org.odpi.openmetadata.governanceservers.openlineage.mockdata.MockGraphGenerator;
-import org.odpi.openmetadata.governanceservers.openlineage.responses.VoidResponse;
-import org.odpi.openmetadata.governanceservers.openlineage.responses.ffdc.exceptions.PropertyServerException;
+import org.odpi.openmetadata.governanceservers.openlineage.responses.LineageVertexResponse;
+import org.odpi.openmetadata.governanceservers.openlineage.responses.LineageResponse;
+import org.odpi.openmetadata.governanceservers.openlineage.util.OpenLineageExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,59 +18,61 @@ public class OpenLineageRestServices {
 
     private static final Logger log = LoggerFactory.getLogger(OpenLineageRestServices.class);
     private final OpenLineageInstanceHandler instanceHandler = new OpenLineageInstanceHandler();
+    private OpenLineageExceptionHandler openLineageExceptionHandler = new OpenLineageExceptionHandler();
 
-    public VoidResponse dumpGraph(String serverName, String userId, String graph) {
-        VoidResponse response = new VoidResponse();
 
+    public LineageResponse lineage(String serverName, String userId, Scope scope, String guid, String displayNameMustContain,
+                                   boolean includeProcesses) {
+        LineageResponse response = new LineageResponse();
+        final String methodName = "OpenLineageRestServices.lineage";
+        final String debugMessage = "An exception occurred during a lineage HTTP request";
         try {
-            GraphServices graphServices = instanceHandler.queryHandler(serverName);
-            graphServices.dumpGraph(graph);
-        } catch (PropertyServerException e) {
-            response.setExceptionClassName(e.getReportingClassName());
-            response.setExceptionErrorMessage(e.getReportedErrorMessage());
-            response.setRelatedHTTPCode(e.getReportedHTTPCode());
-            response.setExceptionUserAction(e.getReportedUserAction());
-        }
-
-        return response;
-    }
-
-    public String exportGraph(String serverName, String userId, String graph) {
-        String response = "";
-        try {
-            GraphServices graphServices = instanceHandler.queryHandler(serverName);
-            response = graphServices.exportGraph(graph);
-        } catch (PropertyServerException e) {
-            log.error(e.getMessage());
-        }
-        return response;
-    }
-
-
-    public String lineage(String serverName, String userId, String graph, Scope scope, View view, String guid) {
-        String response = "";
-        try {
-            GraphServices graphServices = instanceHandler.queryHandler(serverName);
-            response = graphServices.lineage(graph, scope, view, guid);
-        } catch (PropertyServerException e) {
-            log.error(e.getMessage());
+            OpenLineageHandler openLineageHandler = instanceHandler.getOpenLineageHandler(userId,
+                    serverName,
+                    methodName);
+            response = openLineageHandler.lineage(scope, guid, displayNameMustContain, includeProcesses);
+        } catch (InvalidParameterException e) {
+            openLineageExceptionHandler.captureInvalidParameterException(response, e);
+            log.debug(debugMessage, e);
+        } catch (org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException e) {
+            openLineageExceptionHandler.capturePropertyServerException(response, e);
+            log.debug(debugMessage, e);
+        } catch (UserNotAuthorizedException e) {
+            openLineageExceptionHandler.captureUserNotAuthorizedException(response, e);
+            log.debug(debugMessage, e);
+        } catch (OpenLineageException e) {
+            openLineageExceptionHandler.captureOpenLineageException(response, e);
+            log.debug(debugMessage, e);
+        }catch (Exception e) {
+            openLineageExceptionHandler.captureThrowable(response, e, methodName);
+            log.debug(debugMessage, e);
         }
         return response;
     }
 
-    public VoidResponse generateGraph(String serverName, String userId) {
-        VoidResponse response = new VoidResponse();
-
+    public LineageVertexResponse getEntityDetails(String serverName, String userId, String guid) {
+        LineageVertexResponse response = new LineageVertexResponse();
+        final String methodName = "OpenLineageRestServices.getEntityDetails";
+        final String debugMessage = "An exception occurred during a getEntityDetails HTTP request";
         try {
-            MockGraphGenerator mockGraphGenerator = instanceHandler.mockGraphGenerator(serverName);
-            mockGraphGenerator.generate();
-        } catch (PropertyServerException e) {
-            response.setExceptionClassName(e.getReportingClassName());
-            response.setExceptionErrorMessage(e.getReportedErrorMessage());
-            response.setRelatedHTTPCode(e.getReportedHTTPCode());
-            response.setExceptionUserAction(e.getReportedUserAction());
+            OpenLineageHandler openLineageHandler = instanceHandler.getOpenLineageHandler(userId, serverName, methodName);
+            response = openLineageHandler.getEntityDetails(guid);
+        } catch (InvalidParameterException e) {
+            openLineageExceptionHandler.captureInvalidParameterException(response, e);
+            log.debug(debugMessage, e);
+        } catch (org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException e) {
+            openLineageExceptionHandler.capturePropertyServerException(response, e);
+            log.debug(debugMessage, e);
+        } catch (UserNotAuthorizedException e) {
+            openLineageExceptionHandler.captureUserNotAuthorizedException(response, e);
+            log.debug(debugMessage, e);
+        } catch (OpenLineageException e) {
+            openLineageExceptionHandler.captureOpenLineageException(response, e);
+            log.debug(debugMessage, e);
+        }catch (Exception e) {
+            openLineageExceptionHandler.captureThrowable(response, e, methodName);
+            log.debug(debugMessage, e);
         }
-
         return response;
     }
 }

@@ -7,21 +7,37 @@
     <parent>
         <artifactId>data-platform-services</artifactId>
         <groupId>org.odpi.egeria</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>2.10-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <scm>
+        <connection>scm:git:git://github.com/odpi/egeria.git</connection>
+        <developerConnection>scm:git:ssh://github.com/odpi/egeria.git</developerConnection>
+        <url>http://github.com/odpi/egeria/tree/master</url>
+    </scm>
+
     <artifactId>data-platform-services-server</artifactId>
 
+    <name>Data Platform Services Server</name>
+    <description>The implementation of server for Data Platform Service.</description>
+
+
     <dependencies>
+
         <dependency>
             <groupId>org.odpi.egeria</groupId>
-            <artifactId>cassandra-open-metadata-connector</artifactId>
+            <artifactId>data-platform-services-connector</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.odpi.egeria</groupId>
             <artifactId>admin-services-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.odpi.egeria</groupId>
+            <artifactId>audit-log-framework</artifactId>
         </dependency>
 
         <dependency>
@@ -41,20 +57,9 @@
 
         <dependency>
             <groupId>org.odpi.egeria</groupId>
-            <artifactId>data-platform-api</artifactId>
+            <artifactId>data-platform-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
+
     </dependencies>
 
 </project>

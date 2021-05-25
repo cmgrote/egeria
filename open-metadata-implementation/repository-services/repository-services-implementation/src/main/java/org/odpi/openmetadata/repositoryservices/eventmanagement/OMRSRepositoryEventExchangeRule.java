@@ -38,17 +38,9 @@ public class OMRSRepositoryEventExchangeRule
          */
         if (exchangeRule == null)
         {
-            OMRSErrorCode  errorCode = OMRSErrorCode.NULL_EXCHANGE_RULE;
-
-            String errorMessage = errorCode.getErrorMessageId()
-                                + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_EXCHANGE_RULE.getMessageDefinition(methodName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         this.exchangeRule = exchangeRule;
@@ -118,6 +110,13 @@ public class OMRSRepositoryEventExchangeRule
                  * All active types should be processed
                  */
                 return true;
+            }
+            else if (exchangeRule == OpenMetadataExchangeRule.DESELECTED_TYPES)
+            {
+                /*
+                 * All active types should be processed
+                 */
+                return (! selectedTypesToProcess.contains(typeDefGUID));
             }
             else
             {

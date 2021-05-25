@@ -2,11 +2,12 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.governanceengine.server;
 
-import org.odpi.openmetadata.accessservices.governanceengine.server.admin.GovernanceEngineAdmin;
+
+import org.odpi.openmetadata.accessservices.governanceengine.admin.GovernanceEngineAdmin;
 import org.odpi.openmetadata.adminservices.configuration.OMAGAccessServiceRegistration;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
-import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceOperationalStatus;
 import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceRegistration;
+import org.odpi.openmetadata.adminservices.configuration.registration.ServiceOperationalStatus;
 
 /**
  * GovernanceEngineRegistration registers the access service with the OMAG Server administration services.
@@ -14,16 +15,18 @@ import org.odpi.openmetadata.adminservices.configuration.registration.AccessServ
  * then use this registration information as confirmation that there is an implementation of this
  * access service in the server and it can be configured and used.
  */
-class GovernanceEngineRegistration {
+class GovernanceEngineRegistration
+{
     /**
      * Pass information about this access service to the OMAG Server administration services.
      */
-    static void registerAccessService() {
+    static void registerAccessService()
+    {
         AccessServiceDescription myDescription = AccessServiceDescription.GOVERNANCE_ENGINE_OMAS;
 
         AccessServiceRegistration myRegistration = new AccessServiceRegistration(myDescription,
-                AccessServiceOperationalStatus.ENABLED,
-                GovernanceEngineAdmin.class.getName());
+                                                                                 ServiceOperationalStatus.ENABLED,
+                                                                                 GovernanceEngineAdmin.class.getName());
         OMAGAccessServiceRegistration.registerAccessService(myRegistration);
     }
 }

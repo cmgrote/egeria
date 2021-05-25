@@ -21,6 +21,8 @@ import java.util.Objects;
  */
 public class AssetComment extends AssetElementHeader
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Comment              commentBean;
     protected AssetCommentReplies  commentReplies = null;
 
@@ -136,6 +138,17 @@ public class AssetComment extends AssetElementHeader
 
 
     /**
+     * Return if this comment is private to the creating user.
+     *
+     * @return boolean
+     */
+    public boolean isPublic()
+    {
+        return commentBean.getIsPublic();
+    }
+
+
+    /**
      * Return an enum that describes the type of comment.
      *
      * @return CommentType enum
@@ -211,7 +224,7 @@ public class AssetComment extends AssetElementHeader
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetComment))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -220,7 +233,19 @@ public class AssetComment extends AssetElementHeader
             return false;
         }
         AssetComment that = (AssetComment) objectToCompare;
-        return Objects.equals(getCommentBean(), that.getCommentBean()) &&
-                Objects.equals(getCommentReplies(), that.getCommentReplies());
+        return Objects.equals(commentBean, that.commentBean) &&
+                       Objects.equals(commentReplies, that.commentReplies);
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), commentBean, commentReplies);
     }
 }

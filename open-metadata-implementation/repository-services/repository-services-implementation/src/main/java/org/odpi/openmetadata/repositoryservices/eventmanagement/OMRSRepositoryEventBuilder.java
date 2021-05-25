@@ -2,10 +2,7 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.eventmanagement;
 
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceGraph;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceProvenanceType;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.AttributeTypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDef;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefPatch;
@@ -27,8 +24,6 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
     OMRSRepositoryEventBuilder(String eventProcessorName)
     {
         super(eventProcessorName);
-
-        this.eventProcessorName = eventProcessorName;
     }
 
 
@@ -328,8 +323,8 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
 
         OMRSTypeDefEvent typeDefEvent = new OMRSTypeDefEvent(OMRSTypeDefEventErrorCode.CONFLICTING_TYPEDEFS,
                                                              errorMessage,
-                                                             originatorMetadataCollectionId,
                                                              originatorTypeDefSummary,
+                                                             otherMetadataCollectionId,
                                                              conflictingTypeDefSummary);
 
         typeDefEvent.setEventOriginator(eventOriginator);
@@ -372,8 +367,8 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
 
         OMRSTypeDefEvent typeDefEvent = new OMRSTypeDefEvent(OMRSTypeDefEventErrorCode.CONFLICTING_ATTRIBUTE_TYPEDEFS,
                                                              errorMessage,
-                                                             originatorMetadataCollectionId,
                                                              originatorAttributeTypeDef,
+                                                             otherMetadataCollectionId,
                                                              conflictingAttributeTypeDef);
 
         typeDefEvent.setEventOriginator(eventOriginator);
@@ -552,13 +547,15 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
      * @param originatorServerType type of server that the event came from.
      * @param originatorOrganizationName name of the organization that owns the server that sent the event.
      * @param entity details of the entity with the new classification added.
+     * @param classification new classification
      */
-    public void processClassifiedEntityEvent(String       sourceName,
-                                             String       originatorMetadataCollectionId,
-                                             String       originatorServerName,
-                                             String       originatorServerType,
-                                             String       originatorOrganizationName,
-                                             EntityDetail entity)
+    public void processClassifiedEntityEvent(String         sourceName,
+                                             String         originatorMetadataCollectionId,
+                                             String         originatorServerName,
+                                             String         originatorServerType,
+                                             String         originatorOrganizationName,
+                                             EntityDetail   entity,
+                                             Classification classification)
     {
         OMRSEventOriginator eventOriginator = new OMRSEventOriginator();
 
@@ -568,7 +565,9 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
         eventOriginator.setOrganizationName(originatorOrganizationName);
 
         OMRSInstanceEvent instanceEvent = new OMRSInstanceEvent(OMRSInstanceEventType.CLASSIFIED_ENTITY_EVENT,
-                                                                entity);
+                                                                entity,
+                                                                null,
+                                                                classification);
 
 
         instanceEvent.setEventOriginator(eventOriginator);
@@ -588,13 +587,15 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
      * @param originatorServerType type of server that the event came from.
      * @param originatorOrganizationName name of the organization that owns the server that sent the event.
      * @param entity details of the entity after the classification has been removed.
+     * @param originalClassification classification that was removed
      */
-    public void processDeclassifiedEntityEvent(String       sourceName,
-                                               String       originatorMetadataCollectionId,
-                                               String       originatorServerName,
-                                               String       originatorServerType,
-                                               String       originatorOrganizationName,
-                                               EntityDetail entity)
+    public void processDeclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification)
     {
         OMRSEventOriginator eventOriginator = new OMRSEventOriginator();
 
@@ -604,7 +605,9 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
         eventOriginator.setOrganizationName(originatorOrganizationName);
 
         OMRSInstanceEvent instanceEvent = new OMRSInstanceEvent(OMRSInstanceEventType.DECLASSIFIED_ENTITY_EVENT,
-                                                                entity);
+                                                                entity,
+                                                                originalClassification,
+                                                                null);
 
 
         instanceEvent.setEventOriginator(eventOriginator);
@@ -624,13 +627,17 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
      * @param originatorServerType type of server that the event came from.
      * @param originatorOrganizationName name of the organization that owns the server that sent the event.
      * @param entity details of the entity after the classification has been changed.
+     * @param originalClassification classification that was removed
+     * @param classification new classification
      */
-    public void processReclassifiedEntityEvent(String       sourceName,
-                                               String       originatorMetadataCollectionId,
-                                               String       originatorServerName,
-                                               String       originatorServerType,
-                                               String       originatorOrganizationName,
-                                               EntityDetail entity)
+    public void processReclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification,
+                                               Classification classification)
     {
         OMRSEventOriginator eventOriginator = new OMRSEventOriginator();
 
@@ -640,7 +647,9 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
         eventOriginator.setOrganizationName(originatorOrganizationName);
 
         OMRSInstanceEvent instanceEvent = new OMRSInstanceEvent(OMRSInstanceEventType.RECLASSIFIED_ENTITY_EVENT,
-                                                                entity);
+                                                                entity,
+                                                                originalClassification,
+                                                                classification);
 
 
         instanceEvent.setEventOriginator(eventOriginator);
@@ -723,6 +732,41 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
         this.sendInstanceEvent(sourceName, instanceEvent);
     }
 
+
+    /**
+     * An entity has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the version of the entity that has been purged.
+     */
+    public void processPurgedEntityEvent(String       sourceName,
+                                         String       originatorMetadataCollectionId,
+                                         String       originatorServerName,
+                                         String       originatorServerType,
+                                         String       originatorOrganizationName,
+                                         EntityDetail entity)
+    {
+        OMRSEventOriginator eventOriginator = new OMRSEventOriginator();
+
+        eventOriginator.setMetadataCollectionId(originatorMetadataCollectionId);
+        eventOriginator.setServerName(originatorServerName);
+        eventOriginator.setServerType(originatorServerType);
+        eventOriginator.setOrganizationName(originatorOrganizationName);
+
+        OMRSInstanceEvent instanceEvent = new OMRSInstanceEvent(OMRSInstanceEventType.PURGED_ENTITY_EVENT,
+                                                                entity);
+
+
+        instanceEvent.setEventOriginator(eventOriginator);
+
+        this.sendInstanceEvent(sourceName, instanceEvent);
+    }
 
 
     /**
@@ -1184,6 +1228,40 @@ public abstract class OMRSRepositoryEventBuilder extends OMRSRepositoryEventProc
         this.sendInstanceEvent(sourceName, instanceEvent);
     }
 
+
+    /**
+     * A relationship has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param relationship  details of the  relationship that has been purged.
+     */
+    public void processPurgedRelationshipEvent(String       sourceName,
+                                               String       originatorMetadataCollectionId,
+                                               String       originatorServerName,
+                                               String       originatorServerType,
+                                               String       originatorOrganizationName,
+                                               Relationship relationship)
+    {
+        OMRSEventOriginator eventOriginator = new OMRSEventOriginator();
+
+        eventOriginator.setMetadataCollectionId(originatorMetadataCollectionId);
+        eventOriginator.setServerName(originatorServerName);
+        eventOriginator.setServerType(originatorServerType);
+        eventOriginator.setOrganizationName(originatorOrganizationName);
+
+        OMRSInstanceEvent instanceEvent = new OMRSInstanceEvent(OMRSInstanceEventType.PURGED_RELATIONSHIP_EVENT,
+                                                                relationship);
+
+        instanceEvent.setEventOriginator(eventOriginator);
+
+        this.sendInstanceEvent(sourceName, instanceEvent);
+    }
 
 
     /**

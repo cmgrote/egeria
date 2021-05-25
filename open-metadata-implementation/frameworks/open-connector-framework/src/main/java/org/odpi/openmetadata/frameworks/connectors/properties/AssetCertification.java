@@ -24,6 +24,8 @@ import java.util.Objects;
  */
 public class AssetCertification extends AssetReferenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     protected Certification certificationBean;
 
 
@@ -220,6 +222,7 @@ public class AssetCertification extends AssetReferenceable
     }
 
 
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -233,7 +236,7 @@ public class AssetCertification extends AssetReferenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof AssetCertification))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -243,5 +246,17 @@ public class AssetCertification extends AssetReferenceable
         }
         AssetCertification that = (AssetCertification) objectToCompare;
         return Objects.equals(getCertificationBean(), that.getCertificationBean());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getCertificationBean());
     }
 }

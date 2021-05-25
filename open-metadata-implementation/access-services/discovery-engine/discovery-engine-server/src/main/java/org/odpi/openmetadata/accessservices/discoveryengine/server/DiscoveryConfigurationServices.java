@@ -3,17 +3,16 @@
 package org.odpi.openmetadata.accessservices.discoveryengine.server;
 
 import org.odpi.openmetadata.accessservices.discoveryengine.handlers.DiscoveryConfigurationHandler;
+import org.odpi.openmetadata.commonservices.ffdc.RESTCallLogger;
+import org.odpi.openmetadata.commonservices.ffdc.RESTCallToken;
 import org.odpi.openmetadata.commonservices.ffdc.RESTExceptionHandler;
 import org.odpi.openmetadata.commonservices.ffdc.rest.*;
-import org.odpi.openmetadata.commonservices.odf.metadatamanagement.rest.*;
+import org.odpi.openmetadata.accessservices.discoveryengine.rest.*;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.OwnerType;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
-
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
@@ -28,15 +27,54 @@ public class DiscoveryConfigurationServices
 {
     private static DiscoveryEngineServiceInstanceHandler instanceHandler = new DiscoveryEngineServiceInstanceHandler();
 
-    private static final Logger log = LoggerFactory.getLogger(DiscoveryConfigurationServices.class);
-
-    private RESTExceptionHandler restExceptionHandler = new RESTExceptionHandler();
+    private static RESTCallLogger       restCallLogger       = new RESTCallLogger(LoggerFactory.getLogger(DiscoveryConfigurationServices.class),
+                                                                                  instanceHandler.getServiceName());
+    private    RESTExceptionHandler restExceptionHandler = new RESTExceptionHandler();
 
     /**
      * Default constructor
      */
     public DiscoveryConfigurationServices()
     {
+    }
+
+
+    /**
+     * Return the connection object for the Discovery Engine OMAS's out topic.
+     *
+     * @param serverName name of the service to route the request to.
+     * @param userId identifier of calling user.
+     * @param callerId unique identifier of the caller
+     *
+     * @return connection object for the out topic or
+     * InvalidParameterException one of the parameters is null or invalid or
+     * UserNotAuthorizedException user not authorized to issue this request or
+     * PropertyServerException problem retrieving the discovery engine definition.
+     */
+    public ConnectionResponse getOutTopicConnection(String serverName,
+                                                    String userId,
+                                                    String callerId)
+    {
+        final String        methodName = "getOutTopicConnection";
+
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
+
+        ConnectionResponse response = new ConnectionResponse();
+        AuditLog           auditLog = null;
+
+        try
+        {
+            auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
+            response.setConnection(instanceHandler.getOutTopicConnection(userId, serverName, methodName, callerId));
+        }
+        catch (Exception error)
+        {
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
+        }
+
+        restCallLogger.logRESTCallReturn(token, response.toString());
+
+        return response;
     }
 
 
@@ -62,13 +100,13 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "createDiscoveryEngine";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String       qualifiedName = null;
         String       displayName   = null;
         String       description   = null;
         GUIDResponse response      = new GUIDResponse();
-        OMRSAuditLog auditLog      = null;
+        AuditLog     auditLog      = null;
 
 
         if (requestBody != null)
@@ -88,24 +126,12 @@ public class DiscoveryConfigurationServices
                                                            displayName,
                                                            description));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -129,10 +155,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getDiscoveryEngineByGUID";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryEnginePropertiesResponse response = new DiscoveryEnginePropertiesResponse();
-        OMRSAuditLog                      auditLog = null;
+        AuditLog                          auditLog = null;
 
         try
         {
@@ -141,24 +167,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryEngineProperties(handler.getDiscoveryEngineByGUID(userId, guid));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -182,10 +196,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getDiscoveryEngineByName";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryEnginePropertiesResponse response = new DiscoveryEnginePropertiesResponse();
-        OMRSAuditLog                      auditLog      = null;
+        AuditLog                          auditLog      = null;
 
         try
         {
@@ -194,24 +208,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryEngineProperties(handler.getDiscoveryEngineByName(userId, name));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -237,10 +239,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getAllDiscoveryEngines";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryEngineListResponse response = new DiscoveryEngineListResponse();
-        OMRSAuditLog                auditLog = null;
+        AuditLog                    auditLog = null;
 
         try
         {
@@ -249,24 +251,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryEngines(handler.getAllDiscoveryEngines(userId, startingFrom, maximumResults));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -294,7 +284,7 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "updateDiscoveryEngine";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String              qualifiedName        = null;
         String              displayName          = null;
@@ -306,7 +296,7 @@ public class DiscoveryConfigurationServices
         Map<String, String> additionalProperties = null;
         Map<String, Object> extendedProperties   = null;
         VoidResponse        response             = new VoidResponse();
-        OMRSAuditLog        auditLog             = null;
+        AuditLog            auditLog             = null;
 
 
         if (requestBody != null)
@@ -339,24 +329,12 @@ public class DiscoveryConfigurationServices
                                           additionalProperties,
                                           extendedProperties);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -383,11 +361,11 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "deleteDiscoveryEngine";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String       qualifiedName = null;
         VoidResponse response      = new VoidResponse();
-        OMRSAuditLog auditLog      = null;
+        AuditLog auditLog          = null;
 
 
         if (requestBody != null)
@@ -404,24 +382,12 @@ public class DiscoveryConfigurationServices
                                           guid,
                                           qualifiedName);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -437,7 +403,7 @@ public class DiscoveryConfigurationServices
      *                    qualifiedName - unique name for the discovery service;
      *                    displayName -  display name for the discovery service;
      *                    description - description of the analysis provided by the discovery service;
-     *                    connection -  connection to instanciate the discovery service implementation.
+     *                    connection -  connection to instantiate the discovery service implementation.
      *
      * @return unique identifier of the discovery service or
      * InvalidParameterException one of the parameters is null or invalid or
@@ -450,14 +416,14 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "createDiscoveryService";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String       qualifiedName = null;
         String       displayName   = null;
         String       description   = null;
         Connection   connection    = null;
         GUIDResponse response      = new GUIDResponse();
-        OMRSAuditLog auditLog      = null;
+        AuditLog auditLog          = null;
 
 
         if (requestBody != null)
@@ -479,24 +445,12 @@ public class DiscoveryConfigurationServices
                                                             description,
                                                             connection));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -520,10 +474,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getDiscoveryServiceByGUID";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryServicePropertiesResponse response = new DiscoveryServicePropertiesResponse();
-        OMRSAuditLog                       auditLog = null;
+        AuditLog                           auditLog = null;
 
         try
         {
@@ -532,24 +486,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryServiceProperties(handler.getDiscoveryServiceByGUID(userId, guid));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -573,10 +515,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getDiscoveryServiceByName";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryServicePropertiesResponse response = new DiscoveryServicePropertiesResponse();
-        OMRSAuditLog                       auditLog = null;
+        AuditLog                           auditLog = null;
 
         try
         {
@@ -585,24 +527,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryServiceProperties(handler.getDiscoveryServiceByName(userId, name));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -628,10 +558,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getAllDiscoveryServices";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         DiscoveryServiceListResponse response = new DiscoveryServiceListResponse();
-        OMRSAuditLog                 auditLog = null;
+        AuditLog                     auditLog = null;
 
         try
         {
@@ -640,24 +570,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setDiscoveryServices(handler.getAllDiscoveryServices(userId, startingFrom, maximumResults));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -681,10 +599,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getDiscoveryServiceRegistrations";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         GUIDListResponse response = new GUIDListResponse();
-        OMRSAuditLog     auditLog = null;
+        AuditLog         auditLog = null;
 
         try
         {
@@ -693,24 +611,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setGUIDs(handler.getDiscoveryServiceRegistrations(userId, discoveryServiceGUID));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -738,33 +644,24 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "updateDiscoveryService";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String              qualifiedName        = null;
         String              displayName          = null;
-        String              shortDescription     = null;
         String              description          = null;
-        String              owner                = null;
-        OwnerType           ownerType            = null;
-        List<String>        zoneMembership       = null;
-        String              latestChange         = null;
         Connection          connection           = null;
         Map<String, String> additionalProperties = null;
         Map<String, Object> extendedProperties   = null;
+
         VoidResponse        response             = new VoidResponse();
-        OMRSAuditLog        auditLog             = null;
+        AuditLog            auditLog             = null;
 
 
         if (requestBody != null)
         {
             qualifiedName = requestBody.getQualifiedName();
             displayName = requestBody.getDisplayName();
-            shortDescription = requestBody.getShortDescription();
             description = requestBody.getDescription();
-            owner = requestBody.getOwner();
-            ownerType = requestBody.getOwnerType();
-            zoneMembership = requestBody.getZoneMembership();
-            latestChange = requestBody.getLatestChange();
             connection = requestBody.getConnection();
             additionalProperties = requestBody.getAdditionalProperties();
             extendedProperties = requestBody.getExtendedProperties();
@@ -779,34 +676,17 @@ public class DiscoveryConfigurationServices
                                            guid,
                                            qualifiedName,
                                            displayName,
-                                           shortDescription,
                                            description,
-                                           owner,
-                                           ownerType,
-                                           zoneMembership,
-                                           latestChange,
                                            connection,
                                            additionalProperties,
                                            extendedProperties);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -834,11 +714,11 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "deleteDiscoveryService";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         String       qualifiedName = null;
         VoidResponse response      = new VoidResponse();
-        OMRSAuditLog auditLog      = null;
+        AuditLog auditLog          = null;
 
 
         if (requestBody != null)
@@ -855,24 +735,12 @@ public class DiscoveryConfigurationServices
                                            guid,
                                            qualifiedName);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -886,7 +754,7 @@ public class DiscoveryConfigurationServices
      * @param discoveryEngineGUID unique identifier of the discovery engine.
      * @param requestBody containing:
      *                    discoveryServiceGUID - unique identifier of the discovery service;
-     *                    assetTypes - list of asset types that this discovery service is able to process.
+     *                    discoveryRequestTypes - list of asset types that this discovery service is able to process.
      *
      * @return void or
      * InvalidParameterException one of the parameters is null or invalid or
@@ -900,18 +768,20 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "registerDiscoveryServiceWithEngine";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
-        String       discoveryServiceGUID = null;
-        List<String> assetTypes           = null;
-        VoidResponse response             = new VoidResponse();
-        OMRSAuditLog auditLog             = null;
+        String              discoveryServiceGUID      = null;
+        String              discoveryRequestType      = null;
+        Map<String, String> defaultAnalysisParameters = null;
+        VoidResponse        response                  = new VoidResponse();
+        AuditLog            auditLog                  = null;
 
 
         if (requestBody != null)
         {
-            discoveryServiceGUID = requestBody.getDiscoveryServiceGUID();
-            assetTypes = requestBody.getAssetTypes();
+            discoveryServiceGUID      = requestBody.getDiscoveryServiceGUID();
+            discoveryRequestType      = requestBody.getDiscoveryRequestType();
+            defaultAnalysisParameters = requestBody.getDefaultAnalysisParameters();
         }
 
         try
@@ -919,26 +789,14 @@ public class DiscoveryConfigurationServices
             DiscoveryConfigurationHandler handler = instanceHandler.getDiscoveryConfigurationHandler(userId, serverName, methodName);
 
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
-            handler.registerDiscoveryServiceWithEngine(userId, discoveryEngineGUID, discoveryServiceGUID, assetTypes);
+            handler.registerDiscoveryServiceWithEngine(userId, discoveryEngineGUID, discoveryServiceGUID, discoveryRequestType, defaultAnalysisParameters);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -962,12 +820,12 @@ public class DiscoveryConfigurationServices
                                                                             String  discoveryEngineGUID,
                                                                             String  discoveryServiceGUID)
     {
-        final String        methodName = "getRegisteredDiscoveryService";
+        final String        methodName = "getRegisteredGovernanceService";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         RegisteredDiscoveryServiceResponse response = new RegisteredDiscoveryServiceResponse();
-        OMRSAuditLog                       auditLog = null;
+        AuditLog                           auditLog = null;
 
         try
         {
@@ -976,24 +834,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             response.setRegisteredDiscoveryService(handler.getRegisteredDiscoveryService(userId, discoveryEngineGUID, discoveryServiceGUID));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -1021,10 +867,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "getRegisteredDiscoveryServices";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         GUIDListResponse response = new GUIDListResponse();
-        OMRSAuditLog     auditLog = null;
+        AuditLog         auditLog = null;
 
         try
         {
@@ -1033,24 +879,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName,methodName);
             response.setGUIDs(handler.getRegisteredDiscoveryServices(userId, discoveryEngineGUID, startingFrom, maximumResults));
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }
@@ -1070,6 +904,7 @@ public class DiscoveryConfigurationServices
      * UserNotAuthorizedException user not authorized to issue this request or
      * PropertyServerException problem storing the discovery engine definition.
      */
+    @SuppressWarnings(value = "unused")
     public VoidResponse unregisterDiscoveryServiceFromEngine(String          serverName,
                                                              String          userId,
                                                              String          discoveryEngineGUID,
@@ -1078,10 +913,10 @@ public class DiscoveryConfigurationServices
     {
         final String        methodName = "unregisterDiscoveryServiceFromEngine";
 
-        log.debug("Calling method: " + methodName);
+        RESTCallToken token = restCallLogger.logRESTCall(serverName, userId, methodName);
 
         VoidResponse response = new VoidResponse();
-        OMRSAuditLog auditLog = null;
+        AuditLog     auditLog = null;
 
         try
         {
@@ -1090,24 +925,12 @@ public class DiscoveryConfigurationServices
             auditLog = instanceHandler.getAuditLog(userId, serverName, methodName);
             handler.unregisterDiscoveryServiceFromEngine(userId, discoveryEngineGUID, discoveryServiceGUID);
         }
-        catch (InvalidParameterException error)
+        catch (Exception error)
         {
-            restExceptionHandler.captureInvalidParameterException(response, error);
-        }
-        catch (PropertyServerException error)
-        {
-            restExceptionHandler.capturePropertyServerException(response, error);
-        }
-        catch (UserNotAuthorizedException error)
-        {
-            restExceptionHandler.captureUserNotAuthorizedException(response, error);
-        }
-        catch (Throwable error)
-        {
-            restExceptionHandler.captureThrowable(response, error, methodName, auditLog);
+            restExceptionHandler.captureExceptions(response, error, methodName, auditLog);
         }
 
-        log.debug("Returning from method: " + methodName + " with response: " + response.toString());
+        restCallLogger.logRESTCallReturn(token, response.toString());
 
         return response;
     }

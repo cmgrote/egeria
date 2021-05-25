@@ -2,13 +2,17 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.localrepository.repositoryconnector;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.MessageFormatter;
+import org.odpi.openmetadata.frameworks.auditlog.messagesets.AuditLogMessageDefinition;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefCategory;
 import org.odpi.openmetadata.repositoryservices.events.*;
+import org.odpi.openmetadata.repositoryservices.ffdc.exception.EntityNotKnownException;
+import org.odpi.openmetadata.repositoryservices.ffdc.exception.RelationshipNotKnownException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.OMRSLogicErrorException;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.OMRSMetadataCollection;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.typedefs.TypeDefSummary;
@@ -33,6 +37,8 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
 {
     final private static String  localOMRSInstanceEventProcessorName = "Local Repository Inbound Instance Events";
 
+    final private static MessageFormatter messageFormatter = new MessageFormatter();
+
     private String                          localMetadataCollectionId;
     private String                          localServerName;
     private OMRSRepositoryConnector         localRepositoryConnector;
@@ -40,15 +46,16 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     private OMRSRepositoryValidator         repositoryValidator;
     private OMRSRepositoryEventExchangeRule saveExchangeRule;
     private OMRSMetadataCollection          localMetadataCollection = null;
+    private boolean                         produceRefreshEvents;
     private OMRSRepositoryEventProcessor    outboundRepositoryEventProcessor;
 
     /*
      * The audit log provides a verifiable record of the open metadata archives that have been loaded into
      * the open metadata repository.  The Logger is for standard debug.
      */
-    private OMRSAuditLog auditLog;
+    private AuditLog auditLog;
 
-    private static final Logger       log      = LoggerFactory.getLogger(LocalOMRSInstanceEventProcessor.class);
+    private static final Logger log = LoggerFactory.getLogger(LocalOMRSInstanceEventProcessor.class);
 
 
     /**
@@ -61,6 +68,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param repositoryHelper                 helper class for building instances
      * @param repositoryValidator              helper class for validating instances
      * @param saveExchangeRule                 rule that determines which events to process.
+     * @param produceRefreshEvents             flag indicating whether the local connector should respond to refresh events
      * @param outboundRepositoryEventProcessor event processor
      * @param auditLog                         audit log for this component.
      */
@@ -70,8 +78,9 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                     OMRSRepositoryHelper            repositoryHelper,
                                     OMRSRepositoryValidator         repositoryValidator,
                                     OMRSRepositoryEventExchangeRule saveExchangeRule,
+                                    boolean                         produceRefreshEvents,
                                     OMRSRepositoryEventProcessor    outboundRepositoryEventProcessor,
-                                    OMRSAuditLog                    auditLog)
+                                    AuditLog                        auditLog)
     {
         super(localOMRSInstanceEventProcessorName);
 
@@ -83,6 +92,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
         this.repositoryHelper = repositoryHelper;
         this.repositoryValidator = repositoryValidator;
         this.saveExchangeRule = saveExchangeRule;
+        this.produceRefreshEvents = produceRefreshEvents;
         this.outboundRepositoryEventProcessor = outboundRepositoryEventProcessor;
         this.auditLog = auditLog;
 
@@ -92,7 +102,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
             {
                 this.localMetadataCollection = localConnector.getMetadataCollection();
             }
-            catch (Throwable  error)
+            catch (Exception  error)
             {
                 /*
                  * Nothing to do, error will be logged in verifyEventProcessor
@@ -152,16 +162,11 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                   OMRSInstanceEvent     instanceEvent,
                                   String                methodName)
     {
-        OMRSAuditCode auditCode = OMRSAuditCode.PROCESS_INCOMING_EVENT;
-        auditLog.logRecord(methodName,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(instanceEventType.getName(),
-                                                            instanceGUID,
-                                                            instanceEventOriginator.toString()),
-                           instanceEvent.toString(),
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(methodName,
+                           OMRSAuditCode.PROCESS_INCOMING_EVENT.getMessageDefinition(instanceEventType.getName(), 
+                                                                                     instanceGUID, 
+                                                                                     instanceEventOriginator.toString()),
+                           instanceEvent.toString());
     }
 
 
@@ -171,6 +176,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param cohortName source of the event
      * @param instanceEvent the event to process
      */
+    @Override
     public void   sendInstanceEvent(String            cohortName,
                                     OMRSInstanceEvent instanceEvent)
     {
@@ -224,7 +230,8 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                       instanceEventOriginator.getServerName(),
                                                       instanceEventOriginator.getServerType(),
                                                       instanceEventOriginator.getOrganizationName(),
-                                                      instanceEvent.getEntity());
+                                                      instanceEvent.getEntity(),
+                                                      instanceEvent.getClassification());
                     break;
 
                 case RECLASSIFIED_ENTITY_EVENT:
@@ -238,7 +245,9 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                         instanceEventOriginator.getServerName(),
                                                         instanceEventOriginator.getServerType(),
                                                         instanceEventOriginator.getOrganizationName(),
-                                                        instanceEvent.getEntity());
+                                                        instanceEvent.getEntity(),
+                                                        instanceEvent.getOriginalClassification(),
+                                                        instanceEvent.getClassification());
                     break;
 
                 case DECLASSIFIED_ENTITY_EVENT:
@@ -252,7 +261,8 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                         instanceEventOriginator.getServerName(),
                                                         instanceEventOriginator.getServerType(),
                                                         instanceEventOriginator.getOrganizationName(),
-                                                        instanceEvent.getEntity());
+                                                        instanceEvent.getEntity(),
+                                                        instanceEvent.getOriginalClassification());
                     break;
 
                 case DELETED_ENTITY_EVENT:
@@ -270,19 +280,36 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                     break;
 
                 case PURGED_ENTITY_EVENT:
-                    this.logIncomingEvent(instanceEventType,
-                                          instanceEvent.getInstanceGUID(),
-                                          instanceEventOriginator,
-                                          instanceEvent,
-                                          methodName);
-                    this.processPurgedEntityEvent(cohortName,
-                                                  instanceEventOriginator.getMetadataCollectionId(),
-                                                  instanceEventOriginator.getServerName(),
-                                                  instanceEventOriginator.getServerType(),
-                                                  instanceEventOriginator.getOrganizationName(),
-                                                  instanceEvent.getTypeDefGUID(),
-                                                  instanceEvent.getTypeDefName(),
-                                                  instanceEvent.getInstanceGUID());
+                    if (instanceEvent.getEntity() == null)
+                    {
+                        this.logIncomingEvent(instanceEventType,
+                                              instanceEvent.getInstanceGUID(),
+                                              instanceEventOriginator,
+                                              instanceEvent,
+                                              methodName);
+                        this.processPurgedEntityEvent(cohortName,
+                                                      instanceEventOriginator.getMetadataCollectionId(),
+                                                      instanceEventOriginator.getServerName(),
+                                                      instanceEventOriginator.getServerType(),
+                                                      instanceEventOriginator.getOrganizationName(),
+                                                      instanceEvent.getTypeDefGUID(),
+                                                      instanceEvent.getTypeDefName(),
+                                                      instanceEvent.getInstanceGUID());
+                    }
+                    else
+                    {
+                        this.logIncomingEvent(instanceEventType,
+                                              instanceEvent.getEntity(),
+                                              instanceEventOriginator,
+                                              instanceEvent,
+                                              methodName);
+                        this.processPurgedEntityEvent(cohortName,
+                                                      instanceEventOriginator.getMetadataCollectionId(),
+                                                      instanceEventOriginator.getServerName(),
+                                                      instanceEventOriginator.getServerType(),
+                                                      instanceEventOriginator.getOrganizationName(),
+                                                      instanceEvent.getEntity());
+                    }
                     break;
 
                 case DELETE_PURGED_ENTITY_EVENT:
@@ -461,19 +488,36 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                     break;
 
                 case PURGED_RELATIONSHIP_EVENT:
-                    this.logIncomingEvent(instanceEventType,
-                                          instanceEvent.getInstanceGUID(),
-                                          instanceEventOriginator,
-                                          instanceEvent,
-                                          methodName);
-                    this.processPurgedRelationshipEvent(cohortName,
-                                                        instanceEventOriginator.getMetadataCollectionId(),
-                                                        instanceEventOriginator.getServerName(),
-                                                        instanceEventOriginator.getServerType(),
-                                                        instanceEventOriginator.getOrganizationName(),
-                                                        instanceEvent.getTypeDefGUID(),
-                                                        instanceEvent.getTypeDefName(),
-                                                        instanceEvent.getInstanceGUID());
+                    if (instanceEvent.getRelationship() == null)
+                    {
+                        this.logIncomingEvent(instanceEventType,
+                                              instanceEvent.getInstanceGUID(),
+                                              instanceEventOriginator,
+                                              instanceEvent,
+                                              methodName);
+                        this.processPurgedRelationshipEvent(cohortName,
+                                                            instanceEventOriginator.getMetadataCollectionId(),
+                                                            instanceEventOriginator.getServerName(),
+                                                            instanceEventOriginator.getServerType(),
+                                                            instanceEventOriginator.getOrganizationName(),
+                                                            instanceEvent.getTypeDefGUID(),
+                                                            instanceEvent.getTypeDefName(),
+                                                            instanceEvent.getInstanceGUID());
+                    }
+                    else
+                    {
+                        this.logIncomingEvent(instanceEventType,
+                                              instanceEvent.getRelationship(),
+                                              instanceEventOriginator,
+                                              instanceEvent,
+                                              methodName);
+                        this.processPurgedRelationshipEvent(cohortName,
+                                                            instanceEventOriginator.getMetadataCollectionId(),
+                                                            instanceEventOriginator.getServerName(),
+                                                            instanceEventOriginator.getServerType(),
+                                                            instanceEventOriginator.getOrganizationName(),
+                                                            instanceEvent.getRelationship());
+                    }
                     break;
 
                 case DELETE_PURGED_RELATIONSHIP_EVENT:
@@ -673,6 +717,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the new entity
      */
+    @Override
     public void processNewEntityEvent(String       sourceName,
                                       String       originatorMetadataCollectionId,
                                       String       originatorServerName,
@@ -703,6 +748,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param oldEntity                      original values for the entity.
      * @param newEntity                      details of the new version of the entity.
      */
+    @Override
     public void processUpdatedEntityEvent(String       sourceName,
                                           String       originatorMetadataCollectionId,
                                           String       originatorServerName,
@@ -733,6 +779,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the version of the entity that has been restored.
      */
+    @Override
     public void processUndoneEntityEvent(String       sourceName,
                                          String       originatorMetadataCollectionId,
                                          String       originatorServerName,
@@ -753,87 +800,122 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     /**
      * A new classification has been added to an entity.
      *
-     * @param sourceName                     name of the source of the event.  It may be the cohort name for incoming events or the
-     *                                       local repository, or event mapper name.
-     * @param originatorMetadataCollectionId unique identifier for the metadata collection hosted by the server that
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
      *                                       sent the event.
-     * @param originatorServerName           name of the server that the event came from.
-     * @param originatorServerType           type of server that the event came from.
-     * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
-     * @param entity                         details of the entity with the new classification added.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity with the new classification added. No guarantee this is all of the classifications.
+     * @param classification new classification
      */
-    public void processClassifiedEntityEvent(String sourceName,
-                                             String originatorMetadataCollectionId,
-                                             String originatorServerName,
-                                             String originatorServerType,
-                                             String originatorOrganizationName,
-                                             EntityDetail entity)
+    @Override
+    public void processClassifiedEntityEvent(String         sourceName,
+                                             String         originatorMetadataCollectionId,
+                                             String         originatorServerName,
+                                             String         originatorServerType,
+                                             String         originatorOrganizationName,
+                                             EntityDetail   entity,
+                                             Classification classification)
     {
         final String methodName = "processClassifiedEntityEvent";
 
-        updateReferenceEntity(sourceName,
-                              methodName,
-                              originatorMetadataCollectionId,
-                              originatorServerName,
-                              entity);
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.saveClassificationReferenceCopy(localRepositoryConnector.getServerUserId(), entity, classification);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
     }
 
 
     /**
      * A classification has been removed from an entity.
      *
-     * @param sourceName                     name of the source of the event.  It may be the cohort name for incoming events or the
-     *                                       local repository, or event mapper name.
-     * @param originatorMetadataCollectionId unique identifier for the metadata collection hosted by the server that
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
      *                                       sent the event.
-     * @param originatorServerName           name of the server that the event came from.
-     * @param originatorServerType           type of server that the event came from.
-     * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
-     * @param entity                         details of the entity after the classification has been removed.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity after the classification has been removed. No guarantee this is all of the classifications.
+     * @param originalClassification classification that was removed
      */
-    public void processDeclassifiedEntityEvent(String sourceName,
-                                               String originatorMetadataCollectionId,
-                                               String originatorServerName,
-                                               String originatorServerType,
-                                               String originatorOrganizationName,
-                                               EntityDetail entity)
+    @Override
+    public void processDeclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification)
     {
         final String methodName = "processDeclassifiedEntityEvent";
 
-        updateReferenceEntity(sourceName,
-                              methodName,
-                              originatorMetadataCollectionId,
-                              originatorServerName,
-                              entity);
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.purgeClassificationReferenceCopy(localRepositoryConnector.getServerUserId(), entity, originalClassification);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
     }
 
 
     /**
      * An existing classification has been changed on an entity.
      *
-     * @param sourceName                     name of the source of the event.  It may be the cohort name for incoming events or the
-     *                                       local repository, or event mapper name.
-     * @param originatorMetadataCollectionId unique identifier for the metadata collection hosted by the server that
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
      *                                       sent the event.
-     * @param originatorServerName           name of the server that the event came from.
-     * @param originatorServerType           type of server that the event came from.
-     * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
-     * @param entity                         details of the entity after the classification has been changed.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the entity after the classification has been changed. No guarantee this is all of the classifications.
+     * @param originalClassification classification that was removed
+     * @param classification new classification
      */
-    public void processReclassifiedEntityEvent(String       sourceName,
-                                               String       originatorMetadataCollectionId,
-                                               String       originatorServerName,
-                                               String       originatorServerType,
-                                               String       originatorOrganizationName,
-                                               EntityDetail entity)
+    @Override
+    public void processReclassifiedEntityEvent(String         sourceName,
+                                               String         originatorMetadataCollectionId,
+                                               String         originatorServerName,
+                                               String         originatorServerType,
+                                               String         originatorOrganizationName,
+                                               EntityDetail   entity,
+                                               Classification originalClassification,
+                                               Classification classification)
     {
         final String methodName = "processReclassifiedEntityEvent";
 
-        updateReferenceEntity(sourceName,
-                              methodName,
-                              originatorMetadataCollectionId,
-                              originatorServerName,
-                              entity);
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.saveClassificationReferenceCopy(localRepositoryConnector.getServerUserId(), entity, classification);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
     }
 
 
@@ -856,6 +938,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         deleted entity
      */
+    @Override
     public void processDeletedEntityEvent(String       sourceName,
                                           String       originatorMetadataCollectionId,
                                           String       originatorServerName,
@@ -865,11 +948,57 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     {
         final String methodName = "processDeletedEntityEvent";
 
-        updateReferenceEntity(sourceName,
-                              methodName,
-                              originatorMetadataCollectionId,
-                              originatorServerName,
-                              entity);
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.deleteEntityReferenceCopy(localRepositoryConnector.getServerUserId(), entity);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
+    }
+
+
+    /**
+     * An entity has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param entity  details of the version of the entity that has been purged.
+     */
+    @Override
+    public  void processPurgedEntityEvent(String       sourceName,
+                                          String       originatorMetadataCollectionId,
+                                          String       originatorServerName,
+                                          String       originatorServerType,
+                                          String       originatorOrganizationName,
+                                          EntityDetail entity)
+    {
+        final String methodName = "processPurgedEntityEvent";
+
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.purgeEntityReferenceCopy(localRepositoryConnector.getServerUserId(), entity);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
     }
 
 
@@ -890,6 +1019,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param typeDefName                    name of this entity's TypeDef
      * @param instanceGUID                   unique identifier for the entity
      */
+    @Override
     public void processPurgedEntityEvent(String sourceName,
                                          String originatorMetadataCollectionId,
                                          String originatorServerName,
@@ -910,9 +1040,14 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                              typeDefGUID,
                                                              typeDefName,
                                                              originatorMetadataCollectionId);
-
         }
-        catch (Throwable error)
+        catch (EntityNotKnownException  error)
+        {
+            /*
+             * Ignore - just means the repository did not have the instance.
+             */
+        }
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -934,6 +1069,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the version of the entity that has been restored.
      */
+    @Override
     public void processRestoredEntityEvent(String       sourceName,
                                            String       originatorMetadataCollectionId,
                                            String       originatorServerName,
@@ -966,6 +1102,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalEntityGUID             the existing identifier for the entity.
      * @param entity                         new values for this entity, including the new guid.
      */
+    @Override
     public void processReIdentifiedEntityEvent(String       sourceName,
                                                String       originatorMetadataCollectionId,
                                                String       originatorServerName,
@@ -999,6 +1136,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalTypeDefSummary         original details of this entity's TypeDef.
      * @param entity                         new values for this entity, including the new type information.
      */
+    @Override
     public void processReTypedEntityEvent(String         sourceName,
                                           String         originatorMetadataCollectionId,
                                           String         originatorServerName,
@@ -1032,6 +1170,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalHomeMetadataCollectionId unique identifier for the original home repository.
      * @param entity                           new values for this entity, including the new home information.
      */
+    @Override
     public void processReHomedEntityEvent(String       sourceName,
                                           String       originatorMetadataCollectionId,
                                           String       originatorServerName,
@@ -1066,6 +1205,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param instanceGUID                   unique identifier for the entity
      * @param homeMetadataCollectionId       metadata collection id for the home of this instance.
      */
+    @Override
     public void processRefreshEntityRequested(String sourceName,
                                               String originatorMetadataCollectionId,
                                               String originatorServerName,
@@ -1082,7 +1222,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
         {
             verifyEventProcessor(methodName);
 
-            if (localMetadataCollectionId.equals(homeMetadataCollectionId))
+            if (produceRefreshEvents && (localMetadataCollectionId.equals(homeMetadataCollectionId)))
             {
                 EntityDetail entity = localMetadataCollection.isEntityKnown(localRepositoryConnector.getServerUserId(),
                                                                             instanceGUID);
@@ -1098,7 +1238,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                 }
             }
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -1120,6 +1260,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param entity                         details of the requested entity
      */
+    @Override
     public void processRefreshEntityEvent(String       sourceName,
                                           String       originatorMetadataCollectionId,
                                           String       originatorServerName,
@@ -1127,7 +1268,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                           String       originatorOrganizationName,
                                           EntityDetail entity)
     {
-        final String methodName = "processReHomedEntityEvent";
+        final String methodName = "processRefreshEntityEvent";
 
         updateReferenceEntity(sourceName,
                               methodName,
@@ -1149,6 +1290,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param relationship                   details of the new relationship
      */
+    @Override
     public void processNewRelationshipEvent(String       sourceName,
                                             String       originatorMetadataCollectionId,
                                             String       originatorServerName,
@@ -1179,6 +1321,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param oldRelationship                original details of the relationship.
      * @param newRelationship                details of the new version of the relationship.
      */
+    @Override
     public void processUpdatedRelationshipEvent(String       sourceName,
                                                 String       originatorMetadataCollectionId,
                                                 String       originatorServerName,
@@ -1209,6 +1352,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param relationship                   details of the version of the relationship that has been restored.
      */
+    @Override
     public void processUndoneRelationshipEvent(String       sourceName,
                                                String       originatorMetadataCollectionId,
                                                String       originatorServerName,
@@ -1242,6 +1386,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param relationship                   deleted relationship
      */
+    @Override
     public void processDeletedRelationshipEvent(String       sourceName,
                                                 String       originatorMetadataCollectionId,
                                                 String       originatorServerName,
@@ -1251,11 +1396,57 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     {
         final String methodName = "processDeletedRelationshipEvent";
 
-        updateReferenceRelationship(sourceName,
-                                    methodName,
-                                    originatorMetadataCollectionId,
-                                    originatorServerName,
-                                    relationship);
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.deleteRelationshipReferenceCopy(localRepositoryConnector.getServerUserId(), relationship);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
+    }
+
+
+    /**
+     * A relationship has been permanently removed from the repository.  This request can not be undone.
+     *
+     * @param sourceName  name of the source of the event.  It may be the cohort name for incoming events or the
+     *                   local repository, or event mapper name.
+     * @param originatorMetadataCollectionId  unique identifier for the metadata collection hosted by the server that
+     *                                       sent the event.
+     * @param originatorServerName  name of the server that the event came from.
+     * @param originatorServerType  type of server that the event came from.
+     * @param originatorOrganizationName  name of the organization that owns the server that sent the event.
+     * @param relationship  details of the  relationship that has been purged.
+     */
+    @Override
+    public void processPurgedRelationshipEvent(String       sourceName,
+                                               String       originatorMetadataCollectionId,
+                                               String       originatorServerName,
+                                               String       originatorServerType,
+                                               String       originatorOrganizationName,
+                                               Relationship relationship)
+    {
+        final String methodName = "processPurgedRelationshipEvent";
+
+        try
+        {
+            verifyEventProcessor(methodName);
+
+            localMetadataCollection.purgeRelationshipReferenceCopy(localRepositoryConnector.getServerUserId(), relationship);
+        }
+        catch (Exception error)
+        {
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           originatorServerName,
+                                           originatorMetadataCollectionId);
+        }
     }
 
 
@@ -1276,6 +1467,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param typeDefName                    name of this relationship's TypeDef.
      * @param instanceGUID                   unique identifier for the relationship.
      */
+    @Override
     public void processPurgedRelationshipEvent(String sourceName,
                                                String originatorMetadataCollectionId,
                                                String originatorServerName,
@@ -1298,7 +1490,13 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                    originatorMetadataCollectionId);
 
         }
-        catch (Throwable error)
+        catch (RelationshipNotKnownException error)
+        {
+            /*
+             * Ignore as this just means that he reference copy was not stored for this instance.
+             */
+        }
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -1320,6 +1518,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param relationship                   details of the version of the relationship that has been restored.
      */
+    @Override
     public void processRestoredRelationshipEvent(String       sourceName,
                                                  String       originatorMetadataCollectionId,
                                                  String       originatorServerName,
@@ -1352,6 +1551,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalRelationshipGUID       the existing identifier for the relationship.
      * @param relationship                   new values for this relationship, including the new guid.
      */
+    @Override
     public void processReIdentifiedRelationshipEvent(String       sourceName,
                                                      String       originatorMetadataCollectionId,
                                                      String       originatorServerName,
@@ -1385,6 +1585,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalTypeDefSummary         original details of this relationship's TypeDef.
      * @param relationship                   new values for this relationship, including the new type information.
      */
+    @Override
     public void processReTypedRelationshipEvent(String         sourceName,
                                                 String         originatorMetadataCollectionId,
                                                 String         originatorServerName,
@@ -1418,6 +1619,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originalHomeMetadataCollection unique identifier for the original home repository.
      * @param relationship                   new values for this relationship, including the new home information.
      */
+    @Override
     public void processReHomedRelationshipEvent(String       sourceName,
                                                 String       originatorMetadataCollectionId,
                                                 String       originatorServerName,
@@ -1452,6 +1654,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param instanceGUID                   unique identifier for the instance
      * @param homeMetadataCollectionId       metadata collection id for the home of this instance.
      */
+    @Override
     public void processRefreshRelationshipRequest(String sourceName,
                                                   String originatorMetadataCollectionId,
                                                   String originatorServerName,
@@ -1468,7 +1671,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
         {
             verifyEventProcessor(methodName);
 
-            if (localMetadataCollectionId.equals(homeMetadataCollectionId))
+            if (produceRefreshEvents && (localMetadataCollectionId.equals(homeMetadataCollectionId)))
             {
                 Relationship relationship = localMetadataCollection.isRelationshipKnown(localRepositoryConnector.getServerUserId(),
                                                                                         instanceGUID);
@@ -1486,7 +1689,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
             }
 
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -1509,6 +1712,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName     name of the organization that owns the server that sent the event.
      * @param relationship                   relationship details
      */
+    @Override
     public void processRefreshRelationshipEvent(String       sourceName,
                                                 String       originatorMetadataCollectionId,
                                                 String       originatorServerName,
@@ -1539,6 +1743,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorOrganizationName name of the organization that owns the server that sent the event.
      * @param instances multiple entities and relationships for sharing.
      */
+    @Override
     public void processInstanceBatchEvent(String         sourceName,
                                           String         originatorMetadataCollectionId,
                                           String         originatorServerName,
@@ -1555,7 +1760,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
             localMetadataCollection.saveInstanceReferenceCopies(localRepositoryConnector.getServerUserId(),
                                                                 instances);
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -1587,6 +1792,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param otherInstanceGUID              unique identifier for the other (older) instance
      * @param errorMessage                   description of the error.
      */
+    @Override
     public void processConflictingInstancesEvent(String                 sourceName,
                                                  String                 originatorMetadataCollectionId,
                                                  String                 originatorServerName,
@@ -1603,22 +1809,17 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     {
         final String methodName = "processConflictingInstancesEvent";
 
-        OMRSAuditCode auditCode = OMRSAuditCode.DUPLICATE_INSTANCES_FOR_GUID;
-        auditLog.logRecord(methodName,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(originatorServerName,
-                                                            originatorMetadataCollectionId,
-                                                            otherInstanceGUID,
-                                                            otherMetadataCollectionId,
-                                                            otherTypeDefSummary.toString(),
-                                                            otherOrigin.getName(),
-                                                            targetMetadataCollectionId,
-                                                            targetTypeDefSummary.toString(),
-                                                            errorMessage),
-                           sourceName,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(methodName,
+                            OMRSAuditCode.DUPLICATE_INSTANCES_FOR_GUID.getMessageDefinition(originatorServerName,
+                                                                                            originatorMetadataCollectionId,
+                                                                                            otherInstanceGUID,
+                                                                                            otherMetadataCollectionId,
+                                                                                            otherTypeDefSummary.toString(),
+                                                                                            otherOrigin.getName(),
+                                                                                            targetMetadataCollectionId,
+                                                                                            targetTypeDefSummary.toString(),
+                                                                                            errorMessage),
+                           sourceName);
 
         /*
          * This repository has been targeted to act.
@@ -1649,34 +1850,22 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                    newGUID);
                 }
 
-                auditCode = OMRSAuditCode.INSTANCE_SUCCESSFULLY_REIDENTIFIED;
-                auditLog.logRecord(methodName,
-                                   auditCode.getLogMessageId(),
-                                   auditCode.getSeverity(),
-                                   auditCode.getFormattedLogMessage(localServerName,
-                                                                    localMetadataCollectionId,
-                                                                    otherTypeDefSummary.getName(),
-                                                                    targetInstanceGUID,
-                                                                    newGUID),
-                                   null,
-                                   auditCode.getSystemAction(),
-                                   auditCode.getUserAction());
+                auditLog.logMessage(methodName,
+                                    OMRSAuditCode.INSTANCE_SUCCESSFULLY_REIDENTIFIED.getMessageDefinition(localServerName,
+                                                                                                          localMetadataCollectionId,
+                                                                                                          otherTypeDefSummary.getName(),
+                                                                                                          targetInstanceGUID,
+                                                                                                          newGUID));
             }
-            catch (Throwable error)
+            catch (Exception error)
             {
-                auditCode = OMRSAuditCode.UNABLE_TO_RE_IDENTIFY_INSTANCE;
-                auditLog.logRecord(methodName,
-                                   auditCode.getLogMessageId(),
-                                   auditCode.getSeverity(),
-                                   auditCode.getFormattedLogMessage(localServerName,
-                                                                    localMetadataCollectionId,
-                                                                    otherTypeDefSummary.getName(),
-                                                                    targetInstanceGUID,
-                                                                    error.getClass().getName(),
-                                                                    error.getMessage()),
-                                   null,
-                                   auditCode.getSystemAction(),
-                                   auditCode.getUserAction());
+                auditLog.logMessage(methodName,
+                                    OMRSAuditCode.UNABLE_TO_RE_IDENTIFY_INSTANCE.getMessageDefinition(localServerName,
+                                                                                                      localMetadataCollectionId,
+                                                                                                      otherTypeDefSummary.getName(),
+                                                                                                      targetInstanceGUID,
+                                                                                                      error.getClass().getName(),
+                                                                                                      error.getMessage()));
             }
         }
         else
@@ -1708,6 +1897,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param otherTypeDefSummary            details of the local copy of the instance's TypeDef
      * @param errorMessage                   description of the error.
      */
+    @Override
     public void processConflictingTypeEvent(String         sourceName,
                                             String         originatorMetadataCollectionId,
                                             String         originatorServerName,
@@ -1723,37 +1913,25 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
 
         if (localMetadataCollectionId.equals(targetMetadataCollectionId))
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.LOCAL_INSTANCE_WITH_CONFLICTING_TYPES;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(originatorServerName,
-                                                                originatorMetadataCollectionId,
-                                                                targetInstanceGUID,
-                                                                otherTypeDefSummary.toString(),
-                                                                targetMetadataCollectionId,
-                                                                targetTypeDefSummary.toString(),
-                                                                errorMessage),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.LOCAL_INSTANCE_WITH_CONFLICTING_TYPES.getMessageDefinition(originatorServerName,
+                                                                                                         originatorMetadataCollectionId,
+                                                                                                         targetInstanceGUID,
+                                                                                                         otherTypeDefSummary.toString(),
+                                                                                                         targetMetadataCollectionId,
+                                                                                                         targetTypeDefSummary.toString(),
+                                                                                                         errorMessage));
         }
         else
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.INSTANCES_WITH_CONFLICTING_TYPES;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(originatorServerName,
-                                                                originatorMetadataCollectionId,
-                                                                targetInstanceGUID,
-                                                                otherTypeDefSummary.toString(),
-                                                                targetMetadataCollectionId,
-                                                                targetTypeDefSummary.toString(),
-                                                                errorMessage),
-                               null,
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.INSTANCES_WITH_CONFLICTING_TYPES.getMessageDefinition(originatorServerName,
+                                                                                                    originatorMetadataCollectionId,
+                                                                                                    targetInstanceGUID,
+                                                                                                    otherTypeDefSummary.toString(),
+                                                                                                    targetMetadataCollectionId,
+                                                                                                    targetTypeDefSummary.toString(),
+                                                                                                    errorMessage));
 
             removeReferenceCopyOfInstance(targetTypeDefSummary,
                                           targetInstanceGUID,
@@ -1791,10 +1969,10 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                 if (processedEntityType != null)
                 {
                     /*
-                     * It would be possible to save the relationship directly into the repository,
+                     * It would be possible to save the entity directly into the repository,
                      * but it is possible that some of the properties have been suppressed for the
                      * requesting user Id.  In which case saving it now would result in other users
-                     * seeing a restricted view of the relationship.
+                     * seeing a restricted view of the entity.
                      */
                     localMetadataCollection.refreshEntityReferenceCopy(localRepositoryConnector.getServerUserId(),
                                                                        processedEntityGUID,
@@ -1804,9 +1982,57 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                 }
             }
         }
-        catch (Throwable   error)
+        catch (Exception   error)
         {
             final String methodName = "processRetrievedEntity";
+
+            handleUnexpectedErrorFromEvent(error,
+                                           methodName,
+                                           sourceName,
+                                           metadataCollectionId);
+        }
+    }
+
+
+
+    /**
+     * Pass a relationship that has been retrieved from a remote open metadata repository so it can be validated and
+     * (if the rules permit) cached in the local repository.
+     *
+     * @param sourceName name of the source of this event.
+     * @param metadataCollectionId unique identifier for the metadata from the remote repository
+     * @param processedRelationshipGUID the retrieved relationship's GUID.
+     * @param processedRelationshipType the retrieved relationship's Type.
+     */
+    private void refreshRetrievedRelationship(String        sourceName,
+                                              String        metadataCollectionId,
+                                              String        processedRelationshipGUID,
+                                              InstanceType  processedRelationshipType)
+    {
+        try
+        {
+            if (localMetadataCollection.isRelationshipKnown(localRepositoryConnector.getServerUserId(),
+                                                            processedRelationshipGUID) == null)
+            {
+                if (processedRelationshipType != null)
+                {
+                    /*
+                     * It would be possible to save the relationship directly into the repository,
+                     * but it is possible that some of the properties have been suppressed for the
+                     * requesting user Id.  In which case saving it now would result in other users
+                     * seeing a restricted view of the relationship.
+                     */
+                    localMetadataCollection.refreshRelationshipReferenceCopy(localRepositoryConnector.getServerUserId(),
+                                                                       processedRelationshipGUID,
+                                                                       processedRelationshipType.getTypeDefGUID(),
+                                                                       processedRelationshipType.getTypeDefName(),
+                                                                       metadataCollectionId);
+                }
+            }
+        }
+        catch (Exception   error)
+        {
+            final String methodName = "processRetrievedRelationship";
 
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -1824,17 +2050,26 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param metadataCollectionId unique identifier for the metadata from the remote repository
      * @param processedEntity  the retrieved entity.
      */
+    @Override
     public void processRetrievedEntitySummary(String        sourceName,
                                               String        metadataCollectionId,
                                               EntitySummary processedEntity)
     {
+
         /*
-         * Discover whether the instance should be learned.
+         * Decide whether to send a refresh request:
+         * If the exchange rule is any of:
+         *    ALL - send the refresh request
+         *    SELECTED_TYPES AND the instance type is in the list of types - send the refresh request
+         *    LEARNED_TYPES AND the instance type is already in the list of types or can be added - add it and send the refresh request
+         * In all the above cases, the refresh request should only be sent if the type is active in this repository. Note that in the
+         * LEARNED_TYPES case it will be added to the selected types list, even if not active at this time.
          */
-        if (verifyEventToLearn(sourceName, processedEntity))
+
+        if (verifyWhetherToRequestRefresh(sourceName, processedEntity))
         {
             refreshRetrievedEntity(sourceName,
-                                   metadataCollectionId,
+                                   processedEntity.getMetadataCollectionId(),
                                    processedEntity.getGUID(),
                                    processedEntity.getType());
         }
@@ -1849,17 +2084,26 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param metadataCollectionId unique identifier for the metadata from the remote repository
      * @param processedEntity the retrieved entity.
      */
+    @Override
     public void processRetrievedEntityDetail(String       sourceName,
                                              String       metadataCollectionId,
                                              EntityDetail processedEntity)
     {
+
         /*
-         * Discover whether the instance should be learned.
+         * Decide whether to send a refresh request:
+         * If the exchange rule is any of:
+         *    ALL - send the refresh request
+         *    SELECTED_TYPES AND the instance type is in the list of types - send the refresh request
+         *    LEARNED_TYPES AND the instance type is already in the list of types or can be added - add it and send the refresh request
+         * In all the above cases, the refresh request should only be sent if the type is active in this repository. Note that in the
+         * LEARNED_TYPES case it will be added to the selected types list, even if not active at this time.
          */
-        if (verifyEventToLearn(sourceName, processedEntity))
+
+        if (verifyWhetherToRequestRefresh(sourceName, processedEntity))
         {
             refreshRetrievedEntity(sourceName,
-                                   metadataCollectionId,
+                                   processedEntity.getMetadataCollectionId(),
                                    processedEntity.getGUID(),
                                    processedEntity.getType());
         }
@@ -1874,47 +2118,28 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param metadataCollectionId unique identifier for the metadata from the remote repository
      * @param processedRelationship         the retrieved relationship
      */
+    @Override
     public void processRetrievedRelationship(String       sourceName,
                                              String       metadataCollectionId,
                                              Relationship processedRelationship)
     {
+
         /*
-         * Discover whether the instance should be learned.
+         * Decide whether to send a refresh request:
+         * If the exchange rule is any of:
+         *    ALL - send the refresh request
+         *    SELECTED_TYPES AND the instance type is in the list of types - send the refresh request
+         *    LEARNED_TYPES AND the instance type is already in the list of types or can be added - add it and send the refresh request
+         * In all the above cases, the refresh request should only be sent if the type is active in this repository. Note that in the
+         * LEARNED_TYPES case it will be added to the selected types list, even if not active at this time.
          */
-        if (verifyEventToLearn(sourceName, processedRelationship))
+
+        if (verifyWhetherToRequestRefresh(sourceName, processedRelationship))
         {
-            try
-            {
-                if (localMetadataCollection.isRelationshipKnown(localRepositoryConnector.getServerUserId(),
-                                                                processedRelationship.getGUID()) == null)
-                {
-                    InstanceType type = processedRelationship.getType();
-
-                    if (type != null)
-                    {
-                        /*
-                         * It would be possible to save the relationship directly into the repository,
-                         * but it is possible that some of the properties have been suppressed for the
-                         * requesting user Id.  In which case saving it now would result in other users
-                         * seeing a restricted view of the relationship.
-                         */
-                        localMetadataCollection.refreshRelationshipReferenceCopy(localRepositoryConnector.getServerUserId(),
-                                                                                 processedRelationship.getGUID(),
-                                                                                 type.getTypeDefGUID(),
-                                                                                 type.getTypeDefName(),
-                                                                                 metadataCollectionId);
-                    }
-                }
-            }
-            catch (Throwable   error)
-            {
-                final String methodName = "processRetrievedRelationship";
-
-                handleUnexpectedErrorFromEvent(error,
-                                               methodName,
-                                               sourceName,
-                                               metadataCollectionId);
-            }
+            refreshRetrievedRelationship(sourceName,
+                                   processedRelationship.getMetadataCollectionId(),
+                                   processedRelationship.getGUID(),
+                                   processedRelationship.getType());
         }
     }
 
@@ -1959,23 +2184,19 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                  homeMetadataCollectionId);
             }
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.UNABLE_TO_REMOVE_REFERENCE_COPY;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(localServerName,
-                                                                localMetadataCollectionId,
-                                                                typeDefSummary.getName(),
-                                                                instanceGUID,
-                                                                error.getClass().getName(),
-                                                                error.getMessage()),
-                               error.toString(),
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.UNABLE_TO_REMOVE_REFERENCE_COPY.getMessageDefinition(localServerName,
+                                                                                                   localMetadataCollectionId,
+                                                                                                   typeDefSummary.getName(),
+                                                                                                   instanceGUID,
+                                                                                                   error.getClass().getName(),
+                                                                                                   error.getMessage()),
+                               error.toString());
         }
     }
+
 
     /**
      * Update the reference entity in the local repository if all checks permit.
@@ -2025,7 +2246,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                 }
             }
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -2091,28 +2312,19 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                             if (!incomingInstance.getMetadataCollectionId().equals(
                                     storedInstance.getMetadataCollectionId()))
                             {
-                                OMRSAuditCode auditCode = OMRSAuditCode.NEW_HOME_INFORMATION;
-                                auditLog.logRecord(methodName,
-                                                   auditCode.getLogMessageId(),
-                                                   auditCode.getSeverity(),
-                                                   auditCode.getFormattedLogMessage(
-                                                           Long.toString(incomingInstance.getVersion()),
-                                                           incomingInstance.getGUID(),
-                                                           originatorServerName,
-                                                           incomingInstance.getMetadataCollectionId(),
-                                                           storedInstance.getMetadataCollectionId()),
-                                                   incomingInstance.toString(),
-                                                   auditCode.getSystemAction(),
-                                                   auditCode.getUserAction());
+                                auditLog.logMessage(methodName,
+                                                    OMRSAuditCode.NEW_HOME_INFORMATION.getMessageDefinition(Long.toString(incomingInstance.getVersion()),
+                                                                                                            incomingInstance.getGUID(),
+                                                                                                            originatorServerName,
+                                                                                                            incomingInstance.getMetadataCollectionId(),
+                                                                                                            storedInstance.getMetadataCollectionId()),
+                                                   incomingInstance.toString());
                             }
 
                             if (!incomingInstanceType.getTypeDefName().equals(storedInstanceType.getTypeDefName()))
                             {
-                                OMRSAuditCode auditCode = OMRSAuditCode.NEW_TYPE_INFORMATION;
-                                auditLog.logRecord(methodName,
-                                                   auditCode.getLogMessageId(),
-                                                   auditCode.getSeverity(),
-                                                   auditCode.getFormattedLogMessage(
+                                auditLog.logMessage(methodName,
+                                                    OMRSAuditCode.NEW_TYPE_INFORMATION.getMessageDefinition(
                                                            Long.toString(incomingInstance.getVersion()),
                                                            incomingInstance.getGUID(),
                                                            originatorServerName,
@@ -2121,9 +2333,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                            incomingInstanceType.getTypeDefGUID(),
                                                            storedInstanceType.getTypeDefName(),
                                                            storedInstanceType.getTypeDefGUID()),
-                                                   incomingInstance.toString(),
-                                                   auditCode.getSystemAction(),
-                                                   auditCode.getUserAction());
+                                                   incomingInstance.toString());
                             }
 
                             return true;
@@ -2138,8 +2348,8 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                              */
                             try
                             {
-                                OMRSAuditCode auditCode = OMRSAuditCode.PROCESS_INSTANCE_TYPE_CONFLICT;
-                                String errorMessage = auditCode.getFormattedLogMessage(storedInstance.getGUID(),
+                                AuditLogMessageDefinition messageDefinition = OMRSAuditCode.PROCESS_INSTANCE_TYPE_CONFLICT.getMessageDefinition(
+                                                                                       storedInstance.getGUID(),
                                                                                        originatorServerName,
                                                                                        storedInstance.getMetadataCollectionId(),
                                                                                        storedInstanceType.getTypeDefName(),
@@ -2162,9 +2372,9 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                                                      "storedInstanceType",
                                                                                                      storedInstanceType.getTypeDefGUID(),
                                                                                                      methodName),
-                                                                                             errorMessage);
+                                                                                             messageFormatter.getFormattedMessage(messageDefinition));
                             }
-                            catch (Throwable error)
+                            catch (Exception error)
                             {
                                 /*
                                  * Don't ever expect to be here - it probably means that the getTypeDef method
@@ -2185,8 +2395,8 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                 {
                     try
                     {
-                        OMRSAuditCode auditCode = OMRSAuditCode.PROCESS_INSTANCE_GUID_CONFLICT;
-                        String errorMessage = auditCode.getFormattedLogMessage(incomingInstanceType.getTypeDefName(),
+                        AuditLogMessageDefinition messageDefinition = OMRSAuditCode.PROCESS_INSTANCE_GUID_CONFLICT.getMessageDefinition(
+                                                                               incomingInstanceType.getTypeDefName(),
                                                                                incomingInstanceType.getTypeDefName(),
                                                                                originatorServerName,
                                                                                incomingInstance.getMetadataCollectionId(),
@@ -2213,9 +2423,9 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                                                   storedInstanceType.getTypeDefGUID(),
                                                                                                   methodName),
                                                                                           storedInstance.getGUID(),
-                                                                                          errorMessage);
+                                                                                          messageFormatter.getFormattedMessage(messageDefinition));
                     }
-                    catch (Throwable error)
+                    catch (Exception error)
                     {
                         /*
                          * Don't ever expect to be here - it probably means that the getTypeDef method
@@ -2271,7 +2481,7 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                                       relationship);
             }
         }
-        catch (Throwable error)
+        catch (Exception error)
         {
             handleUnexpectedErrorFromEvent(error,
                                            methodName,
@@ -2290,80 +2500,44 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
     {
         if (localMetadataCollectionId == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_LOCAL_METADATA_COLLECTION;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_LOCAL_METADATA_COLLECTION.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         if (localRepositoryConnector == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NO_LOCAL_REPOSITORY;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NO_LOCAL_REPOSITORY.getMessageDefinition(methodName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
-        if (repositoryHelper ==null)
+        if (repositoryHelper == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_REPOSITORY_HELPER;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_REPOSITORY_HELPER.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         if (repositoryValidator == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_REPOSITORY_VALIDATOR;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_REPOSITORY_VALIDATOR.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         if (saveExchangeRule == null)
         {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_EXCHANGE_RULE;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(methodName);
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_EXCHANGE_RULE.getMessageDefinition(methodName),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
 
         if (localMetadataCollection == null)
         {
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_METADATA_COLLECTION;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSLogicErrorException(errorCode.getHTTPErrorCode(),
+            throw new OMRSLogicErrorException(OMRSErrorCode.NULL_METADATA_COLLECTION.getMessageDefinition(),
                                               this.getClass().getName(),
-                                              methodName,
-                                              errorMessage,
-                                              errorCode.getSystemAction(),
-                                              errorCode.getUserAction());
+                                              methodName);
         }
     }
 
@@ -2376,23 +2550,20 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
      * @param originatorServerName originator server name
      * @param originatorMetadataCollectionId originators metadata collection id
      */
-    private void handleUnexpectedErrorFromEvent(Throwable  error,
+    private void handleUnexpectedErrorFromEvent(Exception  error,
                                                 String     methodName,
                                                 String     originatorServerName,
                                                 String     originatorMetadataCollectionId)
     {
-        OMRSAuditCode auditCode = OMRSAuditCode.UNEXPECTED_EXCEPTION_FROM_EVENT;
-        auditLog.logRecord(methodName,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(methodName,
-                                                            originatorServerName,
-                                                            originatorMetadataCollectionId,
-                                                            error.getMessage()),
-                           error.toString(),
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logException(methodName,
+                              OMRSAuditCode.UNEXPECTED_EXCEPTION_FROM_EVENT.getMessageDefinition(methodName,
+                                                                                                 originatorServerName,
+                                                                                                 originatorMetadataCollectionId,
+                                                                                                 error.getClass().getName(),
+                                                                                                 error.getMessage()),
+                              error);
     }
+
 
     /**
      * Determine if the event should be processed.
@@ -2429,4 +2600,62 @@ public class LocalOMRSInstanceEventProcessor extends OMRSInstanceEventProcessor 
                                                   instanceType.getTypeDefGUID(),
                                                   instanceType.getTypeDefName())));
     }
+
+    /**
+     * Determine if the event should result in a refresh request being sent.
+     *
+     * @param source identifier of the source of the event.
+     * @param instance metadata instance in the event.
+     * @return boolean flag indicating whether the event should be sent to the real repository or not.
+     */
+
+    private boolean verifyWhetherToRequestRefresh(String             source,
+                                                  InstanceHeader     instance)
+    {
+        /*
+         * Decide whether to send a refresh request:
+         * If the exchange rule is any of:
+         *    ALL - send the refresh request
+         *    SELECTED_TYPES AND the instance type is in the list of types - send the refresh request
+         *    LEARNED_TYPES AND the instance type is already in the list of types or can be added - add it and send the refresh request
+         * In all the above cases, the refresh request should only be sent if the type is active in this repository. Note that in the
+         * LEARNED_TYPES case it will be added to the selected types list, even if not active at this time.
+         */
+        InstanceType   instanceType = instance.getType();
+
+        /*
+         * Provide an opportunity for the type to be learned.
+         * The result is ignored because processInstanceEvent will verify the exchange rule and type inclusion
+         */
+        saveExchangeRule.learnInstanceEvent(instance);
+
+        /*
+         * Determine whether the exchange rule permits processing of this event.
+         */
+        boolean shouldProcess = saveExchangeRule.processInstanceEvent(instance);
+
+        if (shouldProcess)
+        {
+            /*
+             * Check that the instance type is active.
+             */
+            boolean isActiveType = repositoryValidator.isActiveType(source,
+                                                                instanceType.getTypeDefGUID(),
+                                                                instanceType.getTypeDefName());
+
+            if (isActiveType)
+            {
+               return true;
+            }
+        }
+
+        /*
+         * The event should not trigger a refresh request, either due to an exchange rule mismatch
+         * or because the type is not active
+         */
+        return false;
+
+    }
+
+
 }

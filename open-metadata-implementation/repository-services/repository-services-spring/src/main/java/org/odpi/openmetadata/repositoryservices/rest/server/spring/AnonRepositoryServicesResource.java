@@ -2,9 +2,16 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.rest.server.spring;
 
-import org.odpi.openmetadata.repositoryservices.rest.properties.*;
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.odpi.openmetadata.repositoryservices.rest.properties.EntityDetailResponse;
+import org.odpi.openmetadata.repositoryservices.rest.properties.MetadataCollectionIdResponse;
+import org.odpi.openmetadata.repositoryservices.rest.properties.RelationshipResponse;
 import org.odpi.openmetadata.repositoryservices.rest.server.OMRSRepositoryRESTServices;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 /**
@@ -13,6 +20,15 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/servers/{serverName}/open-metadata/repository-services")
+
+@Tag(name="Repository Services - Anonymous",
+        description="The Open Metadata Repository Services (OMRS) enable metadata repositories to " +
+        "exchange metadata irrespective of the technology, or technology supplier.  The anonymous " +
+                "services do not take a user id in the URL.  These may be disabled if server " +
+                "security is turned on.",
+        externalDocs=@ExternalDocumentation(description="Further information",
+                url="https://egeria.odpi.org/open-metadata-implementation/repository-services/"))
+
 public class AnonRepositoryServicesResource
 {
     private OMRSRepositoryRESTServices  restAPI = new OMRSRepositoryRESTServices(true);
@@ -40,11 +56,13 @@ public class AnonRepositoryServicesResource
      * @return String metadata collection id.
      * or RepositoryErrorException if there is a problem communicating with the metadata repository.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/metadata-collection-id")
+    @GetMapping(path = "/metadata-collection-id")
 
     public MetadataCollectionIdResponse getMetadataCollectionId(@PathVariable String   serverName)
     {
-        return restAPI.getMetadataCollectionId(serverName);
+        @SuppressWarnings(value = "deprecation")
+        MetadataCollectionIdResponse response = restAPI.getMetadataCollectionId(serverName);
+        return response;
     }
 
 
@@ -68,7 +86,7 @@ public class AnonRepositoryServicesResource
      * EntityProxyOnlyException the requested entity instance is only a proxy in the metadata collection or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/entity/{guid}")
+    @GetMapping(path = "/instances/entity/{guid}")
 
     public EntityDetailResponse getEntityDetail(@PathVariable String    serverName,
                                                 @PathVariable String    guid)
@@ -92,7 +110,7 @@ public class AnonRepositoryServicesResource
      *                                         the requested GUID stored or
      * UserNotAuthorizedException the userId is not permitted to perform this operation.
      */
-    @RequestMapping(method = RequestMethod.GET, path = "/instances/relationship/{guid}")
+    @GetMapping(path = "/instances/relationship/{guid}")
 
     public RelationshipResponse getRelationship(@PathVariable String     serverName,
                                                 @PathVariable String     guid)

@@ -3,15 +3,13 @@
 package org.odpi.openmetadata.accessservices.assetowner.client;
 
 import org.odpi.openmetadata.accessservices.assetowner.api.AssetOnboardingFileSystem;
-import org.odpi.openmetadata.accessservices.assetowner.properties.FileSystem;
-import org.odpi.openmetadata.accessservices.assetowner.properties.Folder;
+import org.odpi.openmetadata.accessservices.assetowner.client.rest.AssetOwnerRESTClient;
+import org.odpi.openmetadata.accessservices.assetowner.metadataelements.FileSystemElement;
+import org.odpi.openmetadata.accessservices.assetowner.metadataelements.FolderElement;
 import org.odpi.openmetadata.accessservices.assetowner.rest.*;
-import org.odpi.openmetadata.commonservices.ffdc.InvalidParameterHandler;
-import org.odpi.openmetadata.commonservices.ffdc.RESTExceptionHandler;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDListResponse;
 import org.odpi.openmetadata.commonservices.ffdc.rest.GUIDResponse;
-import org.odpi.openmetadata.commonservices.ffdc.rest.NullRequestBody;
-import org.odpi.openmetadata.commonservices.ffdc.rest.VoidResponse;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
@@ -23,14 +21,23 @@ import java.util.Map;
  * FileSystemAssetOwner provides specialist methods for onboarding details of a file system and the files within it.
  * At the top level is a file system.  It can have nested Folders attached and inside the folders are the files.
  */
-public class FileSystemAssetOwner implements AssetOnboardingFileSystem
+public class FileSystemAssetOwner extends AssetOwner implements AssetOnboardingFileSystem
 {
-    private String               serverName;               /* Initialized in constructor */
-    private String               serverPlatformRootURL;    /* Initialized in constructor */
-    private AssetOwnerRESTClient restClient;               /* Initialized in constructor */
-
-    private InvalidParameterHandler invalidParameterHandler = new InvalidParameterHandler();
-    private RESTExceptionHandler    exceptionHandler        = new RESTExceptionHandler();
+    /**
+     * Create a new client with no authentication embedded in the HTTP request and an audit log.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param auditLog logging destination
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public FileSystemAssetOwner(String   serverName,
+                                String   serverPlatformRootURL,
+                                AuditLog auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+    }
 
 
     /**
@@ -41,16 +48,34 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws InvalidParameterException there is a problem creating the client-side components to issue any
      * REST API calls.
      */
-    public FileSystemAssetOwner(String     serverName,
+    public FileSystemAssetOwner(String serverName,
                                 String serverPlatformRootURL) throws InvalidParameterException
     {
-        final String methodName = "Constructor (no security)";
+        super(serverName, serverPlatformRootURL);
+    }
 
-        invalidParameterHandler.validateOMAGServerPlatformURL(serverPlatformRootURL, serverName, methodName);
 
-        this.serverName = serverName;
-        this.serverPlatformRootURL = serverPlatformRootURL;
-        this.restClient = new AssetOwnerRESTClient(serverName, serverPlatformRootURL);
+    /**
+     * Create a new client that passes userId and password in each HTTP request.  This is the
+     * userId/password of the calling server.  The end user's userId is sent on each request.
+     * There is also an audit log destination.
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param userId caller's userId embedded in all HTTP requests
+     * @param password caller's userId embedded in all HTTP requests
+     * @param auditLog logging destination
+     *
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public FileSystemAssetOwner(String   serverName,
+                                String   serverPlatformRootURL,
+                                String   userId,
+                                String   password,
+                                AuditLog auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, userId, password, auditLog);
     }
 
 
@@ -65,18 +90,37 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws InvalidParameterException there is a problem creating the client-side components to issue any
      * REST API calls.
      */
-    public FileSystemAssetOwner(String     serverName,
+    public FileSystemAssetOwner(String serverName,
                                 String serverPlatformRootURL,
-                                String     userId,
-                                String     password) throws InvalidParameterException
+                                String userId,
+                                String password) throws InvalidParameterException
     {
-        final String methodName = "Constructor (with security)";
+        super(serverName, serverPlatformRootURL, userId, password);
+    }
 
-        invalidParameterHandler.validateOMAGServerPlatformURL(serverPlatformRootURL, serverName, methodName);
 
-        this.serverName = serverName;
-        this.serverPlatformRootURL = serverPlatformRootURL;
-        this.restClient = new AssetOwnerRESTClient(serverName, serverPlatformRootURL, userId, password);
+    /**
+     * Create a new client that is going to be used in an OMAG Server (view service or integration service typically).
+     *
+     * @param serverName name of the server to connect to
+     * @param serverPlatformRootURL the network address of the server running the OMAS REST servers
+     * @param restClient client that issues the REST API calls
+     * @param maxPageSize maximum number of results supported by this server
+     * @param auditLog logging destination
+     * @throws InvalidParameterException there is a problem creating the client-side components to issue any
+     * REST API calls.
+     */
+    public FileSystemAssetOwner(String               serverName,
+                                String               serverPlatformRootURL,
+                                AssetOwnerRESTClient restClient,
+                                int                  maxPageSize,
+                                AuditLog             auditLog) throws InvalidParameterException
+    {
+        super(serverName, serverPlatformRootURL, auditLog);
+
+        invalidParameterHandler.setMaxPagingSize(maxPageSize);
+
+        this.restClient = restClient;
     }
 
     /*
@@ -106,6 +150,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public String   createFileSystemInCatalog(String              userId,
                                               String              uniqueName,
                                               String              displayName,
@@ -144,10 +189,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                   serverName,
                                                                   userId);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUID();
     }
 
@@ -167,6 +208,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String> createFolderStructureInCatalog(String   userId,
                                                        String   anchorGUID,
                                                        String   pathName) throws InvalidParameterException,
@@ -190,10 +232,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                           userId,
                                                                           anchorGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUIDs();
     }
 
@@ -212,6 +250,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String> createFolderStructureInCatalog(String   userId,
                                                        String   pathName) throws InvalidParameterException,
                                                                                  UserNotAuthorizedException,
@@ -233,10 +272,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                           serverName,
                                                                           userId);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUIDs();
     }
 
@@ -252,6 +287,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void attachFolderToFileSystem(String   userId,
                                          String   fileSystemGUID,
                                          String   folderGUID) throws InvalidParameterException,
@@ -267,19 +303,13 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(fileSystemGUID, fileSystemGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  fileSystemGUID,
-                                                                  folderGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        fileSystemGUID,
+                                        folderGUID);
     }
 
 
@@ -294,6 +324,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void detachFolderFromFileSystem(String   userId,
                                            String   fileSystemGUID,
                                            String   folderGUID) throws InvalidParameterException,
@@ -309,19 +340,13 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(fileSystemGUID, fileSystemGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  fileSystemGUID,
-                                                                  folderGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        fileSystemGUID,
+                                        folderGUID);
     }
 
 
@@ -343,6 +368,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String> addDataFileAssetToCatalog(String   userId,
                                                   String   displayName,
                                                   String   description,
@@ -368,10 +394,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                           serverName,
                                                                           userId);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUIDs();
     }
 
@@ -396,6 +418,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String> addDataFolderAssetToCatalog(String   userId,
                                                     String   displayName,
                                                     String   description,
@@ -421,10 +444,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                           serverName,
                                                                           userId);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUIDs();
     }
 
@@ -441,6 +460,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void attachDataFileAssetToFolder(String   userId,
                                             String   folderGUID,
                                             String   fileGUID) throws InvalidParameterException,
@@ -456,19 +476,13 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(fileGUID, fileGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  folderGUID,
-                                                                  fileGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        folderGUID,
+                                        fileGUID);
     }
 
 
@@ -485,6 +499,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void detachDataFileAssetFromFolder(String   userId,
                                               String   folderGUID,
                                               String   fileGUID) throws InvalidParameterException,
@@ -500,19 +515,13 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(fileGUID, fileGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  folderGUID,
-                                                                  fileGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        folderGUID,
+                                        fileGUID);
     }
 
 
@@ -528,6 +537,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void moveDataFileInCatalog(String   userId,
                                       String   folderGUID,
                                       String   fileGUID) throws InvalidParameterException,
@@ -543,19 +553,13 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(fileGUID, fileGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  folderGUID,
-                                                                  fileGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        folderGUID,
+                                        fileGUID);
     }
 
 
@@ -571,6 +575,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public void moveDataFolderInCatalog(String   userId,
                                         String   folderGUID,
                                         String   dataFolderGUID) throws InvalidParameterException,
@@ -586,38 +591,33 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         invalidParameterHandler.validateGUID(dataFolderGUID, fileGUIDParameter, methodName);
         invalidParameterHandler.validateGUID(folderGUID, folderGUIDParameter, methodName);
 
-        NullRequestBody requestBody = new NullRequestBody();
-
-        VoidResponse restResult = restClient.callVoidPostRESTCall(methodName,
-                                                                  serverPlatformRootURL + urlTemplate,
-                                                                  requestBody,
-                                                                  serverName,
-                                                                  userId,
-                                                                  folderGUID,
-                                                                  dataFolderGUID);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+        restClient.callVoidPostRESTCall(methodName,
+                                        serverPlatformRootURL + urlTemplate,
+                                        nullRequestBody,
+                                        serverName,
+                                        userId,
+                                        folderGUID,
+                                        dataFolderGUID);
     }
 
 
     /**
-     * Retrieve a FileSystem asset by its unique identifier (GUID).
+     * Retrieve a FileSystemProperties asset by its unique identifier (GUID).
      *
      * @param userId calling user
      * @param fileSystemGUID unique identifier used to locate the file system
      *
-     * @return FileSystem properties
+     * @return FileSystemProperties properties
      *
      * @throws InvalidParameterException one of the parameters is null or invalid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public FileSystem getFileSystemByGUID(String   userId,
-                                          String   fileSystemGUID) throws InvalidParameterException,
-                                                                          UserNotAuthorizedException,
-                                                                          PropertyServerException
+    @Override
+    public FileSystemElement getFileSystemByGUID(String   userId,
+                                                 String   fileSystemGUID) throws InvalidParameterException,
+                                                                                 UserNotAuthorizedException,
+                                                                                 PropertyServerException
     {
         final String   methodName = "getFileSystemByGUID";
         final String   fileSystemGUIDParameter = "fileSystemGUID";
@@ -632,16 +632,12 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                              userId,
                                                                              fileSystemGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getFileSystem();
     }
 
 
     /**
-     * Retrieve a FileSystem asset by its unique name.
+     * Retrieve a FileSystemProperties asset by its unique name.
      *
      * @param userId calling user
      * @param uniqueName unique identifier used to locate the folder
@@ -652,10 +648,11 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public FileSystem getFileSystemByUniqueName(String userId,
-                                                String uniqueName) throws InvalidParameterException,
-                                                                          UserNotAuthorizedException,
-                                                                          PropertyServerException
+    @Override
+    public FileSystemElement getFileSystemByUniqueName(String userId,
+                                                       String uniqueName) throws InvalidParameterException,
+                                                                                 UserNotAuthorizedException,
+                                                                                 PropertyServerException
     {
         final String   methodName = "getFileSystemByUniqueName";
         final String   nameParameter = "uniqueName";
@@ -669,10 +666,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                              serverName,
                                                                              userId,
                                                                              uniqueName);
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getFileSystem();
     }
@@ -691,6 +684,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String> getFileSystems(String  userId,
                                        int     startingFrom,
                                        int     maxPageSize) throws InvalidParameterException,
@@ -709,30 +703,27 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                           Integer.toString(startingFrom),
                                                                           Integer.toString(maxPageSize));
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getGUIDs();
     }
 
 
     /**
-     * Retrieve a Folder asset by its unique identifier (GUID).
+     * Retrieve a FolderProperties asset by its unique identifier (GUID).
      *
      * @param userId calling user
      * @param folderGUID unique identifier used to locate the folder
      *
-     * @return Folder properties
+     * @return FolderProperties properties
      *
      * @throws InvalidParameterException one of the parameters is null or invalid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public Folder getFolderByGUID(String   userId,
-                                  String   folderGUID) throws InvalidParameterException,
-                                                              UserNotAuthorizedException,
-                                                              PropertyServerException
+    @Override
+    public FolderElement getFolderByGUID(String   userId,
+                                         String   folderGUID) throws InvalidParameterException,
+                                                                     UserNotAuthorizedException,
+                                                                     PropertyServerException
     {
         final String   methodName = "getFileSystemByGUID";
         final String   folderGUIDParameter = "folderGUID";
@@ -747,10 +738,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                      userId,
                                                                      folderGUID);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getFolder();
     }
 
@@ -761,16 +748,17 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @param userId calling user
      * @param pathName path name
      *
-     * @return Folder properties
+     * @return FolderProperties properties
      *
      * @throws InvalidParameterException one of the parameters is null or invalid
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
-    public Folder getFolderByPathName(String   userId,
-                                      String   pathName) throws InvalidParameterException,
-                                                                UserNotAuthorizedException,
-                                                                PropertyServerException
+    @Override
+    public FolderElement getFolderByPathName(String   userId,
+                                             String   pathName) throws InvalidParameterException,
+                                                                       UserNotAuthorizedException,
+                                                                       PropertyServerException
     {
         final String   methodName = "getFileSystemByUniqueName";
         final String   nameParameter = "pathName";
@@ -785,10 +773,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                      userId,
                                                                      pathName);
 
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
-
         return restResult.getFolder();
     }
 
@@ -797,7 +781,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * Return the list of folders nested inside a folder.
      *
      * @param userId calling user
-     * @param anchorGUID unique identifier of the anchor folder or file system
+     * @param parentGUID unique identifier of the anchor folder or file system
      * @param startingFrom starting point in the list
      * @param maxPageSize maximum number of results
      *
@@ -807,8 +791,9 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String>  getNestedFolders(String  userId,
-                                          String  anchorGUID,
+                                          String  parentGUID,
                                           int     startingFrom,
                                           int     maxPageSize) throws InvalidParameterException,
                                                                       UserNotAuthorizedException,
@@ -819,19 +804,15 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
         final String   urlTemplate = "/servers/{0}/open-metadata/access-services/asset-owner/users/{1}/anchor/{2}/folders?startingFrom={3}&maximumResults={4}";
 
         invalidParameterHandler.validateUserId(userId, methodName);
-        invalidParameterHandler.validateGUID(anchorGUID, anchorGUIDParameter, methodName);
+        invalidParameterHandler.validateGUID(parentGUID, anchorGUIDParameter, methodName);
 
         GUIDListResponse restResult = restClient.callGUIDListGetRESTCall(methodName,
                                                                          serverPlatformRootURL + urlTemplate,
                                                                          serverName,
                                                                          userId,
-                                                                         anchorGUID,
+                                                                         parentGUID,
                                                                          Integer.toString(startingFrom),
                                                                          Integer.toString(maxPageSize));
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUIDs();
     }
@@ -851,6 +832,7 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
      * @throws PropertyServerException problem accessing property server
      * @throws UserNotAuthorizedException security access problem
      */
+    @Override
     public List<String>   getFolderFiles(String  userId,
                                          String  folderGUID,
                                          int     startingFrom,
@@ -872,10 +854,6 @@ public class FileSystemAssetOwner implements AssetOnboardingFileSystem
                                                                          folderGUID,
                                                                          Integer.toString(startingFrom),
                                                                          Integer.toString(maxPageSize));
-
-        exceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-        exceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-        exceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
 
         return restResult.getGUIDs();
     }

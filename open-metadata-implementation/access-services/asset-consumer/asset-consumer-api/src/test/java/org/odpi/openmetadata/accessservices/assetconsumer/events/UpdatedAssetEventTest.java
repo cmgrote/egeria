@@ -4,7 +4,7 @@ package org.odpi.openmetadata.accessservices.assetconsumer.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Asset;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.Classification;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementClassification;
 import org.testng.annotations.Test;
 
 import java.util.*;
@@ -17,21 +17,21 @@ import static org.testng.Assert.assertTrue;
  */
 public class UpdatedAssetEventTest
 {
-    private AssetConsumerEventType eventType                = AssetConsumerEventType.NEW_ASSET_EVENT;
-    private Asset                  originalAsset            = new Asset();
-    private Asset                  asset                    = new Asset();
+    private AssetConsumerEventType      eventType                = AssetConsumerEventType.NEW_ASSET_EVENT;
+    private Asset                       originalAsset            = new Asset();
+    private Asset                       asset                    = new Asset();
     private String                 guid            = "TestGUID";
     private String                 typeName        = "TestTypeName";
-    private String                 typeDescription = "TestTypeDescription";
-    private String                 qualifiedName            = "TestQualifiedName";
-    private String                 displayName              = "TestDisplayName";
-    private String                 description              = "TestDescription";
-    private String                 owner                    = "TestOwner";
-    private Date                   updateTime               = new Date();
-    private Map<String, String>    additionalProperties     = new HashMap<>();
-    private List<Classification>   classifications          = new ArrayList<>();
-    private Classification         classification           = new Classification();
-    private Map<String, Object>    classificationProperties = new HashMap<>();
+    private String                      typeDescription          = "TestTypeDescription";
+    private String                      qualifiedName            = "TestQualifiedName";
+    private String                      displayName              = "TestDisplayName";
+    private String                      description              = "TestDescription";
+    private String                      owner                    = "TestOwner";
+    private Date                        updateTime               = new Date();
+    private Map<String, String>         additionalProperties     = new HashMap<>();
+    private List<ElementClassification> classifications          = new ArrayList<>();
+    private ElementClassification       classification           = new ElementClassification();
+    private Map<String, Object>         classificationProperties = new HashMap<>();
 
 
     /**
@@ -187,7 +187,7 @@ public class UpdatedAssetEventTest
         {
             jsonString = objectMapper.writeValueAsString(getTestObject());
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -196,7 +196,7 @@ public class UpdatedAssetEventTest
         {
             validateResultObject(objectMapper.readValue(jsonString, UpdatedAssetEvent.class));
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -210,7 +210,7 @@ public class UpdatedAssetEventTest
         {
             jsonString = objectMapper.writeValueAsString(superObject);
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -219,7 +219,7 @@ public class UpdatedAssetEventTest
         {
             validateResultObject((UpdatedAssetEvent) objectMapper.readValue(jsonString, AssetEvent.class));
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
@@ -228,22 +228,22 @@ public class UpdatedAssetEventTest
         /*
          * Through superSuperclass
          */
-        AssetConsumerEventHeader superSuperObject = getTestObject();
+        AssetConsumerEvent superSuperObject = getTestObject();
 
         try
         {
             jsonString = objectMapper.writeValueAsString(superSuperObject);
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }
 
         try
         {
-            validateResultObject((UpdatedAssetEvent) objectMapper.readValue(jsonString, AssetConsumerEventHeader.class));
+            validateResultObject((UpdatedAssetEvent) objectMapper.readValue(jsonString, AssetConsumerEvent.class));
         }
-        catch (Throwable  exc)
+        catch (Exception  exc)
         {
             assertTrue(false, "Exception: " + exc.getMessage());
         }

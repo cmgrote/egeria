@@ -8,14 +8,13 @@ import org.odpi.openmetadata.accessservices.subjectarea.properties.classificatio
 import org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.SpineAttribute;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.SpineObject;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.governednode.GovernedNode;
-import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.graph.Node;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.graph.NodeType;
 
 import org.odpi.openmetadata.accessservices.subjectarea.properties.objects.nodesummary.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Objects;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_ONLY;
@@ -35,28 +34,25 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
         property = "class",
-        defaultImpl = Term.class
+        defaultImpl = Term.class,
+        visible = true
 )
-@JsonSubTypes(
-        {
-                @JsonSubTypes.Type(value = Term.class, name = "Term")
-        })
+@JsonSubTypes({ @JsonSubTypes.Type(value = Activity.class, name = "Activity") })
 public class Term extends GovernedNode implements Serializable {
-    private static final Logger log = LoggerFactory.getLogger(Term.class);
-    private static final String className = Term.class.getName();
-
     private String summary =null;
     private String abbreviation =null;
     private String examples =null;
     private String usage =null;
 
     private GlossarySummary glossary =null;
-
-    private boolean isSpineObject =false;
-    private boolean isSpineAttribute =false;
-    private boolean isObjectIdentifier =false;
+    private List<CategorySummary> categories = null;
+    @JsonProperty(value="spineObject")
+    private boolean spineObject =false;
+    @JsonProperty(value="spineAttribute")
+    private boolean spineAttribute =false;
+    @JsonProperty(value="objectIdentifier")
+    private boolean objectIdentifier =false;
 
     public Term() {
         nodeType = NodeType.Term;
@@ -127,11 +123,11 @@ public class Term extends GovernedNode implements Serializable {
      * @return <code>true</code> if spine object, false otherwise.
      */
     public boolean isSpineObject() {
-        return isSpineObject;
+        return spineObject;
     }
 
     public void setSpineObject(boolean spineObject) {
-        isSpineObject = spineObject;
+        this.spineObject = spineObject;
     }
 
     /**
@@ -139,11 +135,11 @@ public class Term extends GovernedNode implements Serializable {
       * @return <code>true</code> if spine object, false otherwise.
      */
     public boolean isSpineAttribute() {
-        return isSpineAttribute;
+        return spineAttribute;
     }
 
     public void setSpineAttribute(boolean spineAttribute) {
-        isSpineAttribute = spineAttribute;
+        this.spineAttribute = spineAttribute;
     }
 
     /**
@@ -151,12 +147,24 @@ public class Term extends GovernedNode implements Serializable {
      * @return <code>true</code> if term is an identifier, false otherwise.
      */
     public boolean isObjectIdentifier() {
-        return isObjectIdentifier;
+        return objectIdentifier;
     }
 
     public void setObjectIdentifier(boolean objectIdentifier) {
-        isObjectIdentifier = objectIdentifier;
+        this.objectIdentifier = objectIdentifier;
     }
+    /**
+     * The Categories that categorize this Term
+     * @return Category Summaries
+     */
+    public List<CategorySummary> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<CategorySummary> categories) {
+        this.categories = categories;
+    }
+
     @Override
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
@@ -165,74 +173,76 @@ public class Term extends GovernedNode implements Serializable {
         sb.append("term=");
         sb.append(super.toString(sb));
         sb.append("Term Attributes{");
-        sb.append("Summary=" +this.summary);
+        sb.append("Summary=").append(this.summary);
 
-        sb.append("Examples=" +this.examples);
-        sb.append("Abbreviation=" +this.abbreviation);
-        sb.append("Usage=" +this.usage);
-        sb.append("Glossary" +this.glossary);
+        sb.append("Examples=").append(this.examples);
+        sb.append("Abbreviation=").append(this.abbreviation);
+        sb.append("Usage=").append(this.usage);
+        sb.append("Glossary").append(this.glossary);
+        if (this.categories != null && this.categories.size() >0) {
+            sb.append("Categories: [");
+            for (CategorySummary categorySummary : this.categories) {
+                sb.append("Category=" + categorySummary);
+            }
+            sb.append("]");
+        }
+        sb.append(getGovernanceClassifications());
         sb.append(", SpineInformation=[");
 
-        if (isSpineObject) {
+        if (spineObject) {
             sb.append("SpineObject ");
         }
-        if (isSpineAttribute) {
+        if (spineAttribute) {
             sb.append("SpineAttribute ");
         }
-        if (isObjectIdentifier) {
+        if (objectIdentifier) {
             sb.append("SpineIdentifier");
         }
         sb.append("]");
 
         if (glossary!=null ){
-            sb.append(", glossary:" + glossary.toString());
+            sb.append(", glossary:").append(glossary.toString());
 
         }
         sb.append('}');
         return sb;
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
+        if (!super.equals(o)) return false;
         Term term = (Term) o;
-        if (!(this.equals((Node)o))) return false;
-        if (glossary != null ? !glossary.equals(term.glossary) : term.glossary != null) return false;
-        if (summary != null ? !summary.equals(term.summary) : term.summary != null) return false;
-        return  true;
+
+        return spineObject == term.spineObject &&
+                spineAttribute == term.spineAttribute &&
+                objectIdentifier == term.objectIdentifier &&
+                Objects.equals(categories,term.categories) &&
+                Objects.equals(summary, term.summary) &&
+                Objects.equals(abbreviation, term.abbreviation) &&
+                Objects.equals(usage, term.usage) &&
+                Objects.equals(getGovernanceClassifications(), term.getGovernanceClassifications()) &&
+                Objects.equals(glossary, term.glossary);
     }
 
     @Override
     public int hashCode() {
-        int  result = super.hashCode();
-        result = 31 * result + (summary != null ? summary.hashCode() : 0);
-        result = 31 * result + (glossary!= null ? glossary.hashCode() : 0);
-        // not including assets, terms and categories in hashcode as they are relationships
-        if (this.isSpineAttribute) {
-            result = 31 * result + "isSpineAttribute".hashCode();
-        }
-        if (this.isSpineObject) {
-            result = 31 * result + "isSpineObject".hashCode();
-        }
-        if (this.isObjectIdentifier) {
-            result = 31 * result + "isObjectIdentifier".hashCode();
-        }
-        return result;
+        return Objects.hash(super.hashCode(), summary, usage, abbreviation, glossary, spineObject, spineAttribute, objectIdentifier, categories, getGovernanceClassifications());
     }
 
     protected void processClassification(Classification classification) {
         String classificationName = new SpineObject().getClassificationName();
         if (classification.getClassificationName().equals(classificationName)) {
-            this.isSpineObject = true;
+            this.spineObject = true;
         }
         classificationName = new SpineAttribute().getClassificationName();
         if (classification.getClassificationName().equals(classificationName)) {
-            this.isSpineAttribute = true;
+            this.spineAttribute = true;
         }
         classificationName = new ObjectIdentifier().getClassificationName();
         if (classification.getClassificationName().equals(classificationName)) {
-            this.isObjectIdentifier = true;
+            this.objectIdentifier = true;
         }
     }
 }

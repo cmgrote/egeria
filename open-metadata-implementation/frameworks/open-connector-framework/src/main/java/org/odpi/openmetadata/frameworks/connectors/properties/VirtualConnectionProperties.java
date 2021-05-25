@@ -22,6 +22,8 @@ import java.util.Objects;
  */
 public class VirtualConnectionProperties extends ConnectionProperties
 {
+    private static final long     serialVersionUID = 1L;
+
     protected VirtualConnection connectionBean;
 
 
@@ -241,7 +243,7 @@ public class VirtualConnectionProperties extends ConnectionProperties
      *
      * @return secured properties typically user credentials for the connection
      */
-    protected Map<String, Object> getSecuredProperties()
+    protected Map<String, String> getSecuredProperties()
     {
         return connectionBean.getSecuredProperties();
     }
@@ -272,7 +274,7 @@ public class VirtualConnectionProperties extends ConnectionProperties
         {
             return true;
         }
-        if (!(objectToCompare instanceof VirtualConnectionProperties))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -282,5 +284,17 @@ public class VirtualConnectionProperties extends ConnectionProperties
         }
         VirtualConnectionProperties that = (VirtualConnectionProperties) objectToCompare;
         return Objects.equals(getConnectionBean(), that.getConnectionBean());
+    }
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getConnectionBean());
     }
 }

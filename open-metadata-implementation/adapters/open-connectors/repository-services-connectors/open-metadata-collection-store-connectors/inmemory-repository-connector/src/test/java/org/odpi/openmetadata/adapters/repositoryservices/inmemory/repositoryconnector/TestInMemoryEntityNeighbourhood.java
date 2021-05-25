@@ -7,26 +7,24 @@ import org.mockito.MockitoAnnotations;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.*;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryValidator;
-import org.odpi.openmetadata.repositoryservices.ffdc.exception.InvalidParameterException;
-import org.odpi.openmetadata.repositoryservices.ffdc.exception.RepositoryErrorException;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.TypeErrorException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-;
 
 public class TestInMemoryEntityNeighbourhood
 {
+    public static final String CLASSIFICATION_1 = "classification1";
+    public static final String CLASSIFICATION_2 = "classification2";
+    public static final String CLASSIFICATION_3 = "classification3";
     @Mock
     private OMRSRepositoryValidator repositoryValidator;
     @Mock
@@ -34,15 +32,15 @@ public class TestInMemoryEntityNeighbourhood
 
     @BeforeMethod
 
-    public void setup() throws Exception
+    public void setup()
     {
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    void testGetGraph() throws RepositoryErrorException, InvalidParameterException, TypeErrorException {
+    void testGetGraph() throws TypeErrorException {
         Map<String, EntityDetail> entityStore = new HashMap<>();
-        Map<String, Relationship> relationshipStore = new HashMap();
+        Map<String, Relationship> relationshipStore = new HashMap<>();
         String rootEntityGUID = "1111";
         List<String> entityTypeGUIDs = null;
         List<String> relationshipTypeGUIDs = null;
@@ -56,10 +54,10 @@ public class TestInMemoryEntityNeighbourhood
         when(repositoryValidator.verifyEntityIsClassified(any(), any())).thenReturn(true);
         when(repositoryHelper.isTypeOf(anyString(),anyString(),anyString())).thenReturn(true);
         // test with 1 entity
-        InMemoryEntityNeighbourhood inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 0);
+        InMemoryEntityNeighbourhood inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 1);
         InstanceGraph graph = inMemoryEntityNeighbourhood.createInstanceGraph();
         assertTrue(graphContainsEntityWithGuid(graph, "1111"));
-        assertTrue(graph.getRelationships() == null);
+        assertNull(graph.getRelationships());
 
         // test with 2 entities 1 relationship
         EntityDetail entity2 = new EntityDetail();
@@ -78,7 +76,7 @@ public class TestInMemoryEntityNeighbourhood
 
         entityStore.put(entity2.getGUID(), entity2);
         relationshipStore.put(relationship1.getGUID(), relationship1);
-        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper, "", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 0);
+        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper, "", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 1);
         graph = inMemoryEntityNeighbourhood.createInstanceGraph();
 
         assertTrue(graph.getEntities().size() == 2);
@@ -108,7 +106,7 @@ public class TestInMemoryEntityNeighbourhood
         assertTrue(graphContainsRelationshipWithGuid(graph, "3333"));
 
         // test with 3 entities 2 relationship, level 2
-        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 2);
+        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 3);
         graph = inMemoryEntityNeighbourhood.createInstanceGraph();
 
         assertTrue(graph.getEntities().size() == 3);
@@ -118,6 +116,50 @@ public class TestInMemoryEntityNeighbourhood
         assertTrue(graph.getRelationships().size() == 2);
         assertTrue(graphContainsRelationshipWithGuid(graph, "3333"));
         assertTrue(graphContainsRelationshipWithGuid(graph, "6666"));
+
+        // test limit by classification
+        List<Classification> classificationsForEntity2 = new ArrayList<>();
+        Classification testClassification = new Classification();
+        testClassification.setName(CLASSIFICATION_1);
+        classificationsForEntity2.add(testClassification);
+        testClassification = new Classification();
+        testClassification.setName(CLASSIFICATION_2);
+        classificationsForEntity2.add(testClassification);
+        entity2.setClassifications(classificationsForEntity2);
+        entityStore.put(entity2.getGUID(), entity2);
+        // check the same results are returned when there is no limitation on classification but one of the entities is classified
+        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 1);
+        graph = inMemoryEntityNeighbourhood.createInstanceGraph();
+        assertTrue(graph.getEntities().size() == 2);
+        assertTrue(graphContainsEntityWithGuid(graph, "1111"));
+        assertTrue(graphContainsEntityWithGuid(graph, "2222"));
+        assertTrue(graphContainsRelationshipWithGuid(graph, "3333"));
+
+        // check that specifying the classification in the limitResultsByClassification list gives the same result
+        limitResultsByClassification = new ArrayList<>();
+        limitResultsByClassification.add(CLASSIFICATION_1);
+        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 1);
+        graph = inMemoryEntityNeighbourhood.createInstanceGraph();
+        assertTrue(graph.getEntities().size() == 2);
+        assertTrue(graphContainsEntityWithGuid(graph, "1111"));
+        assertTrue(graphContainsEntityWithGuid(graph, "2222"));
+        assertTrue(graphContainsRelationshipWithGuid(graph, "3333"));
+
+        // check that the same results are returned if there are other classifications in the limitResultsByClassification list
+        limitResultsByClassification.add(CLASSIFICATION_2);
+        limitResultsByClassification.add(CLASSIFICATION_3);
+        limitResultsByClassification = new ArrayList<>();
+        limitResultsByClassification.add(CLASSIFICATION_1);
+        inMemoryEntityNeighbourhood = new InMemoryEntityNeighbourhood(repositoryHelper,"", repositoryValidator, entityStore, relationshipStore, rootEntityGUID, entityTypeGUIDs, relationshipTypeGUIDs, limitResultsByStatus, limitResultsByClassification, 1);
+        graph = inMemoryEntityNeighbourhood.createInstanceGraph();
+        assertTrue(graph.getEntities().size() == 2);
+        assertTrue(graphContainsEntityWithGuid(graph, "1111"));
+        assertTrue(graphContainsEntityWithGuid(graph, "2222"));
+        assertTrue(graphContainsRelationshipWithGuid(graph, "3333"));
+
+        // Unfortunately checking that limiting on a classification that the entity does not have, means it should not be returned is mocked out in the junit.
+
+
     }
 
     private boolean graphContainsEntityWithGuid(InstanceGraph graph, String guid)
@@ -129,7 +171,7 @@ public class TestInMemoryEntityNeighbourhood
             {
                 if (entity.getGUID().equals(guid))
                 {
-                    if (valid == true)
+                    if (valid)
                     {
                         // it should only appear once
                         valid = false;
@@ -152,11 +194,12 @@ public class TestInMemoryEntityNeighbourhood
             {
                 if (relationship.getGUID().equals(guid))
                 {
-                    if (valid == true)
+                    if (valid)
                     {
                         // it should only appear once
                         valid = false;
-                    } else
+                    }
+                    else
                     {
                         valid = true;
                     }

@@ -2,16 +2,16 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryeventmapper;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
+import org.odpi.openmetadata.frameworks.auditlog.AuditLoggingComponent;
 import org.odpi.openmetadata.frameworks.connectors.ConnectorBase;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.connectors.openmetadatatopic.OpenMetadataTopicConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +19,9 @@ import java.util.List;
 /**
  * OMRSRepositoryEventMapperBase provides a base class for implementors of OMRSRepositoryEventMapper.
  */
-public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase implements OMRSRepositoryEventMapper
+public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase implements OMRSRepositoryEventMapper,
+                                                                                          AuditLoggingComponent
 {
-    private static final Logger       log           = LoggerFactory.getLogger(OMRSRepositoryEventMapperConnector.class);
-
     protected OMRSRepositoryEventProcessor repositoryEventProcessor  = null;
     protected String                       repositoryEventMapperName = null;
     protected OMRSRepositoryConnector      repositoryConnector       = null;
@@ -33,7 +32,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
     protected String                       localServerType           = null;
     protected String                       localOrganizationName     = null;
     protected String                       localServerUserId         = null;
-    protected OMRSAuditLog                 auditLog = null;
+    protected AuditLog                     auditLog                  = null;
 
     private List<OpenMetadataTopicConnector> eventBusConnectors = new ArrayList<>();
 
@@ -41,7 +40,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
     /**
      * Default constructor for OCF ConnectorBase.
      */
-    public OMRSRepositoryEventMapperConnector()
+    OMRSRepositoryEventMapperConnector()
     {
         super();
     }
@@ -53,7 +52,8 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param auditLog audit log object
      */
-    public void setAuditLog(OMRSAuditLog   auditLog)
+    @Override
+    public void setAuditLog(AuditLog   auditLog)
     {
         this.auditLog = auditLog;
     }
@@ -67,6 +67,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *                            events from.  The repository connector is used to retrieve additional information
      *                            necessary to fill out the OMRS Events.
      */
+    @Override
     public void initialize(String                      repositoryEventMapperName,
                            OMRSRepositoryConnector     repositoryConnector)
     {
@@ -80,6 +81,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param repositoryHelper helper object for building TypeDefs and metadata instances.
      */
+    @Override
     public void setRepositoryHelper(OMRSRepositoryHelper repositoryHelper)
     {
         this.repositoryHelper = repositoryHelper;
@@ -91,6 +93,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param repositoryValidator validator object to check the validity of TypeDefs and metadata instances.
      */
+    @Override
     public void setRepositoryValidator(OMRSRepositoryValidator repositoryValidator)
     {
         this.repositoryValidator = repositoryValidator;
@@ -102,6 +105,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param serverName String name
      */
+    @Override
     public void  setServerName(String      serverName)
     {
         this.localServerName = serverName;
@@ -114,6 +118,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param serverType String server type
      */
+    @Override
     public void setServerType(String serverType)
     {
         this.localServerType = serverType;
@@ -125,6 +130,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param organizationName String organization name
      */
+    @Override
     public void setOrganizationName(String organizationName)
     {
         this.localOrganizationName = organizationName;
@@ -137,6 +143,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param localServerUserId string user id
      */
+    @Override
     public void setServerUserId(String localServerUserId)
     {
         this.localServerUserId = localServerUserId;
@@ -148,6 +155,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @param metadataCollectionId String unique Id
      */
+    @Override
     public void setMetadataCollectionId(String         metadataCollectionId)
     {
         this.localMetadataCollectionId = metadataCollectionId;
@@ -163,6 +171,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *                                changes to metadata types and instances to the rest of the
      *                                open metadata repository cluster.
      */
+    @Override
     public void setRepositoryEventProcessor(OMRSRepositoryEventProcessor repositoryEventProcessor)
     {
         this.repositoryEventProcessor = repositoryEventProcessor;
@@ -174,6 +183,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public void start() throws ConnectorCheckedException
     {
         super.start();
@@ -190,14 +200,9 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
 
         if (auditLog != null)
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.EVENT_MAPPER_LISTENER_STARTED;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(repositoryEventMapperName),
-                               this.getConnection().toString(),
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.EVENT_MAPPER_LISTENER_STARTED.getMessageDefinition(repositoryEventMapperName),
+                               this.getConnection().toString());
         }
     }
 
@@ -207,6 +212,7 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
         final String            methodName = "Disconnect Event Mapper";
@@ -223,14 +229,9 @@ public abstract class OMRSRepositoryEventMapperConnector extends ConnectorBase i
 
         if (auditLog != null)
         {
-            OMRSAuditCode auditCode = OMRSAuditCode.EVENT_MAPPER_LISTENER_DISCONNECTED;
-            auditLog.logRecord(methodName,
-                               auditCode.getLogMessageId(),
-                               auditCode.getSeverity(),
-                               auditCode.getFormattedLogMessage(repositoryEventMapperName),
-                               this.getConnection().toString(),
-                               auditCode.getSystemAction(),
-                               auditCode.getUserAction());
+            auditLog.logMessage(methodName,
+                                OMRSAuditCode.EVENT_MAPPER_LISTENER_DISCONNECTED.getMessageDefinition(repositoryEventMapperName),
+                               this.getConnection().toString());
         }
     }
 }

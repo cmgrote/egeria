@@ -27,6 +27,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Classification extends InstanceAuditHeader
 {
+    private static final long    serialVersionUID = 1L;
+
     private String               classificationName       = null;
     private InstanceProperties   classificationProperties = null;
     private ClassificationOrigin classificationOrigin     = null;
@@ -44,45 +46,20 @@ public class Classification extends InstanceAuditHeader
          */
         if (name == null || name.equals(""))
         {
+            final String methodName = "validateName";
+
             /*
              * Build and throw exception.  This should not happen and it is likely to be a problem in the
              * repository connector.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_CLASSIFICATION_PROPERTY_NAME;
-            String       errorMessage = errorCode.getErrorMessageId()
-                                      + errorCode.getFormattedErrorMessage();
-
-            throw new OMRSRuntimeException(errorCode.getHTTPErrorCode(),
+            throw new OMRSRuntimeException(OMRSErrorCode.NULL_CLASSIFICATION_PROPERTY_NAME.getMessageDefinition(),
                                            this.getClass().getName(),
-                                           "validateName",
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
         }
         else
         {
             return name;
         }
-    }
-
-
-    /**
-     * Typical constructor verifies and saves parameters.
-     *
-     * @param name name of the classification
-     * @param properties additional properties for the classification
-     * @param origin the origin of the classification
-     * @param originGUID the guid of the entity of the classification origin was propagated.
-     */
-    public Classification(String               name,
-                          InstanceProperties   properties,
-                          ClassificationOrigin origin,
-                          String               originGUID)
-    {
-        this.classificationName = validateName(name);
-        this.classificationProperties = properties;
-        this.classificationOrigin = origin;
-        this.classificationOriginGUID = originGUID;
     }
 
 
@@ -110,20 +87,15 @@ public class Classification extends InstanceAuditHeader
          */
         if (template == null)
         {
+            final String methodName = "Copy Constructor";
+
             /*
              * Build and throw exception.  This should not happen and this is likely to be a problem in the
              * repository connector.
              */
-            OMRSErrorCode errorCode = OMRSErrorCode.NULL_CLASSIFICATION_PROPERTY_NAME;
-            String        errorMessage = errorCode.getErrorMessageId()
-                                       + errorCode.getFormattedErrorMessage("<Unknown>");
-
-            throw new OMRSRuntimeException(errorCode.getHTTPErrorCode(),
+            throw new OMRSRuntimeException(OMRSErrorCode.NULL_CLASSIFICATION_PROPERTY_NAME.getMessageDefinition("<Unknown>"),
                                            this.getClass().getName(),
-                                           "Copy Constructor",
-                                           errorMessage,
-                                           errorCode.getSystemAction(),
-                                           errorCode.getUserAction());
+                                           methodName);
         }
         else
         {
@@ -139,7 +111,7 @@ public class Classification extends InstanceAuditHeader
 
 
     /**
-     * Return the name of the classification.
+     * Return the name of the classification. This name is the type name defined in a ClassificationDef type definition.
      *
      * @return name of classification
      */
@@ -150,7 +122,7 @@ public class Classification extends InstanceAuditHeader
 
 
     /**
-     * Set up the name of the classification.
+     * Set up the name of the classification. This name is the type name defined in a ClassificationDef type definition.
      *
      * @param classificationName String name
      */
@@ -169,6 +141,12 @@ public class Classification extends InstanceAuditHeader
     public InstanceProperties getProperties()
     {
         if (classificationProperties == null)
+        {
+            return null;
+        }
+        else if ((classificationProperties.getInstanceProperties() == null) &&
+                 (classificationProperties.getEffectiveFromTime() == null) &&
+                 (classificationProperties.getEffectiveToTime() == null))
         {
             return null;
         }

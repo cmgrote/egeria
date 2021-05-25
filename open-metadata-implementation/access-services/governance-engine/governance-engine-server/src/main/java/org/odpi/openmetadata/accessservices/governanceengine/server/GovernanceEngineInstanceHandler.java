@@ -2,48 +2,176 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.accessservices.governanceengine.server;
 
-import org.odpi.openmetadata.accessservices.governanceengine.api.ffdc.errorcode.GovernanceEngineErrorCode;
-import org.odpi.openmetadata.accessservices.governanceengine.api.ffdc.exceptions.PropertyServerException;
-import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryConnector;
+import org.odpi.openmetadata.accessservices.governanceengine.handlers.GovernanceConfigurationHandler;
+import org.odpi.openmetadata.accessservices.governanceengine.handlers.MetadataElementHandler;
+import org.odpi.openmetadata.accessservices.governanceengine.metadataelements.GovernanceActionElement;
+import org.odpi.openmetadata.accessservices.governanceengine.metadataelements.GovernanceActionProcessElement;
+import org.odpi.openmetadata.accessservices.governanceengine.metadataelements.GovernanceActionTypeElement;
+import org.odpi.openmetadata.adminservices.configuration.registration.AccessServiceDescription;
+import org.odpi.openmetadata.commonservices.generichandlers.AssetHandler;
+import org.odpi.openmetadata.commonservices.generichandlers.GovernanceActionHandler;
+import org.odpi.openmetadata.commonservices.generichandlers.GovernanceActionTypeHandler;
+import org.odpi.openmetadata.commonservices.multitenant.OMASServiceInstanceHandler;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
+import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
+import org.odpi.openmetadata.frameworks.governanceaction.properties.OpenMetadataElement;
 
 /**
  * GovernanceEngineInstanceHandler retrieves information from the instance map for the
  * access service instances.  The instance map is thread-safe.  Instances are added
  * and removed by the GovernanceEngineAdmin class.
  */
-class GovernanceEngineInstanceHandler {
-    private static GovernanceEngineServicesInstanceMap instanceMap = new GovernanceEngineServicesInstanceMap();
-
+class GovernanceEngineInstanceHandler extends OMASServiceInstanceHandler
+{
     /**
      * Default constructor registers the access service
      */
-    GovernanceEngineInstanceHandler() {
+    GovernanceEngineInstanceHandler()
+    {
+        super(AccessServiceDescription.GOVERNANCE_ENGINE_OMAS.getAccessServiceFullName());
+
         GovernanceEngineRegistration.registerAccessService();
     }
 
+
     /**
-     * Return the repository connector for this server.
+     * Retrieve the specific handler for the access service.
      *
-     * @return OMRSRepositoryConnector object
-     * @throws PropertyServerException the instance has not been initialized successfully
+     * @param userId calling user
+     * @param serverName name of the server tied to the request
+     * @param serviceOperationName name of the REST API call (typically the top-level methodName)
+     * @return handler for use by the requested instance
+     * @throws InvalidParameterException no available instance for the requested server
+     * @throws UserNotAuthorizedException user does not have access to the requested server
+     * @throws PropertyServerException the service name is not known - indicating a logic error
      */
-    OMRSRepositoryConnector getRepositoryConnector(String serverName) throws PropertyServerException {
-        GovernanceEngineServicesInstance instance = instanceMap.getInstance(serverName);
+    GovernanceConfigurationHandler getGovernanceConfigurationHandler(String userId,
+                                                                     String serverName,
+                                                                     String serviceOperationName) throws InvalidParameterException,
+                                                                                                         UserNotAuthorizedException,
+                                                                                                         PropertyServerException
+    {
+        GovernanceEngineInstance instance = (GovernanceEngineInstance)super.getServerServiceInstance(userId, serverName, serviceOperationName);
 
-        if (instance != null) {
-            return instance.getRepositoryConnector();
-        } else {
-            final String methodName = "getRepositoryConnector";
-
-            GovernanceEngineErrorCode errorCode = GovernanceEngineErrorCode.SERVICE_NOT_INITIALIZED;
-            String errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage(serverName, methodName);
-
-            throw new PropertyServerException(errorCode.getHTTPErrorCode(),
-                    this.getClass().getName(),
-                    methodName,
-                    errorMessage,
-                    errorCode.getSystemAction(),
-                    errorCode.getUserAction());
+        if (instance != null)
+        {
+            return instance.getGovernanceConfigurationHandler();
         }
+
+        return null;
+    }
+
+
+    /**
+     * Retrieve the specific handler for the access service.
+     *
+     * @param userId calling user
+     * @param serverName name of the server tied to the request
+     * @param serviceOperationName name of the REST API call (typically the top-level methodName)
+     * @return handler for use by the requested instance
+     * @throws InvalidParameterException no available instance for the requested server
+     * @throws UserNotAuthorizedException user does not have access to the requested server
+     * @throws PropertyServerException the service name is not known - indicating a logic error
+     */
+    MetadataElementHandler<OpenMetadataElement> getMetadataElementHandler(String userId,
+                                                                          String serverName,
+                                                                          String serviceOperationName) throws InvalidParameterException,
+                                                                                                              UserNotAuthorizedException,
+                                                                                                              PropertyServerException
+    {
+        GovernanceEngineInstance instance = (GovernanceEngineInstance)super.getServerServiceInstance(userId, serverName, serviceOperationName);
+
+        if (instance != null)
+        {
+            return instance.getMetadataElementHandler();
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Retrieve the specific handler for the access service.
+     *
+     * @param userId calling user
+     * @param serverName name of the server tied to the request
+     * @param serviceOperationName name of the REST API call (typically the top-level methodName)
+     * @return handler for use by the requested instance
+     * @throws InvalidParameterException no available instance for the requested server
+     * @throws UserNotAuthorizedException user does not have access to the requested server
+     * @throws PropertyServerException the service name is not known - indicating a logic error
+     */
+    AssetHandler<GovernanceActionProcessElement> getGovernanceActionProcessHandler(String userId,
+                                                                                   String serverName,
+                                                                                   String serviceOperationName) throws InvalidParameterException,
+                                                                                                                       UserNotAuthorizedException,
+                                                                                                                       PropertyServerException
+    {
+        GovernanceEngineInstance instance = (GovernanceEngineInstance)super.getServerServiceInstance(userId, serverName, serviceOperationName);
+
+        if (instance != null)
+        {
+            return instance.getGovernanceActionProcessHandler();
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Retrieve the specific handler for the access service.
+     *
+     * @param userId calling user
+     * @param serverName name of the server tied to the request
+     * @param serviceOperationName name of the REST API call (typically the top-level methodName)
+     * @return handler for use by the requested instance
+     * @throws InvalidParameterException no available instance for the requested server
+     * @throws UserNotAuthorizedException user does not have access to the requested server
+     * @throws PropertyServerException the service name is not known - indicating a logic error
+     */
+    GovernanceActionTypeHandler<GovernanceActionTypeElement> getGovernanceActionTypeHandler(String userId,
+                                                                                            String serverName,
+                                                                                            String serviceOperationName) throws InvalidParameterException,
+                                                                                                                                UserNotAuthorizedException,
+                                                                                                                                PropertyServerException
+    {
+        GovernanceEngineInstance instance = (GovernanceEngineInstance)super.getServerServiceInstance(userId, serverName, serviceOperationName);
+
+        if (instance != null)
+        {
+            return instance.getGovernanceActionTypeHandler();
+        }
+
+        return null;
+    }
+
+
+
+    /**
+     * Retrieve the specific handler for the access service.
+     *
+     * @param userId calling user
+     * @param serverName name of the server tied to the request
+     * @param serviceOperationName name of the REST API call (typically the top-level methodName)
+     * @return handler for use by the requested instance
+     * @throws InvalidParameterException no available instance for the requested server
+     * @throws UserNotAuthorizedException user does not have access to the requested server
+     * @throws PropertyServerException the service name is not known - indicating a logic error
+     */
+    GovernanceActionHandler<GovernanceActionElement> getGovernanceActionHandler(String userId,
+                                                                                String serverName,
+                                                                                String serviceOperationName) throws InvalidParameterException,
+                                                                                                                    UserNotAuthorizedException,
+                                                                                                                    PropertyServerException
+    {
+        GovernanceEngineInstance instance = (GovernanceEngineInstance)super.getServerServiceInstance(userId, serverName, serviceOperationName);
+
+        if (instance != null)
+        {
+            return instance.getGovernanceActionHandler();
+        }
+
+        return null;
     }
 }

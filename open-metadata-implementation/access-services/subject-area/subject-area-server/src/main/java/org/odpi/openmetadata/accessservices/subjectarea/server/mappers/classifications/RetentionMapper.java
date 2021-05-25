@@ -3,6 +3,7 @@
 
 package org.odpi.openmetadata.accessservices.subjectarea.server.mappers.classifications;
 
+import org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Retention;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.enums.GovernanceClassificationStatus;
 import org.odpi.openmetadata.accessservices.subjectarea.properties.enums.RetentionBasis;
@@ -32,7 +33,7 @@ public class RetentionMapper extends ClassificationMapper{
         super(omrsapiHelper);
     }
     @Override
-    protected Set<String> mapKnownAttributesToOmrs(org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification omasClassification, InstanceProperties omrsClassificationProperties) {
+    protected Set<String> mapKnownAttributesToOmrs(Classification omasClassification, InstanceProperties omrsClassificationProperties) {
         Retention retention = (Retention) omasClassification;
 
         String stringValue = repositoryHelper.getStringProperty(omrsapiHelper.getServiceName(), "steward", omrsClassificationProperties, "");
@@ -48,11 +49,13 @@ public class RetentionMapper extends ClassificationMapper{
         retention.setAssociatedGUID(stringValue);
 
         Date dateValue = repositoryHelper.getDateProperty(omrsapiHelper.getServiceName(), "archiveAfter", omrsClassificationProperties, "");
-        retention.setArchiveAfter(dateValue);
-
+        if (dateValue !=null) {
+            retention.setArchiveAfter(dateValue.getTime());
+        }
         dateValue = repositoryHelper.getDateProperty(omrsapiHelper.getServiceName(), "deleteAfter", omrsClassificationProperties, "");
-        retention.setDeleteAfter(dateValue);
-
+        if (dateValue !=null) {
+            retention.setDeleteAfter(dateValue.getTime());
+        }
         Integer intValue = repositoryHelper.getIntProperty(omrsapiHelper.getServiceName(), "confidence", omrsClassificationProperties, "");
         retention.setConfidence(intValue);
 
@@ -72,7 +75,7 @@ public class RetentionMapper extends ClassificationMapper{
             }
         }
 
-        return Retention.PROPERTY_NAMES_SET;
+        return Retention.getPropertyNames();
     }
 
     @Override
@@ -81,11 +84,11 @@ public class RetentionMapper extends ClassificationMapper{
     }
 
     @Override
-    protected org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification createOmasClassification() {
+    protected Classification createOmasClassification() {
         return new Retention();
     }
     @Override
-    protected InstanceProperties updateOMRSAttributes(org.odpi.openmetadata.accessservices.subjectarea.properties.classifications.Classification omasClassification) {
+    protected InstanceProperties updateOMRSAttributes(Classification omasClassification) {
         InstanceProperties instanceProperties = new InstanceProperties();
         Retention retention = (Retention)omasClassification;
         if (retention.getSteward()!=null) {
@@ -106,14 +109,14 @@ public class RetentionMapper extends ClassificationMapper{
 
         if (retention.getArchiveAfter()!=null) {
             PrimitivePropertyValue primitivePropertyValue = new PrimitivePropertyValue();
-            primitivePropertyValue.setPrimitiveDefCategory(PrimitiveDefCategory.OM_PRIMITIVE_TYPE_DATE);
+            primitivePropertyValue.setPrimitiveDefCategory(PrimitiveDefCategory.OM_PRIMITIVE_TYPE_LONG);
             primitivePropertyValue.setPrimitiveValue(retention.getArchiveAfter());
             instanceProperties.setProperty("archiveAfter", primitivePropertyValue);
         }
 
         if (retention.getDeleteAfter()!=null) {
             PrimitivePropertyValue primitivePropertyValue = new PrimitivePropertyValue();
-            primitivePropertyValue.setPrimitiveDefCategory(PrimitiveDefCategory.OM_PRIMITIVE_TYPE_DATE);
+            primitivePropertyValue.setPrimitiveDefCategory(PrimitiveDefCategory.OM_PRIMITIVE_TYPE_LONG);
             primitivePropertyValue.setPrimitiveValue(retention.getDeleteAfter());
             instanceProperties.setProperty("deleteAfter", primitivePropertyValue);
         }

@@ -2,15 +2,20 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.adapters.repositoryservices.auditlogstore.file;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.io.FileUtils;
+import org.odpi.openmetadata.frameworks.connectors.properties.EndpointProperties;
+import org.odpi.openmetadata.repositoryservices.ffdc.exception.RepositoryErrorException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.ConnectorCheckedException;
-import org.odpi.openmetadata.repositoryservices.ffdc.OMRSErrorCode;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.InvalidParameterException;
 import org.odpi.openmetadata.repositoryservices.ffdc.exception.PagingErrorException;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.auditlogstore.OMRSAuditLogRecord;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.auditlogstore.OMRSAuditLogStoreConnectorBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -21,7 +26,11 @@ import java.util.List;
  */
 public class FileBasedAuditLogStoreConnector extends OMRSAuditLogStoreConnectorBase
 {
+    private static final String defaultDirectoryTemplate = "omag.server.auditlog";
+
     private static final Logger log = LoggerFactory.getLogger(FileBasedAuditLogStoreConnector.class);
+
+    private String configStoreTemplateName  = null;
 
 
     /**
@@ -33,44 +42,88 @@ public class FileBasedAuditLogStoreConnector extends OMRSAuditLogStoreConnectorB
 
 
     /**
+     * Set up the name of the file store
+     *
+     * @throws ConnectorCheckedException something went wrong
+     */
+    @Override
+    public void start() throws ConnectorCheckedException
+    {
+        super.start();
+
+        EndpointProperties endpoint = connectionProperties.getEndpoint();
+
+        if (endpoint != null)
+        {
+            configStoreTemplateName = endpoint.getAddress();
+        }
+
+        if (configStoreTemplateName == null)
+        {
+            configStoreTemplateName = defaultDirectoryTemplate;
+        }
+
+        try
+        {
+            File         configStoreDirectory = new File(configStoreTemplateName);
+
+            FileUtils.forceMkdir(configStoreDirectory);
+        }
+        catch (IOException ioException)
+        {
+            log.error("Unusable Server Audit Log Store :(", ioException);
+        }
+    }
+
+
+    /**
      * Store the audit log record in the audit log store.
      *
      * @param logRecord  log record to store
      * @return unique identifier assigned to the log record
      * @throws InvalidParameterException indicates that the logRecord parameter is invalid.
      */
+    @Override
     public String storeLogRecord(OMRSAuditLogRecord logRecord) throws InvalidParameterException
     {
         final String   methodName = "storeLogRecord";
 
-        if (logRecord == null)
-        {
-            OMRSErrorCode errorCode    = OMRSErrorCode.NULL_LOG_RECORD;
-            String        errorMessage = errorCode.getErrorMessageId() + errorCode.getFormattedErrorMessage();
+        super.validateLogRecord(logRecord, methodName);
 
-            throw new InvalidParameterException(errorCode.getHTTPErrorCode(),
-                                                this.getClass().getName(),
-                                                methodName,
-                                                errorMessage,
-                                                errorCode.getSystemAction(),
-                                                errorCode.getUserAction());
+        if (isSupportedSeverity(logRecord))
+        {
+            try
+            {
+                File configStoreFile =
+                        new File(configStoreTemplateName + "/log-record-" + logRecord.getGUID());
+                ObjectMapper objectMapper    = new ObjectMapper();
+
+                String configStoreFileContents = objectMapper.writeValueAsString(logRecord);
+                FileUtils.writeStringToFile(configStoreFile, configStoreFileContents, (String)null, false);
+            }
+            catch (IOException ioException)
+            {
+                log.error("Unusable Server Audit Log Store :(", ioException);
+            }
         }
 
-        log.debug("AuditLogRecord: " + logRecord.toString());
-
-        return null;
+        return logRecord.getGUID();
     }
 
 
     /**
      * Retrieve a specific audit log record.
      *
-     * @param logRecordId  unique identifier for the log record
+     * @param logRecordId unique identifier for the log record
      * @return requested audit log record
-     * @throws InvalidParameterException indicates that the logRecordId parameter is invalid.
+     * @throws InvalidParameterException     indicates that the logRecordId parameter is invalid.
+     * @throws RepositoryErrorException      indicates that the audit log store is not available or has an error.
      */
-    public OMRSAuditLogRecord  getAuditLogRecord(String     logRecordId) throws InvalidParameterException
+    @Override
+    public OMRSAuditLogRecord getAuditLogRecord(String logRecordId) throws InvalidParameterException,
+                                                                           RepositoryErrorException
     {
+        final String methodName = "getAuditLogRecord";
 
         return null;
     }
@@ -80,43 +133,54 @@ public class FileBasedAuditLogStoreConnector extends OMRSAuditLogStoreConnectorB
      * Retrieve a list of log records written in a specified time period.  The offset and maximumRecords
      * parameters support a paging
      *
-     * @param startDate  start of time period
-     * @param endDate  end of time period
-     * @param offset  offset of full collection to begin the return results
-     * @param maximumRecords  maximum number of log records to return
+     * @param startDate      start of time period
+     * @param endDate        end of time period
+     * @param offset         offset of full collection to begin the return results
+     * @param maximumRecords maximum number of log records to return
      * @return list of log records from the specified time period
-     * @throws InvalidParameterException indicates that the start and/or end date parameters are invalid.
-     * @throws PagingErrorException indicates that the offset or the maximumRecords parameters are invalid.
+     * @throws InvalidParameterException     indicates that the start and/or end date parameters are invalid.
+     * @throws PagingErrorException          indicates that the offset or the maximumRecords parameters are invalid.
+     * @throws RepositoryErrorException      indicates that the audit log store is not available or has an error.
      */
-    public List<OMRSAuditLogRecord> getAuditLogRecordsByTimeStamp(Date    startDate,
-                                                                  Date    endDate,
-                                                                  int     offset,
-                                                                  int     maximumRecords) throws InvalidParameterException,
-                                                                                                 PagingErrorException
+    @Override
+    public List<OMRSAuditLogRecord> getAuditLogRecordsByTimeStamp(Date startDate,
+                                                                  Date endDate,
+                                                                  int offset,
+                                                                  int maximumRecords) throws InvalidParameterException,
+                                                                                             PagingErrorException,
+                                                                                             RepositoryErrorException
     {
+        final String methodName = "getAuditLogRecordsByTimeStamp";
+
         return null;
     }
 
+
     /**
-     * Retrieve a list of log records of a specific severity.  The offset and maximumRecords
+     * Retrieve a list of log records that have specific severity.  The offset and maximumRecords
      * parameters support a paging model.
      *
-     * @param severity  the severity value of messages to return
-     * @param startDate  start of time period
-     * @param endDate  end of time period
-     * @param offset  offset of full collection to begin the return results
-     * @param maximumRecords  maximum number of log records to return
+     * @param severity       the severity value of messages to return
+     * @param startDate      start of time period
+     * @param endDate        end of time period
+     * @param offset         offset of full collection to begin the return results
+     * @param maximumRecords maximum number of log records to return
      * @return list of log records from the specified time period
-     * @throws InvalidParameterException indicates that the severity, start and/or end date parameters are invalid.
-     * @throws PagingErrorException indicates that the offset or the maximumRecords parameters are invalid.
+     * @throws InvalidParameterException     indicates that the severity, start and/or end date parameters are invalid.
+     * @throws PagingErrorException          indicates that the offset or the maximumRecords parameters are invalid.
+     * @throws RepositoryErrorException      indicates that the audit log store is not available or has an error.
      */
-    public List<OMRSAuditLogRecord> getAuditLogRecordsBySeverity(String   severity,
-                                                                 Date     startDate,
-                                                                 Date     endDate,
-                                                                 int      offset,
-                                                                 int      maximumRecords) throws InvalidParameterException,
-                                                                                                 PagingErrorException
+    @Override
+    public List<OMRSAuditLogRecord> getAuditLogRecordsBySeverity(String severity,
+                                                                 Date startDate,
+                                                                 Date endDate,
+                                                                 int offset,
+                                                                 int maximumRecords) throws InvalidParameterException,
+                                                                                            PagingErrorException,
+                                                                                            RepositoryErrorException
     {
+        final String methodName = "getAuditLogRecordsBySeverity";
+
         return null;
     }
 
@@ -133,26 +197,20 @@ public class FileBasedAuditLogStoreConnector extends OMRSAuditLogStoreConnectorB
      * @return list of log records from the specified time period
      * @throws InvalidParameterException indicates that the component, start and/or end date parameters are invalid.
      * @throws PagingErrorException indicates that the offset or the maximumRecords parameters are invalid.
+     * @throws RepositoryErrorException indicates that the audit log store is not available or has an error.
      */
+    @Override
     public List<OMRSAuditLogRecord> getAuditLogRecordsByComponent(String component,
                                                                   Date   startDate,
                                                                   Date   endDate,
                                                                   int    offset,
                                                                   int    maximumRecords) throws InvalidParameterException,
-                                                                                                PagingErrorException
+                                                                                                PagingErrorException,
+                                                                                                RepositoryErrorException
     {
+        final String methodName = "getAuditLogRecordsByComponent";
+
         return null;
-    }
-
-
-    /**
-     * Indicates that the connector is completely configured and can begin processing.
-     *
-     * @throws ConnectorCheckedException there is a problem within the connector.
-     */
-    public void start() throws ConnectorCheckedException
-    {
-        super.start();
     }
 
 
@@ -161,6 +219,7 @@ public class FileBasedAuditLogStoreConnector extends OMRSAuditLogStoreConnectorB
      *
      * @throws ConnectorCheckedException there is a problem within the connector.
      */
+    @Override
     public  void disconnect() throws ConnectorCheckedException
     {
         super.disconnect();

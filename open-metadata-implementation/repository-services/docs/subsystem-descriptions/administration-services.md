@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the ODPi Egeria project. -->
 
 # Administration Services
@@ -11,6 +11,10 @@ the OMRS.  They include the following components:
 * **[OMRS Audit Log](../component-descriptions/audit-log.md)** - manages the storage and retrieval of audit log records.
 * **[OMRS Archive Manager](../component-descriptions/archive-manager.md)** - manages the loading of open metadata archives.
 
+
+
+----
+* Return to [repository services subsystem descriptions](.)
 
 
 ----

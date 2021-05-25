@@ -2,8 +2,10 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.frameworks.discovery.properties;
 
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.PropertyBase;
 
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.DataItemSortOrder;
+
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -14,12 +16,20 @@ import java.util.Objects;
  */
 public class DataField extends PropertyBase
 {
-    private int                       dataFieldPosition    = 0;
-    private String                    dataFieldName        = null;
-    private String                    dataFieldType        = null;
-    private List<DataFieldAnnotation> dataFieldAnnotations = null;
-    private Map<String, String>       additionalProperties = null;
-    private int                       nestedDataFields     = 0;
+    private static final long   serialVersionUID = 1L;
+
+    private int                 dataFieldPosition    = 0;
+    private String              dataFieldName        = null;
+    private String              dataFieldType        = null;
+    private String              dataFieldDescription = null;
+    private List<String>        dataFieldAliases     = null;
+    private DataItemSortOrder   dataFieldSortOrder   = null;
+    private String              defaultValue         = null;
+    private Map<String, String> additionalProperties = null;
+
+    private int                 dataFieldAnnotations = 0;
+    private int                 nestedDataFields     = 0;
+
 
     /**
      * Default constructor
@@ -41,82 +51,199 @@ public class DataField extends PropertyBase
         if (template != null)
         {
             dataFieldPosition = template.getDataFieldPosition();
+
             dataFieldName = template.getDataFieldName();
             dataFieldType = template.getDataFieldType();
-            dataFieldAnnotations = template.getDataFieldAnnotations();
+            dataFieldDescription = template.getDataFieldDescription();
+            dataFieldAliases = template.getDataFieldAliases();
+            dataFieldSortOrder = template.getDataFieldSortOrder();
+            defaultValue = template.getDefaultValue();
             additionalProperties = template.getAdditionalProperties();
+
+            dataFieldAnnotations = template.getDataFieldAnnotations();
             nestedDataFields = template.getNestedDataFields();
         }
     }
 
 
+    /**
+     * Return the position (index) of the data field in the schema.
+     *
+     * @return integer
+     */
     public int getDataFieldPosition()
     {
         return dataFieldPosition;
     }
 
 
+    /**
+     * Set up the position (index) of the data field in the schema.
+     *
+     * @param dataFieldPosition integer
+     */
     public void setDataFieldPosition(int dataFieldPosition)
     {
         this.dataFieldPosition = dataFieldPosition;
     }
 
 
+    /**
+     * Return the name of this data field.
+     *
+     * @return string name
+     */
     public String getDataFieldName()
     {
         return dataFieldName;
     }
 
 
+    /**
+     * Set up the name of this data field.
+     *
+     * @param dataFieldName string name
+     */
     public void setDataFieldName(String dataFieldName)
     {
         this.dataFieldName = dataFieldName;
     }
 
 
+    /**
+     * Return the name of type of this data field.
+     *
+     * @return string type name
+     */
     public String getDataFieldType()
     {
         return dataFieldType;
     }
 
 
+    /**
+     * Set up the name of type of this data field.
+     *
+     * @param dataFieldType string type name
+     */
     public void setDataFieldType(String dataFieldType)
     {
         this.dataFieldType = dataFieldType;
     }
 
 
-    public List<DataFieldAnnotation> getDataFieldAnnotations()
+    public String getDataFieldDescription()
     {
-        return dataFieldAnnotations;
+        return dataFieldDescription;
+    }
+
+    public void setDataFieldDescription(String dataFieldDescription)
+    {
+        this.dataFieldDescription = dataFieldDescription;
+    }
+
+    public List<String> getDataFieldAliases()
+    {
+        return dataFieldAliases;
+    }
+
+    public void setDataFieldAliases(List<String> dataFieldAliases)
+    {
+        this.dataFieldAliases = dataFieldAliases;
+    }
+
+    public DataItemSortOrder getDataFieldSortOrder()
+    {
+        return dataFieldSortOrder;
+    }
+
+    public void setDataFieldSortOrder(DataItemSortOrder dataFieldSortOrder)
+    {
+        this.dataFieldSortOrder = dataFieldSortOrder;
+    }
+
+    public String getDefaultValue()
+    {
+        return defaultValue;
     }
 
 
-    public void setDataFieldAnnotations(
-            List<DataFieldAnnotation> dataFieldAnnotations)
+
+    public void setDefaultValue(String defaultValue)
     {
-        this.dataFieldAnnotations = dataFieldAnnotations;
+        this.defaultValue = defaultValue;
     }
 
 
+    /**
+     * Return any additional properties.
+     *
+     * @return map of property name to property value
+     */
     public Map<String, String> getAdditionalProperties()
     {
-        return additionalProperties;
+        if (additionalProperties == null)
+        {
+            return null;
+        }
+        else if (additionalProperties.isEmpty())
+        {
+            return null;
+        }
+
+        return new HashMap<>(additionalProperties);
     }
 
 
+    /**
+     * Set up any additional properties.
+     *
+     * @param additionalProperties map of property name to property value
+     */
     public void setAdditionalProperties(Map<String, String> additionalProperties)
     {
         this.additionalProperties = additionalProperties;
     }
 
 
+    /**
+     * Return the number of the annotations currently attached to this data field.
+     *
+     * @return integer
+     */
+    public int getDataFieldAnnotations()
+    {
+        return dataFieldAnnotations;
+    }
+
+
+    /**
+     * Set up the number of the annotations currently attached to this data field.
+     *
+     * @param dataFieldAnnotations integer
+     */
+    public void setDataFieldAnnotations(int dataFieldAnnotations)
+    {
+        this.dataFieldAnnotations = dataFieldAnnotations;
+    }
+
+
+    /**
+     * Return the number of nested data fields.
+     *
+     * @return integer
+     */
     public int getNestedDataFields()
     {
         return nestedDataFields;
     }
 
 
+    /**
+     * Set up the number of nested data fields.
+     *
+     * @param nestedDataFields integer
+     */
     public void setNestedDataFields(int nestedDataFields)
     {
         this.nestedDataFields = nestedDataFields;
@@ -132,13 +259,21 @@ public class DataField extends PropertyBase
     public String toString()
     {
         return "DataField{" +
-                       "dataFieldPosition=" + dataFieldPosition +
-                       ", dataFieldName='" + dataFieldName + '\'' +
-                       ", dataFieldType='" + dataFieldType + '\'' +
-                       ", dataFieldAnnotations=" + dataFieldAnnotations +
-                       ", additionalProperties=" + additionalProperties +
-                       ", nestedDataFields=" + nestedDataFields +
-                       '}';
+                "dataFieldPosition=" + dataFieldPosition +
+                ", dataFieldName='" + dataFieldName + '\'' +
+                ", dataFieldType='" + dataFieldType + '\'' +
+                ", dataFieldDescription='" + dataFieldDescription + '\'' +
+                ", dataFieldAliases=" + dataFieldAliases +
+                ", dataFieldSortOrder=" + dataFieldSortOrder +
+                ", defaultValue='" + defaultValue + '\'' +
+                ", additionalProperties=" + additionalProperties +
+                ", dataFieldAnnotations=" + dataFieldAnnotations +
+                ", nestedDataFields=" + nestedDataFields +
+                ", headerVersion=" + getHeaderVersion() +
+                ", elementHeader=" + getElementHeader() +
+                ", typeName='" + getTypeName() + '\'' +
+                ", extendedProperties=" + getExtendedProperties() +
+                '}';
     }
 
 
@@ -160,12 +295,16 @@ public class DataField extends PropertyBase
             return false;
         }
         DataField dataField = (DataField) objectToCompare;
-        return getDataFieldPosition() == dataField.getDataFieldPosition() &&
-                       getNestedDataFields() == dataField.getNestedDataFields() &&
-                       Objects.equals(getDataFieldName(), dataField.getDataFieldName()) &&
-                       Objects.equals(getDataFieldType(), dataField.getDataFieldType()) &&
-                       Objects.equals(getDataFieldAnnotations(), dataField.getDataFieldAnnotations()) &&
-                       Objects.equals(getAdditionalProperties(), dataField.getAdditionalProperties());
+        return dataFieldPosition == dataField.dataFieldPosition &&
+                dataFieldAnnotations == dataField.dataFieldAnnotations &&
+                nestedDataFields == dataField.nestedDataFields &&
+                Objects.equals(dataFieldName, dataField.dataFieldName) &&
+                Objects.equals(dataFieldType, dataField.dataFieldType) &&
+                Objects.equals(dataFieldDescription, dataField.dataFieldDescription) &&
+                Objects.equals(dataFieldAliases, dataField.dataFieldAliases) &&
+                dataFieldSortOrder == dataField.dataFieldSortOrder &&
+                Objects.equals(defaultValue, dataField.defaultValue) &&
+                Objects.equals(additionalProperties, dataField.additionalProperties);
     }
 
 
@@ -177,7 +316,6 @@ public class DataField extends PropertyBase
     @Override
     public int hashCode()
     {
-        return Objects.hash(getDataFieldPosition(), getDataFieldName(), getDataFieldType(), getDataFieldAnnotations(),
-                            getAdditionalProperties(), getNestedDataFields());
+        return Objects.hash(dataFieldPosition, dataFieldName, dataFieldType, dataFieldDescription, dataFieldAliases, dataFieldSortOrder, defaultValue, additionalProperties, dataFieldAnnotations, nestedDataFields);
     }
 }

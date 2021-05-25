@@ -2,11 +2,11 @@
 /* Copyright Contributors to the ODPi Egeria project. */
 package org.odpi.openmetadata.repositoryservices.eventmanagement;
 
+import org.odpi.openmetadata.frameworks.auditlog.AuditLog;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryeventmapper.OMRSRepositoryEventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditCode;
-import org.odpi.openmetadata.repositoryservices.auditlog.OMRSAuditLog;
+import org.odpi.openmetadata.repositoryservices.ffdc.OMRSAuditCode;
 import org.odpi.openmetadata.repositoryservices.events.*;
 import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicListener;
 
@@ -24,8 +24,9 @@ import org.odpi.openmetadata.repositoryservices.connectors.omrstopic.OMRSTopicLi
  */
 public class OMRSEventListener implements OMRSTopicListener
 {
-    private String cohortName;
-    private String localMetadataCollectionId;
+    private String                     cohortName;
+    private String                     localMetadataCollectionId;
+    private OpenMetadataEventsSecurity securityVerifier;
 
     /*
      * There is an event processor for each category of event.  The OMRSEventListener passes appropriate events to these
@@ -45,13 +46,15 @@ public class OMRSEventListener implements OMRSTopicListener
      * @param localMetadataCollectionId unique identifier for the local metadata collection
      * @param registryEventProcessor processor for registry events
      * @param repositoryEventProcessor processor for TypeDef and Instance synchronization events
+     * @param securityVerifier new security verifier
      * @param auditLog audit log for this component.
      */
-    public OMRSEventListener(String                                cohortName,
-                             String                                localMetadataCollectionId,
-                             OMRSRegistryEventProcessor            registryEventProcessor,
-                             OMRSRepositoryEventProcessor          repositoryEventProcessor,
-                             OMRSAuditLog                          auditLog)
+    public OMRSEventListener(String                       cohortName,
+                             String                       localMetadataCollectionId,
+                             OMRSRegistryEventProcessor   registryEventProcessor,
+                             OMRSRepositoryEventProcessor repositoryEventProcessor,
+                             OpenMetadataEventsSecurity   securityVerifier,
+                             AuditLog                     auditLog)
     {
         this.cohortName                = cohortName;
         this.localMetadataCollectionId = localMetadataCollectionId;
@@ -59,18 +62,16 @@ public class OMRSEventListener implements OMRSTopicListener
         this.typeDefEventProcessor     = repositoryEventProcessor;
         this.instanceEventProcessor    = repositoryEventProcessor;
 
+        if (securityVerifier != null)
+        {
+            this.securityVerifier = securityVerifier;
+        }
+
         final String   actionDescription = "Initialize OMRS Event Listener";
 
         log.debug(actionDescription);
 
-        OMRSAuditCode auditCode = OMRSAuditCode.OMRS_LISTENER_INITIALIZING;
-        auditLog.logRecord(actionDescription,
-                           auditCode.getLogMessageId(),
-                           auditCode.getSeverity(),
-                           auditCode.getFormattedLogMessage(cohortName),
-                           null,
-                           auditCode.getSystemAction(),
-                           auditCode.getUserAction());
+        auditLog.logMessage(actionDescription, OMRSAuditCode.OMRS_LISTENER_INITIALIZING.getMessageDefinition(cohortName));
     }
 
 
@@ -252,7 +253,12 @@ public class OMRSEventListener implements OMRSTopicListener
         }
         else
         {
-            instanceEventProcessor.sendInstanceEvent(cohortName, instanceEvent);
+            OMRSInstanceEvent verifiedEvent = securityVerifier.validateInboundEvent(cohortName, instanceEvent);
+
+            if (verifiedEvent != null)
+            {
+                instanceEventProcessor.sendInstanceEvent(cohortName, instanceEvent);
+            }
         }
     }
 }

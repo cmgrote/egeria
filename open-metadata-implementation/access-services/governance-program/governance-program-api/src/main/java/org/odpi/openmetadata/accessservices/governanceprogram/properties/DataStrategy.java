@@ -18,8 +18,10 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonAutoDetect(getterVisibility=PUBLIC_ONLY, setterVisibility=PUBLIC_ONLY, fieldVisibility=NONE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class DataStrategy extends GovernanceDriver
+public class DataStrategy extends GovernanceDriverProperties
 {
+    private static final long    serialVersionUID = 1L;
+
     private List<String> businessImperatives = null;
 
 
@@ -29,7 +31,6 @@ public class DataStrategy extends GovernanceDriver
     public DataStrategy()
     {
         super();
-        setType("DataStrategy");
     }
 
 
@@ -95,33 +96,33 @@ public class DataStrategy extends GovernanceDriver
     public String toString()
     {
         return "DataStrategy{" +
-                "businessImperatives='" + businessImperatives + '\'' +
+                "businessImperatives=" + businessImperatives +
                 ", relatedGovernanceDrivers=" + getRelatedGovernanceDrivers() +
                 ", governancePolicies=" + getGovernancePolicies() +
+                ", title='" + getTitle() + '\'' +
+                ", summary='" + getSummary() + '\'' +
                 ", description='" + getDescription() + '\'' +
                 ", scope='" + getScope() + '\'' +
                 ", status=" + getStatus() +
                 ", priority='" + getPriority() + '\'' +
                 ", implications=" + getImplications() +
                 ", outcomes=" + getOutcomes() +
-                ", externalReferences=" + getExternalReferences() +
-                ", additionalProperties=" + getAdditionalProperties() +
                 ", governanceMetrics=" + getGovernanceMetrics() +
                 ", governanceZones=" + getGovernanceZones() +
-                ", GUID='" + getGUID() + '\'' +
-                ", type='" + getType() + '\'' +
-                ", documentId='" + getDocumentId() + '\'' +
-                ", title='" + getTitle() + '\'' +
-                ", summary='" + getSummary() + '\'' +
+                ", typeName='" + getTypeName() + '\'' +
+                ", qualifiedName='" + getQualifiedName() + '\'' +
+                ", additionalProperties=" + getAdditionalProperties() +
+                ", extendedProperties=" + getExtendedProperties() +
                 '}';
     }
 
 
+
     /**
-     * Test the properties of the DataStrategy to determine if the supplied object is equal to this one.
+     * Compare the values of the supplied object with those stored in the current object.
      *
-     * @param objectToCompare object
-     * @return boolean evaluation
+     * @param objectToCompare supplied object
+     * @return boolean result of comparison
      */
     @Override
     public boolean equals(Object objectToCompare)
@@ -130,7 +131,7 @@ public class DataStrategy extends GovernanceDriver
         {
             return true;
         }
-        if (!(objectToCompare instanceof DataStrategy))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -139,6 +140,18 @@ public class DataStrategy extends GovernanceDriver
             return false;
         }
         DataStrategy that = (DataStrategy) objectToCompare;
-        return Objects.equals(getBusinessImperatives(), that.getBusinessImperatives());
+        return Objects.equals(businessImperatives, that.businessImperatives);
+    }
+
+
+    /**
+     * Return has code based on properties.
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), businessImperatives);
     }
 }

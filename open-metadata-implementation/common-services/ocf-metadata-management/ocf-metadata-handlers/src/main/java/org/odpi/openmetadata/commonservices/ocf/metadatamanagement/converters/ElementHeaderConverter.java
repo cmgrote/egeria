@@ -3,7 +3,9 @@
 package org.odpi.openmetadata.commonservices.ocf.metadatamanagement.converters;
 
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementHeader;
+import org.odpi.openmetadata.frameworks.connectors.properties.beans.ElementType;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.EntityDetail;
+import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.InstanceType;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.repositoryconnector.OMRSRepositoryHelper;
 
@@ -21,12 +23,14 @@ import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollec
  * entity (eg Discovery Engine Properties).  The other is for an object built from a combination of connected
  * entities.  In this second case, the root entity and possibly a relevant relationship is passed on the constructor.
  */
-class ElementHeaderConverter
+public class ElementHeaderConverter
 {
     protected EntityDetail           entity;
     protected Relationship           relationship = null;
     protected OMRSRepositoryHelper   repositoryHelper;
     protected String                 serviceName;
+    protected String                 serverName;
+    protected String                 typeName;
 
     /**
      * Constructor captures the initial content
@@ -34,14 +38,18 @@ class ElementHeaderConverter
      * @param entity properties to convert
      * @param repositoryHelper helper object to parse entity
      * @param serviceName name of this component
+     * @param serverName called server
      */
     ElementHeaderConverter(EntityDetail           entity,
                            OMRSRepositoryHelper   repositoryHelper,
-                           String                 serviceName)
+                           String                 serviceName,
+                           String                 serverName)
     {
         this.entity = entity;
         this.repositoryHelper = repositoryHelper;
         this.serviceName = serviceName;
+        this.serverName = serverName;
+        this.setTypeName();
     }
 
 
@@ -52,16 +60,36 @@ class ElementHeaderConverter
      * @param relationship properties to convert
      * @param repositoryHelper helper object to parse entity/relationship
      * @param serviceName name of this component
+     * @param serverName called server
      */
-    ElementHeaderConverter(EntityDetail         entity,
-                           Relationship         relationship,
-                           OMRSRepositoryHelper repositoryHelper,
-                           String               serviceName)
+    public ElementHeaderConverter(EntityDetail         entity,
+                                  Relationship         relationship,
+                                  OMRSRepositoryHelper repositoryHelper,
+                                  String               serviceName,
+                                  String               serverName)
     {
         this.entity = entity;
         this.relationship = relationship;
         this.repositoryHelper = repositoryHelper;
         this.serviceName = serviceName;
+        this.serverName = serverName;
+        this.setTypeName();
+    }
+
+
+    /**
+     * Extract the type name from the entity (if not null).
+     */
+    protected void setTypeName()
+    {
+        if (entity != null)
+        {
+            InstanceType type = entity.getType();
+            if (type != null)
+            {
+                this.typeName = type.getTypeDefName();
+            }
+        }
     }
 
 
@@ -70,7 +98,7 @@ class ElementHeaderConverter
      *
      * @param bean output bean
      */
-    void updateBean(ElementHeader bean)
+    public void updateBean(ElementHeader bean)
     {
         if (entity != null)
         {
@@ -84,6 +112,13 @@ class ElementHeaderConverter
             bean.setGUID(entity.getGUID());
             bean.setURL(entity.getInstanceURL());
         }
-    }
+        else if (typeName != null)
+        {
+            ElementType type = new ElementType();
 
+            type.setElementTypeName(typeName);
+
+            bean.setType(type);
+        }
+    }
 }

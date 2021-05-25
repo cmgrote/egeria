@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.odpi.openmetadata.repositoryservices.connectors.stores.metadatacollectionstore.properties.instances.Relationship;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,6 +24,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class RelationshipListResponse extends OMRSAPIPagedResponse
 {
+    private static final long    serialVersionUID = 1L;
+
     private List<Relationship> relationships = null;
 
 
@@ -70,9 +73,9 @@ public class RelationshipListResponse extends OMRSAPIPagedResponse
         {
             List<Relationship>  clonedRelationships = new ArrayList<>();
 
-            for (Relationship  attributeTypeDef : relationships)
+            for (Relationship  relationship : relationships)
             {
-                clonedRelationships.add(new Relationship(attributeTypeDef));
+                clonedRelationships.add(new Relationship(relationship));
             }
 
             return clonedRelationships;
@@ -105,8 +108,12 @@ public class RelationshipListResponse extends OMRSAPIPagedResponse
                 ", offset=" + offset +
                 ", pageSize=" + pageSize +
                 ", relatedHTTPCode=" + relatedHTTPCode +
+                ", actionDescription='" + actionDescription + '\'' +
                 ", exceptionClassName='" + exceptionClassName + '\'' +
+                ", exceptionCausedBy='" + exceptionCausedBy + '\'' +
                 ", exceptionErrorMessage='" + exceptionErrorMessage + '\'' +
+                ", exceptionErrorMessageId='" + exceptionErrorMessageId + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(exceptionErrorMessageParameters) +
                 ", exceptionSystemAction='" + exceptionSystemAction + '\'' +
                 ", exceptionUserAction='" + exceptionUserAction + '\'' +
                 ", exceptionProperties=" + exceptionProperties +

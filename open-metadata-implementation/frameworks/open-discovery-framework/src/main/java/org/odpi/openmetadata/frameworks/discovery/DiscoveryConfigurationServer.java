@@ -5,7 +5,6 @@ package org.odpi.openmetadata.frameworks.discovery;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.PropertyServerException;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.UserNotAuthorizedException;
 import org.odpi.openmetadata.frameworks.connectors.properties.beans.Connection;
-import org.odpi.openmetadata.frameworks.connectors.properties.beans.OwnerType;
 import org.odpi.openmetadata.frameworks.connectors.ffdc.InvalidParameterException;
 import org.odpi.openmetadata.frameworks.discovery.properties.DiscoveryEngineProperties;
 import org.odpi.openmetadata.frameworks.discovery.properties.DiscoveryServiceProperties;
@@ -263,12 +262,7 @@ public abstract class DiscoveryConfigurationServer
      * @param guid unique identifier of the discovery service - used to locate the definition.
      * @param qualifiedName new value for unique name of discovery service.
      * @param displayName new value for the display name.
-     * @param shortDescription new value for the short description.
      * @param description new value for the description.
-     * @param owner new owner of the discovery service.
-     * @param ownerType new type for the owner of the discovery service.
-     * @param zoneMembership new list of zones for this discovery service.
-     * @param latestChange short description of this update.
      * @param connection connection used to create an instance of this discovery service.
      * @param additionalProperties additional properties for the discovery engine.
      * @param extendedProperties properties to populate the subtype of the discovery service.
@@ -281,12 +275,7 @@ public abstract class DiscoveryConfigurationServer
                                                    String                guid,
                                                    String                qualifiedName,
                                                    String                displayName,
-                                                   String                shortDescription,
                                                    String                description,
-                                                   String                owner,
-                                                   OwnerType             ownerType,
-                                                   List<String>          zoneMembership,
-                                                   String                latestChange,
                                                    Connection            connection,
                                                    Map<String, String>   additionalProperties,
                                                    Map<String, Object>   extendedProperties) throws InvalidParameterException,
@@ -320,18 +309,21 @@ public abstract class DiscoveryConfigurationServer
      * @param userId identifier of calling user
      * @param discoveryEngineGUID unique identifier of the discovery engine.
      * @param discoveryServiceGUID unique identifier of the discovery service.
-     * @param assetTypes list of asset types that this discovery service is able to process.
+     * @param discoveryRequestType discovery request type that this discovery service is able to process.
+     * @param defaultAnalysisParameters list of analysis parameters that are passed the the discovery service (via
+     *                                  the discovery context).  These values can be overridden on the actual discovery request.
      *
      * @throws InvalidParameterException one of the parameters is null or invalid.
      * @throws UserNotAuthorizedException user not authorized to issue this request.
      * @throws PropertyServerException problem retrieving the discovery service and/or discovery engine definitions.
      */
-    public abstract void  registerDiscoveryServiceWithEngine(String        userId,
-                                                             String        discoveryEngineGUID,
-                                                             String        discoveryServiceGUID,
-                                                             List<String>  assetTypes) throws InvalidParameterException,
-                                                                                              UserNotAuthorizedException,
-                                                                                              PropertyServerException;
+    public abstract void  registerDiscoveryServiceWithEngine(String               userId,
+                                                             String               discoveryEngineGUID,
+                                                             String               discoveryServiceGUID,
+                                                             String               discoveryRequestType,
+                                                             Map<String, String>  defaultAnalysisParameters) throws InvalidParameterException,
+                                                                                                                    UserNotAuthorizedException,
+                                                                                                                    PropertyServerException;
 
 
     /**

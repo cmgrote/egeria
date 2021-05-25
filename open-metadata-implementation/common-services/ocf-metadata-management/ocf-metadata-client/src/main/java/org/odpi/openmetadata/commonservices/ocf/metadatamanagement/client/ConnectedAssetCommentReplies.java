@@ -21,6 +21,8 @@ import java.util.List;
  */
 public class ConnectedAssetCommentReplies extends AssetCommentReplies
 {
+    private static final long    serialVersionUID = 1L;
+
     private String                 serviceName;
     private String                 serverName;
     private String                 userId;
@@ -99,6 +101,7 @@ public class ConnectedAssetCommentReplies extends AssetCommentReplies
      * @param parentAsset descriptor of parent asset
      * @return new cloned object.
      */
+    @Override
     protected  AssetCommentReplies cloneIterator(AssetDescriptor parentAsset)
     {
         return new ConnectedAssetCommentReplies(connectedAsset, this);
@@ -113,6 +116,7 @@ public class ConnectedAssetCommentReplies extends AssetCommentReplies
      * @param template object to clone
      * @return new cloned object.
      */
+    @Override
     protected  AssetPropertyBase cloneElement(AssetDescriptor  parentAsset, AssetPropertyBase template)
     {
         return new AssetComment(parentAsset, (AssetComment)template);
@@ -127,6 +131,7 @@ public class ConnectedAssetCommentReplies extends AssetCommentReplies
      * @return list of elements corresponding to the supplied cache pointers.
      * @throws PropertyServerException there is a problem retrieving elements from the property (metadata) server.
      */
+    @Override
     protected  List<AssetPropertyBase> getCachedList(int  cacheStartPointer,
                                                      int  maximumSize) throws PropertyServerException
     {
@@ -146,9 +151,9 @@ public class ConnectedAssetCommentReplies extends AssetCommentReplies
                                                                              cacheStartPointer,
                                                                              maximumSize);
 
-            restExceptionHandler.detectAndThrowInvalidParameterException(methodName, restResult);
-            restExceptionHandler.detectAndThrowUserNotAuthorizedException(methodName, restResult);
-            restExceptionHandler.detectAndThrowPropertyServerException(methodName, restResult);
+            restExceptionHandler.detectAndThrowInvalidParameterException(restResult);
+            restExceptionHandler.detectAndThrowUserNotAuthorizedException(restResult);
+            restExceptionHandler.detectAndThrowPropertyServerException(restResult);
 
             List<CommentResponse> Responses = restResult.getList();
             if ((Responses == null) || (Responses.isEmpty()))

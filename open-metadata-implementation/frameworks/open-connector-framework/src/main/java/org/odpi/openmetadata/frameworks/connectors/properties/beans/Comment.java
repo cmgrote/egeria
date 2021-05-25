@@ -25,6 +25,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class Comment extends Referenceable
 {
+    private static final long     serialVersionUID = 1L;
+
     protected CommentType commentType = null;
     protected String      commentText = null;
     protected String      user        = null;
@@ -132,7 +134,7 @@ public class Comment extends Referenceable
      *
      * @return boolean
      */
-    public boolean isPublic()
+    public boolean getIsPublic()
     {
         return isPublic;
     }
@@ -143,7 +145,7 @@ public class Comment extends Referenceable
      *
      * @param aPublic boolean
      */
-    public void setPublic(boolean aPublic)
+    public void setIsPublic(boolean aPublic)
     {
         isPublic = aPublic;
     }
@@ -170,6 +172,7 @@ public class Comment extends Referenceable
     }
 
 
+
     /**
      * Compare the values of the supplied object with those stored in the current object.
      *
@@ -183,7 +186,7 @@ public class Comment extends Referenceable
         {
             return true;
         }
-        if (!(objectToCompare instanceof Comment))
+        if (objectToCompare == null || getClass() != objectToCompare.getClass())
         {
             return false;
         }
@@ -192,9 +195,22 @@ public class Comment extends Referenceable
             return false;
         }
         Comment comment = (Comment) objectToCompare;
-        return getCommentType() == comment.getCommentType() &&
-                Objects.equals(getCommentText(), comment.getCommentText()) &&
-                Objects.equals(isPublic(), comment.isPublic()) &&
-                Objects.equals(getUser(), comment.getUser());
+        return isPublic == comment.isPublic &&
+                       getCommentType() == comment.getCommentType() &&
+                       Objects.equals(getCommentText(), comment.getCommentText()) &&
+                       Objects.equals(getUser(), comment.getUser());
+    }
+
+
+
+    /**
+     * Hash of properties
+     *
+     * @return int
+     */
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), getCommentType(), getCommentText(), getUser(), isPublic);
     }
 }

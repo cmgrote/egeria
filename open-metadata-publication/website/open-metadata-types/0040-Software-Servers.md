@@ -20,7 +20,7 @@ correlate the server with the changes to the metadata
 See model 0110 Actors in Area 1 for details of how user identifiers
 are correlated with people and teams).
 
-![UML](0040-Software-Servers.png)
+![UML](0040-Software-Servers.png#pagewidth)
 
 Open metadata may also capture the network endpoint(s) that the server
 is connected to and the host it is deployed to.
@@ -32,7 +32,8 @@ tools to call the server.
 Thus through the endpoint entity it is possible to link the
 connection to the underlying server.
 
-An [OMAG Server](../omag-server) is an example of a Software Server.
+An [OMAG Server](../../../open-metadata-implementation/admin-services/docs/concepts/omag-server.md)
+is an example of a Software Server.
 
 Return to [Area 0](Area-0-models.md).
 

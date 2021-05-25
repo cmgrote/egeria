@@ -6,6 +6,7 @@ package org.odpi.openmetadata.accessservices.communityprofile.rest;
 import com.fasterxml.jackson.annotation.*;
 import org.odpi.openmetadata.commonservices.ffdc.rest.FFDCResponseBase;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +32,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.PUBLIC_
         })
 public abstract class CommunityProfileOMASAPIResponse extends FFDCResponseBase
 {
+    private static final long    serialVersionUID = 1L;
+
 
     /**
      * Default constructor
@@ -62,9 +65,13 @@ public abstract class CommunityProfileOMASAPIResponse extends FFDCResponseBase
     public String toString()
     {
         return "CommunityProfileOMASAPIResponse{" +
-                "relatedHTTPCode=" + getRelatedHTTPCode() +
-                ", exceptionClassName='" + getExceptionClassName() + '\'' +
+                "exceptionClassName='" + getExceptionClassName() + '\'' +
+                ", exceptionCausedBy='" + getExceptionCausedBy() + '\'' +
+                ", actionDescription='" + getActionDescription() + '\'' +
+                ", relatedHTTPCode=" + getRelatedHTTPCode() +
                 ", exceptionErrorMessage='" + getExceptionErrorMessage() + '\'' +
+                ", exceptionErrorMessageId='" + getExceptionErrorMessageId() + '\'' +
+                ", exceptionErrorMessageParameters=" + Arrays.toString(getExceptionErrorMessageParameters()) +
                 ", exceptionSystemAction='" + getExceptionSystemAction() + '\'' +
                 ", exceptionUserAction='" + getExceptionUserAction() + '\'' +
                 ", exceptionProperties=" + getExceptionProperties() +
