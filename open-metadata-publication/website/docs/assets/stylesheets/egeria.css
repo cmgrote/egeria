@@ -1,0 +1,127 @@
+/* SPDX-License-Identifier: CC-BY-4.0 */
+/* Copyright Contributors to the ODPi Egeria project. */
+
+:root {
+    --goreleaser-primary-color:   #3b5672;
+    --md-primary-fg-color:        rgb(0, 174, 185);
+    --md-primary-fg-color--light: rgb(0, 174, 185);
+    --md-primary-fg-color--dark:  rgb(0, 174, 185);
+    --md-admonition-icon--graduation-cap: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M622.34 153.2 343.4 67.5c-15.2-4.67-31.6-4.67-46.79 0L17.66 153.2c-23.54 7.23-23.54 38.36 0 45.59l48.63 14.94c-10.67 13.19-17.23 29.28-17.88 46.9C38.78 266.15 32 276.11 32 288c0 10.78 5.68 19.85 13.86 25.65L20.33 428.53C18.11 438.52 25.71 448 35.94 448h56.11c10.24 0 17.84-9.48 15.62-19.47L82.14 313.65C90.32 307.85 96 298.78 96 288c0-11.57-6.47-21.25-15.66-26.87.76-15.02 8.44-28.3 20.69-36.72L296.6 284.5c9.06 2.78 26.44 6.25 46.79 0l278.95-85.7c23.55-7.24 23.55-38.36 0-45.6zM352.79 315.09c-28.53 8.76-52.84 3.92-65.59 0l-145.02-44.55L128 384c0 35.35 85.96 64 192 64s192-28.65 192-64l-14.18-113.47-145.03 44.56z"/></svg>');
+    --md-admonition-icon--beginner: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 15.38 12 12V5.32l6 3.37v6.69m3 1.12c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9M12 4.15 5 8.09v7.82l7 3.94 7-3.94V8.09l-7-3.94z"/></svg>');
+    --md-admonition-icon--intermediate: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 5.32 6 3.37v6.62l-6 3.37V5.32m9 11.18c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9M12 4.15 5 8.09v7.82l7 3.94 7-3.94V8.09l-7-3.94z"/></svg>');
+    --md-admonition-icon--advanced: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 5.32 6 3.37v6.62l-6 3.37-5.94-3.34L12 12V5.32m9 11.18c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9M12 4.15 5 8.09v7.82l7 3.94 7-3.94V8.09l-7-3.94z"/></svg>');
+    --md-admonition-icon--expert: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12 5.32 6 3.37v6.62l-6 3.37-6-3.37V8.69l6-3.37m9 11.18c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9M12 4.15 5 8.09v7.82l7 3.94 7-3.94V8.09l-7-3.94z"/></svg>');
+}
+
+.md-announce {
+    height: 20px;
+}
+
+.md-announce__inner {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Custom admonition for educational content */
+.md-typeset .admonition.education,
+.md-typeset details.education {
+  border-color: rgb(247, 207, 9);
+}
+.md-typeset .education > .admonition-title,
+.md-typeset .education > summary {
+  background-color: rgba(247, 207, 9, 0.1);
+  border-color: rgb(247, 207, 9);
+}
+.md-typeset .education > .admonition-title::before,
+.md-typeset .education > summary::before {
+  background-color: rgb(247, 207, 9);
+  -webkit-mask-image: var(--md-admonition-icon--graduation-cap);
+          mask-image: var(--md-admonition-icon--graduation-cap);
+}
+
+/* Custom admonition for beginner content */
+.md-typeset .admonition.beginner,
+.md-typeset details.beginner {
+  border-color: rgb(43, 155, 70);
+}
+.md-typeset .beginner > .admonition-title,
+.md-typeset .beginner > summary {
+  background-color: rgba(43, 155, 70, 0.1);
+  border-color: rgb(43, 155, 70);
+}
+.md-typeset .beginner > .admonition-title::before,
+.md-typeset .beginner > summary::before {
+  background-color: rgb(43, 155, 70);
+  -webkit-mask-image: var(--md-admonition-icon--beginner);
+          mask-image: var(--md-admonition-icon--beginner);
+}
+
+/* Custom admonition for intermediate content */
+.md-typeset .admonition.intermediate,
+.md-typeset details.intermediate {
+  border-color: rgb(88, 135, 255);
+}
+.md-typeset .intermediate > .admonition-title,
+.md-typeset .intermediate > summary {
+  background-color: rgba(88, 135, 255, 0.1);
+  border-color: rgb(88, 135, 255);
+}
+.md-typeset .intermediate > .admonition-title::before,
+.md-typeset .intermediate > summary::before {
+  background-color: rgb(88, 135, 255);
+  -webkit-mask-image: var(--md-admonition-icon--intermediate);
+          mask-image: var(--md-admonition-icon--intermediate);
+}
+
+/* Custom admonition for advanced content */
+.md-typeset .admonition.advanced,
+.md-typeset details.advanced {
+  border-color: rgb(228, 53, 91);
+}
+.md-typeset .advanced > .admonition-title,
+.md-typeset .advanced > summary {
+  background-color: rgba(228, 53, 91, 0.1);
+  border-color: rgb(228, 53, 91);
+}
+.md-typeset .advanced > .admonition-title::before,
+.md-typeset .advanced > summary::before {
+  background-color: rgb(228, 53, 91);
+  -webkit-mask-image: var(--md-admonition-icon--advanced);
+          mask-image: var(--md-admonition-icon--advanced);
+}
+
+/* Custom admonition for expert content */
+.md-typeset .admonition.expert,
+.md-typeset details.expert {
+  border-color: rgb(42, 68, 93);
+}
+.md-typeset .expert > .admonition-title,
+.md-typeset .expert > summary {
+  background-color: rgba(42, 68, 93, 0.1);
+  border-color: rgb(42, 68, 93);
+}
+.md-typeset .expert > .admonition-title::before,
+.md-typeset .expert > summary::before {
+  background-color: rgb(42, 68, 93);
+  -webkit-mask-image: var(--md-admonition-icon--expert);
+          mask-image: var(--md-admonition-icon--expert);
+}
+
+/* Embed videos (16:9 aspect ratio): https://github.com/squidfunk/mkdocs-material/issues/492#issuecomment-336640342 */
+.video-wrapper {
+  position: relative;
+  display: block;
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+  padding-bottom: 56.25%;
+}
+.video-wrapper > iframe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

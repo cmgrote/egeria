@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: CC-BY-4.0
+# Copyright Contributors to the ODPi Egeria project.
+
+site_name: Egeria
+site_description: automatically exchanging metadata between tools and platforms, no matter the vendor
+copyright: "License: <a href='https://creativecommons.org/licenses/by/4.0/'>CC BY 4.0</a>, &copy; 2018-2021 contributors to the Egeria project."
+repo_name: odpi/egeria
+repo_url: https://github.com/odpi/egeria
+site_url: https://odpi.github.io/egeria/
+edit_uri: ""
+
+nav:
+  - About: index.md
+  - Learn more:
+      - The challenge: introduction/challenge.md
+      - Our solution: introduction/overview.md
+      - Key concepts: introduction/key-concepts.md
+      - Patterns:
+          - Metadata server exchange: introduction/patterns/metadata-server-exchange.md
+          - Repository conformance: introduction/patterns/repository-conformance.md
+          - Data manager integration: introduction/patterns/data-manager-integration.md
+  - Getting started:
+      - Dojo:
+          - Dojo introduction: getting-started/dojo/index.md
+          - Day 1:
+              - Egeria introduction: getting-started/dojo/1/introduction.md
+              - Egeria project introduction: getting-started/dojo/1/project-introduction.md
+              - Running Egeria: getting-started/dojo/1/running-egeria.md
+              - Configuring the OMAG Server Platform: getting-started/dojo/1/configuring-the-platform.md
+          - Day 2: getting-started/dojo/2/index.md
+          - Day 3: getting-started/dojo/3/index.md
+      - Hands-on labs:
+          - Hands-on labs overview: getting-started/hands-on-labs/index.md
+          - Options for running:
+              - Docker Compose: getting-started/hands-on-labs/docker-compose.md
+              - Kubernetes: getting-started/hands-on-labs/kubernetes.md
+              - Local machine: getting-started/hands-on-labs/local.md
+  - Guides:
+      - Community guide: guides/community.md
+      - Operations guide: guides/operations.md
+      - Building an asset catalog: guides/asset-catalog.md
+      - Planning guide: guides/planning.md
+      - Administration guide: guides/admin.md
+      - Developer guide: guides/developer.md
+      - Diagnostic guide: guides/diagnostic.md
+      - Conformance Test Suite: guides/cts.md
+  - Services:
+      - Open Metadata Repository Services (OMRS): services/omrs.md
+      - Open Metadata Access Services (OMAS): services/omas.md
+      - Common services: services/common.md
+      - Platform services: services/platform.md
+      - Governance servers: services/governance.md
+      - View services: services/view.md
+      - Open Lineage Services (OLS): services/ols.md
+  - Frameworks:
+      - Audit Logging Framework (ALF): frameworks/alf.md
+      - Open Connector Framework (OCF): frameworks/ocf.md
+      - Open Discovery Framework (ODF): frameworks/odf.md
+      - Governance Action Framework (GAF): frameworks/gaf.md
+  - Adapters:
+      - Plugin Repositories: adapters/repos.md
+      - Third Party Repositories: adapters/connectors.md
+      - Connectors: adapters/others.md
+  - Types:
+      - Open Metadata Types: types/types.md
+      - Metamodel: types/metamodel.md
+
+theme:
+  name: material
+  language: en
+  custom_dir: overrides
+  features:
+    - navigation.tabs
+    - navigation.sections
+#    - navigation.instant
+    - navigation.top
+#    - toc.integrate
+  palette:
+    - scheme: default
+      accent: cyan
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      accent: cyan
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+  favicon: assets/favicon.ico
+  logo: assets/images/egeria-header.png
+
+extra_css:
+  - assets/stylesheets/egeria.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/odpi/egeria
+      name: Egeria on GitHub
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/u/odpi
+      name: Egeria on Docker
+    - icon: fontawesome/brands/medium
+      link: https://medium.com/tag/egeria
+      name: Egeria on Medium
+    - icon: fontawesome/brands/slack
+      link: https://lfaifoundation.slack.com/archives/C01F40J2XA8
+      name: Egeria on Slack
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - footnotes
+  - abbr
+  - pymdownx.snippets
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.tabbed
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
