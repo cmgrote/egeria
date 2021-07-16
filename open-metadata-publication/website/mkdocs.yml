@@ -9,16 +9,55 @@ repo_url: https://github.com/odpi/egeria
 site_url: https://odpi.github.io/egeria/
 edit_uri: ""
 
+# TODO:
+#  - create outline navigation structure below
+#     - ensure everything listed below has a place to "live" in the overall navigation structure
+#     - ensure existing ./open-metadata-publication/website/ directories have somewhere to "live"
+#     - place each existing directory against some portion of the navigation structure below
+
+# ./open-metadata-resources/open-metadata-archives/docs
+# ./open-metadata-resources/open-metadata-archives/design-model-archives/glossary-canonical-model/docs
+# ./open-metadata-resources/open-metadata-deployment/sample-data/docs
+# ./open-metadata-distribution/open-metadata-assemblies/docs
+# ./open-metadata-implementation/user-interfaces/ui-chassis/ui-chassis-spring/docs
+# ./open-metadata-publication/website/cataloging-assets
+# ./open-metadata-publication/website/connector-catalog
+# ./open-metadata-publication/website/content-status
+# ./open-metadata-publication/website/deduplication
+# ./open-metadata-publication/website/external-identifiers
+# ./open-metadata-publication/website/fun
+# ./open-metadata-publication/website/java-events
+# ./open-metadata-publication/website/lineage
+# ./open-metadata-publication/website/metadata-discovery
+# ./open-metadata-publication/website/metadata-provenance
+# ./open-metadata-publication/website/modelling-technology
+# ./open-metadata-publication/website/omag-client
+# ./open-metadata-publication/website/omag-server
+# ./open-metadata-publication/website/open-metadata-glossary.md
+# ./open-metadata-publication/website/open-metadata-integration-patterns
+# ./open-metadata-publication/website/open-metadata-specifications
+# ./open-metadata-publication/website/reference-data-management
+# ./open-metadata-publication/website/roadmap
+# ./open-metadata-publication/website/target
+# ./open-metadata-publication/website/trouble-shooting
+# ./open-metadata-publication/website/why-egeria
+
+# Only contain images (so docs themselves presumably covered elsewhere):
+# ./open-metadata-implementation/engine-services/docs
+# ./open-metadata-implementation/integration-services/catalog-integrator/docs
+# ./open-metadata-publication/website/images
+
 nav:
-  - About: index.md
+  - Home: index.md
   - Learn more:
-      - The challenge: introduction/challenge.md
-      - Our solution: introduction/overview.md
-      - Key concepts: introduction/key-concepts.md
+      - The challenge: introduction/challenge.md # ./open-metadata-publication/website/README.md
+      - Our solution: introduction/overview.md # ./open-metadata-publication/website/README.md
+      - Key concepts: introduction/key-concepts.md # ./open-metadata-publication/website/basic-concepts
       - Patterns:
-          - Metadata server exchange: introduction/patterns/metadata-server-exchange.md
+          - Metadata server exchange: introduction/patterns/metadata-server-exchange.md # ./open-metadata-publication/website/solutions/metadata-server-exchange
           - Repository conformance: introduction/patterns/repository-conformance.md
-          - Data manager integration: introduction/patterns/data-manager-integration.md
+          - Data manager integration: introduction/patterns/data-manager-integration.md # ./open-metadata-publication/website/solutions/data-manager-integration
+          - File lineage: introduction/patterns/file-lineage.md # ./open-metadata-publication/website/solutions/file-lineage
   - Getting started:
       - Dojo:
           - Dojo introduction: getting-started/dojo/index.md
@@ -39,31 +78,66 @@ nav:
       - Community guide: guides/community.md
       - Operations guide: guides/operations.md
       - Building an asset catalog: guides/asset-catalog.md
-      - Planning guide: guides/planning.md
-      - Administration guide: guides/admin.md
-      - Developer guide: guides/developer.md
-      - Diagnostic guide: guides/diagnostic.md
-      - Conformance Test Suite: guides/cts.md
-  - Services:
-      - Open Metadata Repository Services (OMRS): services/omrs.md
-      - Open Metadata Access Services (OMAS): services/omas.md
-      - Common services: services/common.md
-      - Platform services: services/platform.md
-      - Governance servers: services/governance.md
-      - View services: services/view.md
-      - Open Lineage Services (OLS): services/ols.md
-  - Frameworks:
-      - Audit Logging Framework (ALF): frameworks/alf.md
-      - Open Connector Framework (OCF): frameworks/ocf.md
-      - Open Discovery Framework (ODF): frameworks/odf.md
-      - Governance Action Framework (GAF): frameworks/gaf.md
+      - Planning guide: guides/planning.md # ./open-metadata-publication/website/planning-guide
+      - Administration guide: guides/admin.md # ./open-metadata-implementation/admin-services/docs
+      - Developer guide: guides/developer.md # ./open-metadata-publication/website/developer-guide
+      - Diagnostic guide: guides/diagnostic.md # ./open-metadata-publication/website/diagnostic-guide
+      - Conformance Test Suite: guides/cts.md # ./open-metadata-conformance-suite/docs
+  - Reference:
+      - Services:
+          - Repository services (OMRS):
+              - Open Metadata Repository Services: services/omrs/index.md # ./open-metadata-implementation/repository-services/docs
+              - More (TBD): services/omrs/tbd.md
+          - Access services (OMAS):
+              - Open Metadata Access Services: services/omas/index.md # ./open-metadata-implementation/access-services/docs
+              - Asset catalog OMAS: services/omas/asset-catalog.md # ./open-metadata-implementation/access-services/asset-catalog/docs
+              - Asset consumer OMAS: services/omas/asset-consumer.md # ./open-metadata-implementation/access-services/asset-consumer/docs
+              - Asset lineage OMAS: services/omas/asset-lineage.md # ./open-metadata-implementation/access-services/asset-lineage/docs
+              - Asset owner OMAS: services/omas/asset-owner.md # ./open-metadata-implementation/access-services/asset-owner/docs
+              - Community profile OMAS: services/omas/community-profile.md # ./open-metadata-implementation/access-services/community-profile/docs
+              - Data engine OMAS: services/omas/data-engine.md # ./open-metadata-implementation/access-services/data-engine/docs
+              - Data manager OMAS: services/omas/data-manager.md # ./open-metadata-implementation/access-services/data-manager/docs
+              - Digital architecture OMAS: services/omas/digital-architecture.md # ./open-metadata-implementation/access-services/digital-architecture/docs
+              - Discovery engine OMAS: services/omas/discovery-engine.md # ./open-metadata-implementation/access-services/discovery-engine/docs
+              - Governance engine OMAS: services/omas/governance-engine.md # ./open-metadata-implementation/access-services/governance-engine/docs
+              - Governance program OMAS: services/omas/governance-program.md # ./open-metadata-implementation/access-services/governance-program/docs
+              - Security officer OMAS: services/omas/security-officer.md # ./open-metadata-implementation/access-services/security-officer/docs
+              - Subject area OMAS: services/omas/subject-area.md # ./open-metadata-implementation/access-services/subject-area/docs
+          - Common services:
+              - Common services overview: services/common/index.md
+              - Metadata security: services/common/security.md # ./open-metadata-implementation/common-services/metadata-security/docs
+              - Generic handlers: services/common/handlers.md # ./open-metadata-implementation/common-services/generic-handlers/docs
+          - Platform services: services/platform.md
+          - Governance servers:
+              - Governance servers overview: services/governance/index.md # ./open-metadata-implementation/governance-servers/docs
+              - Integration daemon services: services/governance/integration-daemon.md # ./open-metadata-implementation/governance-servers/integration-daemon-services/docs
+              - Engine host services: services/governance/engine-host.md # ./open-metadata-implementation/governance-servers/engine-host-services/docs
+              - Open lineage services (OLS): services/governance/ols.md # ./open-metadata-implementation/governance-servers/open-lineage-services/docs
+          - View services:
+              - View services overview: services/view/index.md
+              - Glossary author view: services/view/glossary-author.md # ./open-metadata-implementation/view-services/glossary-author-view/docs
+      - Frameworks:
+          - Audit logging (ALF): frameworks/alf.md # ./open-metadata-implementation/frameworks/audit-log-framework/docs
+          - Connectors (OCF): frameworks/ocf.md # ./open-metadata-implementation/frameworks/open-connector-framework/docs
+          - Discovery (ODF): frameworks/odf.md # ./open-metadata-implementation/frameworks/open-discovery-framework/docs
+          - Governance action (GAF): frameworks/gaf.md # ./open-metadata-implementation/frameworks/governance-action-framework/docs
+      - Types:
+          - Open Metadata Types:
+              - Overview of types: types/index.md # ./open-metadata-publication/website/open-metadata-types
+              - Area 0 types: types/0.md
+              - Area 1 types: types/1.md
+          - Metamodel: types/metamodel.md
   - Adapters:
       - Plugin Repositories: adapters/repos.md
       - Third Party Repositories: adapters/connectors.md
       - Connectors: adapters/others.md
-  - Types:
-      - Open Metadata Types: types/types.md
-      - Metamodel: types/metamodel.md
+  # ./open-metadata-implementation/adapters/open-connectors/repository-services-connectors/open-metadata-collection-store-connectors/graph-repository-connector/docs
+  # ./open-metadata-implementation/adapters/open-connectors/repository-services-connectors/open-metadata-collection-store-connectors/docs
+  # ./open-metadata-implementation/adapters/open-connectors/governance-action-connectors/docs
+  - Release notes:
+      - Latest: release-notes/latest.md
+      - 2.11: release-notes/2.11.md
+      - 2.10: release-notes/2.10.md
 
 theme:
   name: material

@@ -3,6 +3,7 @@
 
 *[IGC]: IBM Information Governance Catalog
 *[CTS]: Conformance Test Suite
+*[GUID]: Globally Unique Identifier
 *[OMAG]: Open Metadata and Governance
 *[OMAS]: Open Metadata Access Services
 *[OMRS]: Open Metadata Repository Services
