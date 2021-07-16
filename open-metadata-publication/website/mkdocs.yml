@@ -50,9 +50,9 @@ edit_uri: ""
 nav:
   - Home: index.md
   - Learn more:
-      - The challenge: introduction/challenge.md # ./open-metadata-publication/website/README.md
-      - Our solution: introduction/overview.md # ./open-metadata-publication/website/README.md
-      - Key concepts: introduction/key-concepts.md # ./open-metadata-publication/website/basic-concepts
+      - The challenge: introduction/challenge.md
+      - Our solution: introduction/overview.md
+      - Key concepts: introduction/key-concepts.md
       - Patterns:
           - Metadata server exchange: introduction/patterns/metadata-server-exchange.md # ./open-metadata-publication/website/solutions/metadata-server-exchange
           - Repository conformance: introduction/patterns/repository-conformance.md
